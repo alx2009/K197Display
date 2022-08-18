@@ -1,5 +1,5 @@
 # K197Display
-This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board use a 2.8" 256x64 OLED (SSD1322) and AVR DB on dxCore (see references below) 
+This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on dxCore (see references below) 
 
 DISCLAIMER: Please note that the purpose of this repository is educational. Any use of the information for any other purpose is under own responsibility.
 
@@ -11,6 +11,8 @@ https://www.eevblog.com/forum/projects/replacement-display-board-for-keithley-19
 Prerequisites
 -------------
 The sketch have been developed and tested using a AVR64DB28 microcontroller. It should run with AVR128DB28 and can be easily adapted to packages with 32, 64 and 64 pins. It will not run with 32 Kbit chips. It may run with the DA chips, however those chips will require some kind of voltage conversion somewhere, considering that the display runs at 3.3V and the 197/197A main board interface is done at 5V levels.
+
+The display need to be configured to use SPI (usually this means moving one resistor, see references)
 
 You can refer to the links above for more information about the HW used
 
@@ -56,3 +58,5 @@ dxCore guide to SPI (SPI pin mappings): https://github.com/SpenceKonde/DxCore/bl
 dxCore Optiboot (bootloader) reference: https://github.com/SpenceKonde/DxCore/blob/master/megaavr/extras/Ref_Optiboot.md
 
 Programming via UPDI (needed at least the first time, in order to load the bootloader): https://github.com/SpenceKonde/AVR-Guidance/blob/master/UPDI/jtag2updi.md
+
+Link to the OLED display (no affiliation or special endorsement. Only that I bought it there and it works): https://www.aliexpress.com/item/33013330192.html?spm=a2g0o.order_list.0.0.21ef1802HXu3o 
