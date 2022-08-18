@@ -36,9 +36,9 @@ The current SW is implementing the same functions available in the 197/197A, wit
 
 Porting:
 -------
-I am not planning to port this SW to other micros. If you want to use an older AVR you should consider Technogeeky implementaion instead of mine: https://github.com/technogeeky/keithley-197. 
+I am not planning to port this SW to other micros. If you want to use an older AVR you should consider Technogeeky implementation instead of mine: https://github.com/technogeeky/keithley-197. 
 
-For other architectures, you are welcomed to clone this repository and do the porting, albeit in honesty I think it may be easier to rewrite from scratch. 
+For other architectures, you are welcomed to clone this repository and do the porting. 
 
 Useful References:
 ------------------
