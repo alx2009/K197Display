@@ -25,12 +25,12 @@ Connections:
 Currently this sketch assumes that the microcontroller is connected as follows:
 AVDD and VDD connected to a 3.3V power source (which is also supplied to the display)
 VDDIO2 connected to +5V (same voltage as the 197/197A main board +5V digital power rail)
-PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
-PA2-PA6 used to interface the OLED
-PA7 is conencted to a LED (optional, default LED_BUILTIN for dxCore) 
-PC0-PC3 used to interface the 197/197A main board (4-wire SPI)
-PD1-PD4 connected to the pushbutton cluster on the front panel
-PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
+- PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
+- PA2-PA6 used to interface the OLED
+- PA7 is connected to a LED (optional, default LED_BUILTIN for dxCore) 
+- PC0-PC3 used to interface the 197/197A main board (4-wire SPI)
+- PD1-PD4 connected to the pushbutton cluster on the front panel
+- PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
 
 The current SW is implementing the same functions available in the 197/197A, with minor differences due to the different display technology used (plus any unintended differences - the Issues section is available for reporting them, as well as new feature requests). 
 
