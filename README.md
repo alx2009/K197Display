@@ -23,8 +23,8 @@ You will need the Arduino IDE, with dxCore (https://github.com/SpenceKonde/DxCor
 Connections:
 ------------
 Currently this sketch assumes that the microcontroller is connected as follows:
-AVDD and VDD connected to a 3.3V power source (which is also supplied to the display)
-VDDIO2 connected to +5V (same voltage as the 197/197A main board +5V digital power rail)
+- AVDD and VDD connected to a 3.3V power source (which is also supplied to the display)
+- VDDIO2 connected to +5V (same voltage as the 197/197A main board +5V digital power rail)
 - PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
 - PA2-PA6 used to interface the OLED
 - PA7 is connected to a LED (optional, default LED_BUILTIN for dxCore) 
