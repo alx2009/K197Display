@@ -10,7 +10,7 @@ https://www.eevblog.com/forum/projects/replacement-display-board-for-keithley-19
 
 Prerequisites
 -------------
-The sketch have been developed and tested using a AVR64DB28 microcontroller. It should run with AVR128DB28 and can be easily adapted to packages with 32, 64 and 64 pins. It will not run with 32 Kbit chips. It may run with the DA chips, however those chips will require some kind of voltage conversion somewhere, considering that the display runs at 3.3V and the 197/197A main board interface is done at 5V levels.
+The sketch have been developed and tested using a AVR64DB28 microcontroller. It should run with AVR128DB28 and can be easily adapted to packages with 32, 48 and 64 pins. It will not run with 32 Kbit chips. It may run with the DA chips, however those chips will require some kind of voltage conversion somewhere, considering that the display runs at 3.3V and the 197/197A main board interface is done at 5V levels.
 
 The display need to be configured to use SPI (usually this means moving one resistor, see references)
 
