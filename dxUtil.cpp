@@ -26,16 +26,32 @@ static const float vstep =
 
 dxUtilClass dxUtil;
 
-// using 1.024 Volt would lead to in creased precision for V, but the Temp.
-// sensor generates > 1.024V around ambient temperature... the precision
-// with 2.048 is more than enough for our purposes, so we use 2.048V in this
-// application
+/*!
+    @brief  this function must be called beforee any other function. It must be
+   called again if the analog reference is set elsewhere After calling this
+   function, some time is needed for the reference to stabilize before any ADC
+   reading is reliable See the microcontroller data sheet for details
+*/
 void dxUtilClass::begin() {
+  // using 1.024 Volt would lead to in creased precision for V, but the Temp.
+  // sensor generates > 1.024V around ambient temperature... the precision
+  // with 2.048 is more than enough for our purposes, so we use 2.048V in this
+  // application
   // analogReference(INTERNAL1V024);
   analogReference(INTERNAL2V048);
   analogReadResolution(12);
 }
 
+/*!
+    @brief  this function prints the Optiboot reset flags to Serial
+    Note that the watchdog flag is almost always set because it is used by
+   Optiboot itself. However, if the watchdog flag is the only one present, then
+   probably the restart was called by the watchdog. If another flag is present
+   then it should indicate the cause of the restart.
+
+    Very useful during test/verification/troubleshooting to know what caused a
+   restart of the micro...
+*/
 void dxUtilClass::printResetFlags() {
   uint8_t reset_flags =
       GPR.GPR0; // Optiboot stashes the reset flags here before clearing them to
@@ -60,6 +76,10 @@ void dxUtilClass::printResetFlags() {
   }
 }
 
+/*!
+    @brief  this function prints the MVIO status if any change is detected since
+   last time the function was called
+*/
 bool dxUtilClass::pollMVIOstatus() {
   // Polling the VDDIO2S bit
   if (MVIO.STATUS & MVIO_VDDIO2S_bm) { // MVIO within usable range
@@ -78,6 +98,10 @@ bool dxUtilClass::pollMVIOstatus() {
   return false;
 }
 
+/*!
+    @brief  get the value of Vdd using the built in resistor divided and the ADC
+   (no external HW/pins used)
+*/
 float dxUtilClass::getVdd() {
   int adc_reading =
       analogRead(ADC_VDDDIV10); // Note: temp. will be way out of range in case
@@ -86,6 +110,10 @@ float dxUtilClass::getVdd() {
   return vdd;
 }
 
+/*!
+    @brief  get the value of Vddio2 using the built in resistor divided and the
+   ADC (no external HW/pins used)
+*/
 float dxUtilClass::getVddio2() {
   int adc_reading =
       analogRead(ADC_VDDIO2DIV10); // Note: temp. will be way out of range in
@@ -94,6 +122,13 @@ float dxUtilClass::getVddio2() {
   return vddio2;
 }
 
+/*!
+    @brief  get the Temperature in Kelvin using the built in temperature sensor
+   and the ADC (no external HW/pins used)
+
+    We print the temperature with 1/4th Kelvin resolution. See data sheet for
+   actual accuracy vs temperature range, etc.
+*/
 float dxUtilClass::getTKelvin() {
   uint16_t adc_reading =
       analogRead(ADC_TEMPERATURE); // Note: temp. will be way out of range in
@@ -116,8 +151,19 @@ float dxUtilClass::getTKelvin() {
   return ftempk;
 }
 
+/*!
+    @brief  get the Temperature in Celsius using the built in temperature sensor
+   and the ADC (no external HW/pins used)
+
+    getTCelsius() = getTKelvin() - 273.15
+*/
 float dxUtilClass::getTCelsius() { return getTKelvin() - 273.15; }
 
+/*!
+    @brief  print the current value of Vdd and Vddio2 to Serial
+
+   Internally uses getVdd() and getVddio2()
+*/
 void dxUtilClass::checkVoltages() {
   Serial.print(F("Vdd="));
   Serial.print(getVdd());
@@ -126,6 +172,11 @@ void dxUtilClass::checkVoltages() {
   Serial.println(F(" V"));
 }
 
+/*!
+    @brief  print the current Temperature in Celsius to Serial
+
+   Internally uses getTCelsius()
+*/
 void dxUtilClass::checkTemperature() {
   Serial.print(F("T="));
   Serial.print(getTCelsius());

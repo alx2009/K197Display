@@ -30,6 +30,14 @@
   it as it can be very useful in other cases, and does not add any major
   complication in Client mode
 
+  There are two implementation strategies, selected based on
+  DEVICE_USE_INTERRUPT being defined or not
+  - if DEVICE_USE_INTERRUPT is defined, SPI data is received with interrupts
+  - if DEVICE_USE_INTERRUPT is not defined then polling is used
+
+  Both strategies have pro and cons. As of now, both strategies work equally
+  well. Both options are available as one or the other may work better for users
+  that want to customize this sketch for their specific needs
 */
 /**************************************************************************/
 
@@ -47,6 +55,10 @@ volatile byte spiBuffer[PACKET];
 volatile bool done = false;
 
 #ifdef DEVICE_USE_INTERRUPT
+/*!
+    @brief  Interrupt handler, called when the SS pin changes (only when
+   DEVICE_USE_INTERRUPT is defined)
+*/
 void ss_changing() {
   if (VPORTC.IN & SPI1_SS_bm) { // device de-selected
     done = true;
@@ -55,7 +67,10 @@ void ss_changing() {
   }
 }
 #endif // DEVICE_USE_INTERRUPT
-
+/*!
+    @brief  setup the SPI peripheral. Must be called first, before any other
+   member function
+*/
 void SPIdevice::setup() {
   pinMode(SPI1_MOSI, INPUT);
   pinMode(MB_CD, INPUT); // Command/Data input - It is configured as inpout, so
@@ -93,6 +108,14 @@ void SPIdevice::setup() {
 #endif   // DEVICE_USE_INTERRUPT
 }
 
+/*!
+    @brief  check if new data has been received from SPI
+
+    After this function returns true, it will continue to return true until the
+   data is actually retrived and processed, e.g calling getNewData();
+
+    @return true if new data is available
+*/
 bool SPIdevice::hasNewData() {
 #ifdef DEVICE_USE_INTERRUPT
   return done;
@@ -126,6 +149,17 @@ bool SPIdevice::hasNewData() {
 #endif // DEVICE_USE_INTERRUPT
 }
 
+/*!
+      @brief process a new reading that has just been received via SPI and
+   return a copy of the SPI data buffer
+
+      If a number != 9 is returned, indicates that the data was NOT correctly
+   transmitted
+
+      @param data byte array that will receive the copy of the data. MUST have
+   room for at least 9 elements!
+      @return the number of bytes copied into data.
+*/
 byte SPIdevice::getNewData(byte *data) {
   byte returnvalue;
   while (!hasNewData()) {
@@ -138,6 +172,10 @@ byte SPIdevice::getNewData(byte *data) {
   return returnvalue;
 }
 
+/*!
+      @brief print some debugging information to Serial
+
+*/
 void SPIdevice::debugPrintData(byte *data, byte n) {
   for (int i = 0; i < n; i++) {
     Serial.print("0x");
@@ -147,7 +185,10 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
 }
 
 #ifdef DEVICE_USE_INTERRUPT
-// SPI interrupt routine
+/*!
+    @brief  Interrupt handler, called for SPI1 events (only when
+   DEVICE_USE_INTERRUPT is defined)
+*/
 ISR(SPI1_INT_vect) { // TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
     volatile byte c =

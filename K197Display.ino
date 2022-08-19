@@ -11,24 +11,24 @@
   This file is part of the Arduino K197Display sketch, please see
   https://github.com/alx2009/K197Display for more information
 
-  This is the main file for the sketch, implementing setup() and loop().
-Implements the following functions directly:
-     - Manage the serial user interface (used only for troubleshooting for now)
-     - Handle Callbacks for push button events (only printouts for
-troubleshooting purpose for now)
+  This is the main file for the sketch. In addition to setup() and loop(), the
+following functions are implemented in this file:
+     - Management of the serial user interface (for troubleshooting)
+     - Callbacks for push button events (only printouts for troubleshooting
+purpose)
      - Instantiation and setup  of the key objects K197dev, uiman and
 pushbuttons is also done here
-     - main loop
 
   All the magic happens in the main loop. For each loop iteration:
-  - we handle commands if any is received from Serial
-  - we check if 197dev has got new data (this should happen 3 times a second)
-  - if we have new data we ask uiman to update the display (we also print out to
+  - handle commands from Serial if any has been received
+  - check if 197dev has got new data (this should happen 3 times a second)
+  - if new data available ask uiman to update the display (and print to
 Serial if the relevant flag is set)
-  - we check if K197dev detected SPI collisions and if the number of data
-received is the expected one, and print the information to Serial
-  - Finally we check for pushbutton events (this will not be detected directly
-in loop, but it will trigger the callback)
+  - if new data is available, toggle the built in led
+  - check if K197dev detected SPI collisions and if the number of data received
+is the expected one, and print the information to Serial
+  - Finally, check for pushbutton events (this will not be detected directly in
+loop, but it will trigger the callback)
 
 Note: the way we detect SPI client related problems in loop is not fool-proof,
 but statistically we should print out something if there are recurring issues
@@ -206,7 +206,8 @@ void loop() {
     }
     digitalWriteFast(LED_BUILTIN, CHANGE); // digitalWriteFast is part of dxCore
                                            // built-in "fast I/O" library
-    uiman.updateDisplay();
+    if (n == 9)
+      uiman.updateDisplay();
   }
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {

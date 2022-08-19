@@ -47,11 +47,6 @@ static char seg2char[128] = {
     '*',  'y',  'd', '&', '3', '9', 'a', '8' // row 7 (0x70-0x7f)
 };
 
-void K197device::getNewReading() {
-  byte spiData[PACKET];
-  getNewReading(spiData);
-}
-
 float getMsgValue(char *s, int len) {
   for (int i = 0; i < len; i++) {
     if (*s != ' ') {
@@ -63,31 +58,45 @@ float getMsgValue(char *s, int len) {
               // want to return NaN and have the caller handle that
 }
 
-const char *K197device::getUnit() { // Note: includes UTF-8 characters
-  if (isV()) {
-    if (ismV())
-      return "mV";
-    else
-      return " V";
-  } else if (isOmega()) {
-    if (isM())
-      return "MΩ";
-    else if (isk())
-      return "kΩ";
-    else
-      return " Ω";
-  } else if (isA()) {
-    if (ismicro())
-      return "µA";
-    else if (ismA())
-      return "mA";
-    else
-      return " A";
-  } else {
-    return "  ";
-  }
+/*!
+      @brief process a new reading that has just been received via SPI
+
+      A new reading is not processed automatically to make sure no value can be
+   overriden while in use (especially when interrupts are used). Instead,
+   SPIdevice::hasNewData() should be called periodically, when it returns true
+   getNewReading() can be called to process the new information. The information
+   will be available until the next cycle.
+
+      Note that internally this function calls SPIdevice::getNewData(), so
+   afterwards SPIdevice::hasNewData() will return false until a new batch of
+   data is received via SPI.
+
+      @return true if the data was received correctly, false otherwise
+
+*/
+bool K197device::getNewReading() {
+  byte spiData[PACKET];
+  byte n = getNewReading(spiData);
+  return n == 9 ? true : false;
 }
 
+/*!
+      @brief process a new reading that has just been received via SPI and
+   return a copy of the SPI data buffer
+
+      Similar to getNewReading() except it also returns a copy of the SPI data
+   bufer. The only reason to use this function is to help in troubleshooting,
+      e.g. to print the SPI data buffer to Serial. For normal purposes it is
+   enough to call getNewReading() and access the decoded information via the
+   other member functions
+
+      If a number != 9 is returned, indicates that the data was NOT correctly
+   transmitted
+
+      @param data byte array that will receive the copy of the data.  MUST have
+   room for at least 9 elements!
+      @return the number of bytes copied into data.
+*/
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
@@ -161,6 +170,40 @@ byte K197device::getNewReading(byte *data) {
   return n;
 }
 
+/*!
+    @brief  return the unit text (V, mV, etc.)
+    @return the unit (2 characters + terminating NUL). This is a UTF-8 string
+   because it may include Ω or µ
+*/
+const char *K197device::getUnit() { // Note: includes UTF-8 characters
+  if (isV()) {
+    if (ismV())
+      return "mV";
+    else
+      return " V";
+  } else if (isOmega()) {
+    if (isM())
+      return "MΩ";
+    else if (isk())
+      return "kΩ";
+    else
+      return " Ω";
+  } else if (isA()) {
+    if (ismicro())
+      return "µA";
+    else if (ismA())
+      return "mA";
+    else
+      return " A";
+  } else {
+    return "  ";
+  }
+}
+
+/*!
+    @brief  print a summary of the received message to Serial for
+   troubleshooting purposes
+*/
 void K197device::debugPrint() {
   Serial.print(message);
   if (msg_is_num) {

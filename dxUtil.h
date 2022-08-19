@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-  @file     dxUtil.cpp
+  @file     dxUtil.h
 
   Arduino K197Display sketch
 

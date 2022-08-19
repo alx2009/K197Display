@@ -53,6 +53,12 @@ u8g2(U8G2_R0, OLED_SS,
 
 UImanager::UImanager(K197device *k197) { this->k197 = k197; }
 
+/*!
+    @brief  this function is intended to include any drawing command that may be
+   needed the very first time the display is used
+
+    Called from setup, there should not be called directly
+*/
 void setup_draw(void) {
   // u8g2.setFont(u8g2_font_inr38_mf);  // width = 31 points (7 characters=217
   // points)
@@ -80,6 +86,10 @@ void setup_draw(void) {
   // Serial.println(u8g2.getMaxCharWidth()); u8g2.drawFrame(10, 10, 230, 54);
 }
 
+/*!
+    @brief  setup the display and clears the screen. Must be called before any
+   other member function
+*/
 void UImanager::setup() {
   pinMode(OLED_MOSI, OUTPUT); // Needed to work around a bug in the micro or
                               // dxCore with certain swap options
@@ -102,6 +112,19 @@ void UImanager::setup() {
   u8g2.sendBuffer();
 }
 
+/*!
+    @brief  update the display. The information comes from the pointer to
+   K197device passed when the object was constructed
+
+    This function will not cause the K197device object to read new data, it will
+   use whatever data is already stored in the object.
+
+    Therefore, it should not be called before the first data has been received
+   from the K197/197A
+
+    If you want to add an initial scren/text, the best way would be to add this
+   to setup();
+*/
 void UImanager::updateDisplay() {
   u8g2.setFont(
       u8g2_font_inr30_mf); // width =25  points (7 characters=175 points)

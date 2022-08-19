@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-  @file     pinout.cpp
+  @file     pinout.h
 
   Arduino K197Display sketch
 

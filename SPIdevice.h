@@ -49,6 +49,11 @@ public:
                                // hasNewData() returns true, otherwise data may
                                // be ovewritten by the next update
   void debugPrintData(byte *data, byte n = PACKET_DATA);
+
+  /*!
+      @brief  check if a buffer overflow has been detected by the SPI peripheral
+      @return true if collision detcted (buffer overflow)
+  */
   bool collisionDetected() {
     return SPI1.INTFLAGS & SPI_BUFOVF_bm ? true : false;
   };
