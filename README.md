@@ -44,7 +44,7 @@ Contributions:
 -------------
 Merge requests with bug fixes and new relevant features will be considered, I cannot promise more at this stage.
 
-Please note that this sketch is formatted with Clang and documented with Doxygen (partly but it will be improved). If possible conform to this, which is common to many other Arduino libraries (e.g. see for example Adafruit excellent guide https://learn.adafruit.com/contribute-to-arduino-with-git-and-github/overview)
+Please note that this sketch is formatted with Clang (default LLVM style) and documented with Doxygen (partly but it will be improved). If possible conform to this, which is a convention used by many Arduino libraries (e.g. see for example Adafruit excellent guide https://learn.adafruit.com/contribute-to-arduino-with-git-and-github/overview)
 
 Useful References:
 ------------------
