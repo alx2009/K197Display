@@ -1,4 +1,4 @@
-# K197Display
+# K197Display (initial BETA release)
 This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on dxCore (see references below) 
 
 DISCLAIMER: Please note that the purpose of this repository is educational. Any use of the information for any other purpose is under own responsibility.
@@ -40,10 +40,16 @@ I am not planning to port this SW to other micros. If you want to use an older A
 
 For other architectures, you are welcomed to clone this repository and do the porting. 
 
+Contributions:
+-------------
+Merge requests with bug fixes and new relevant features will be considered, I cannot promise more at this stage.
+
+Please note that this sketch is formatted with Clang and documented with Doxygen (partly but it will be improved). If possible conform to this, which is common to many other Arduino libraries (e.g. see for example Adafruit excellent guide https://learn.adafruit.com/contribute-to-arduino-with-git-and-github/overview)
+
 Useful References:
 ------------------
 In addition to the EEVBlog threads and library links, the following direct links may save you some time:
-Microchip page for the AVR64DB28 microcontroller. 
+Microchip page for the AVR64DB28 microcontroller: https://www.microchip.com/en-us/product/AVR64DB28#document-table
   Recommended readings:
      - Data sheet (obviously)
      - Application Note "Migration from the megaAVR® to AVR® Dx Microcontroller Families" (useful if you have previous experience with older AVR!)
