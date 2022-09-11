@@ -16,6 +16,7 @@
 */
 /**************************************************************************/
 #include "dxUtil.h"
+#include "debugUtil.h"
 #include <Arduino.h>
 
 // static const float vstep = 10.24 / 4096.0; // conversion from ADC reading to
@@ -33,6 +34,11 @@ dxUtilClass dxUtil;
    reading is reliable See the microcontroller data sheet for details
 */
 void dxUtilClass::begin() {
+  if (firstBegin) {
+    reset_flags = GPR.GPR0; // Optiboot stashes the reset flags here before
+                            // clearing them to honor entry conditions
+    firstBegin = false;
+  }
   // using 1.024 Volt would lead to in creased precision for V, but the Temp.
   // sensor generates > 1.024V around ambient temperature... the precision
   // with 2.048 is more than enough for our purposes, so we use 2.048V in this
@@ -43,7 +49,7 @@ void dxUtilClass::begin() {
 }
 
 /*!
-    @brief  this function prints the Optiboot reset flags to Serial
+    @brief  this function prints the Optiboot reset flags to DebugOut
     Note that the watchdog flag is almost always set because it is used by
    Optiboot itself. However, if the watchdog flag is the only one present, then
    probably the restart was called by the watchdog. If another flag is present
@@ -53,44 +59,43 @@ void dxUtilClass::begin() {
    restart of the micro...
 */
 void dxUtilClass::printResetFlags() {
-  uint8_t reset_flags =
-      GPR.GPR0; // Optiboot stashes the reset flags here before clearing them to
-                // honor entry conditions
   if (reset_flags & RSTCTRL_UPDIRF_bm) {
-    Serial.println(F("Reset by UPDI (code just uploaded now)"));
+    DebugOut.println(F("UPDI reset (upload)"));
   }
   if (reset_flags & RSTCTRL_WDRF_bm) {
-    Serial.println(F("reset by WDT timeout"));
+    DebugOut.println(F("WDT reset"));
   }
   if (reset_flags & RSTCTRL_SWRF_bm) {
-    Serial.println(F("reset at request of user code."));
+    DebugOut.println(F("SW reset"));
   }
   if (reset_flags & RSTCTRL_EXTRF_bm) {
-    Serial.println(F("Reset because reset pin brought low"));
+    DebugOut.println(F("HW Reset"));
   }
   if (reset_flags & RSTCTRL_BORF_bm) {
-    Serial.println(F("Reset by voltage brownout"));
+    DebugOut.println(F("Brownout Reset"));
   }
   if (reset_flags & RSTCTRL_PORF_bm) {
-    Serial.println(F("Reset by power on"));
+    DebugOut.println(F("Power on reset"));
   }
 }
 
 /*!
     @brief  this function prints the MVIO status if any change is detected since
    last time the function was called
+
+   @return true if  MVIO within usable range, false otherwise
 */
 bool dxUtilClass::pollMVIOstatus() {
   // Polling the VDDIO2S bit
   if (MVIO.STATUS & MVIO_VDDIO2S_bm) { // MVIO within usable range
     if (MVIO_status != MVIO_ok) {
-      Serial.println(F("MVIO ok!"));
+      DebugOut.println(F("MVIO ok"));
       MVIO_status = MVIO_ok;
       return true;
     }
   } else { // MVIO outside usable range
     if (MVIO_status != MVIO_belowRange) {
-      Serial.println(F("MVIO not ok!"));
+      DebugOut.println(F("MVIO not ok!"));
       MVIO_status = MVIO_belowRange;
       return true;
     }
@@ -101,6 +106,8 @@ bool dxUtilClass::pollMVIOstatus() {
 /*!
     @brief  get the value of Vdd using the built in resistor divided and the ADC
    (no external HW/pins used)
+
+   @return Vdd value in Volts
 */
 float dxUtilClass::getVdd() {
   int adc_reading =
@@ -113,6 +120,8 @@ float dxUtilClass::getVdd() {
 /*!
     @brief  get the value of Vddio2 using the built in resistor divided and the
    ADC (no external HW/pins used)
+
+   @return Vddio2 value in Volts
 */
 float dxUtilClass::getVddio2() {
   int adc_reading =
@@ -128,12 +137,15 @@ float dxUtilClass::getVddio2() {
 
     We print the temperature with 1/4th Kelvin resolution. See data sheet for
    actual accuracy vs temperature range, etc.
+
+   @return Temperature in Kelvin
+
 */
 float dxUtilClass::getTKelvin() {
   uint16_t adc_reading =
       analogRead(ADC_TEMPERATURE); // Note: temp. will be way out of range in
                                    // case analogRead reports an ADC error
-  // Serial.print("ADC="); Serial.println(adc_reading);
+  // DebugOut.print("ADC="); DebugOut.println(adc_reading);
 
   // Using the datasheet recommended method with precision 1/4th Kelvin
   uint16_t sigrow_offset =
@@ -156,29 +168,38 @@ float dxUtilClass::getTKelvin() {
    and the ADC (no external HW/pins used)
 
     getTCelsius() = getTKelvin() - 273.15
+
+   @return Temperature in Celsius
 */
 float dxUtilClass::getTCelsius() { return getTKelvin() - 273.15; }
 
 /*!
-    @brief  print the current value of Vdd and Vddio2 to Serial
+    @brief  print the current value of Vdd and Vddio2 to DebugOut
 
    Internally uses getVdd() and getVddio2()
+
+   @param newline true if a newline should be printed at the end
 */
-void dxUtilClass::checkVoltages() {
-  Serial.print(F("Vdd="));
-  Serial.print(getVdd());
-  Serial.print(F(" V, Vddio2="));
-  Serial.print(getVddio2());
-  Serial.println(F(" V"));
+void dxUtilClass::checkVoltages(bool newline) {
+  DebugOut.print(getVdd());
+  DebugOut.print(F("V, "));
+  DebugOut.print(getVddio2());
+  DebugOut.print(F("V"));
+  if (newline)
+    DebugOut.println();
 }
 
 /*!
-    @brief  print the current Temperature in Celsius to Serial
+    @brief  print the current Temperature in Celsius to DebugOut
 
    Internally uses getTCelsius()
+
+   @param newline true if a newline should be printed at the end
 */
-void dxUtilClass::checkTemperature() {
-  Serial.print(F("T="));
-  Serial.print(getTCelsius());
-  Serial.println(F(" C"));
+void dxUtilClass::checkTemperature(bool newline) {
+  DebugOut.print(F("T="));
+  DebugOut.print(getTCelsius());
+  DebugOut.print(F(" C"));
+  if (newline)
+    DebugOut.println();
 }

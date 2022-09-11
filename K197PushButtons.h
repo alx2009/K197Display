@@ -20,8 +20,8 @@
 #define __ABUTTON_H
 #include <Arduino.h>
 
-#define BUTTON_PRESSED_STATE LOW
-#define BUTTON_IDLE_STATE HIGH
+#define BUTTON_PRESSED_STATE LOW ///< logical level when pressed
+#define BUTTON_IDLE_STATE HIGH   ///< logical level when not pressed
 
 /**************************************************************************/
 /*!
@@ -39,33 +39,37 @@
 class k197ButtonCluster {
 public:
   k197ButtonCluster();
-  typedef void (*buttonCallBack)(uint8_t buttonPinIn, uint8_t buttonEvent);
+  typedef void (*buttonCallBack)(
+      uint8_t buttonPinIn,
+      uint8_t buttonEvent); ///< define the type of the callback function
   void setup();
 
 protected:
   void check(uint8_t i);
   static const unsigned long debounceDelay =
-      50; // the debounce time; increase if the output flickers
+      50; ///< the debounce time; decrease if the button is not responsive
+          ///< enough, increase in case yoyu experience unintended double
+          ///< presses
   static const unsigned long longPressTime =
-      800L; // long press event when pressed more than longPressTime ms
+      800L; ///< long press event will be generated when pressed more than
+            ///< longPressTime ms
   static const unsigned long doubleClicktime =
-      500L; // double click event when pressed within doubleClicktime ms from a
-            // previous release
+      500L; ///< double click event when pressed within doubleClicktime ms from
+            ///< a previous release
 
 public: // Define Button events, switches and callbacks
-  static const uint8_t eventClick = 0x01;       // detected after relase
-  static const uint8_t eventDoubleClick = 0x02; // detected after relase
-  static const uint8_t eventLongPress = 0x03;   // detected after relase
-  static const uint8_t eventPress = 0x11;   // detected imediately when pressed
-  static const uint8_t eventRelease = 0x12; // detected imediately when released
+  static const uint8_t eventClick = 0x01;       ///< detected after relase
+  static const uint8_t eventDoubleClick = 0x02; ///< detected after relase
+  static const uint8_t eventLongPress = 0x03;   ///< detected after relase
+  static const uint8_t eventPress = 0x11; ///< detected imediately when pressed
+  static const uint8_t eventRelease =
+      0x12; ///< detected imediately when released
 
-  boolean
-  setCallback(uint8_t in_pin,
-              buttonCallBack pinCallBack); // set it to NULL to remove call back
+  boolean setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
 
   void check(void);
 
-  static void Serial_printEventName(uint8_t event);
+  static void DebugOut_printEventName(uint8_t event);
 };
 
 #endif //__ABUTTON_H

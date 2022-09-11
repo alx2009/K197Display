@@ -25,6 +25,8 @@
 #include <stdlib.h> // atof()
 #include <string.h> // strstr()
 
+#include "debugUtil.h"
+
 // Lookup table to convert from segments to char
 // Note: before using the table, shift the 5 most significant bit one position
 // to the right (removes DP bit)
@@ -47,6 +49,19 @@ static char seg2char[128] = {
     '*',  'y',  'd', '&', '3', '9', 'a', '8' // row 7 (0x70-0x7f)
 };
 
+/*!
+      @brief utility function, return the value of a message up to len
+   characters
+
+      this function can only be used within K197device.cpp
+
+      @param s a char array with the message (does not need to be null
+   terminated)
+      @param len the number of characters in s to consider
+
+      @return the value using atof(), or 0 if s includes only space characters
+
+*/
 float getMsgValue(char *s, int len) {
   for (int i = 0; i < len; i++) {
     if (*s != ' ') {
@@ -100,8 +115,8 @@ bool K197device::getNewReading() {
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
-    Serial.print(F("Warning, K197 n="));
-    Serial.println(n);
+    DebugOut.print(F("Warning, K197 n="));
+    DebugOut.println(n);
   }
   if (n > 0)
     annunciators0 = data[0];
@@ -142,7 +157,7 @@ byte K197device::getNewReading(byte *data) {
         message[nchar] = '.';
         nchar++;
       } else {
-        Serial.println(F("Warning, K197 dupl. DP"));
+        DebugOut.println(F("Warning, K197 dupl. DP"));
       }
     }
     int seg128 = ((data[i] & 0b11111000) >> 1) |
@@ -201,17 +216,17 @@ const char *K197device::getUnit() { // Note: includes UTF-8 characters
 }
 
 /*!
-    @brief  print a summary of the received message to Serial for
+    @brief  print a summary of the received message to DebugOut for
    troubleshooting purposes
 */
 void K197device::debugPrint() {
-  Serial.print(message);
+  DebugOut.print(message);
   if (msg_is_num) {
-    Serial.print(F(", ("));
-    Serial.print(msg_value, 6);
-    Serial.print(')');
+    DebugOut.print(F(", ("));
+    DebugOut.print(msg_value, 6);
+    DebugOut.print(')');
   }
   if (msg_is_ovrange)
-    Serial.print(F(" + Ov.Range"));
-  Serial.println();
+    DebugOut.print(F(" + Ov.Range"));
+  DebugOut.println();
 }

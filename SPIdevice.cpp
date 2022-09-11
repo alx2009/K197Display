@@ -48,11 +48,14 @@
 #include <string.h>
 
 #include "SPIdevice.h"
+#include "debugUtil.h"
 #include "pinout.h"
 
-volatile byte nbyte = 0;
-volatile byte spiBuffer[PACKET];
-volatile bool done = false;
+volatile byte nbyte =
+    0; ///< keep track of characters received from the SPI client
+volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
+volatile bool done = false; ///< set at the end of the SPI transfer, signals
+                            ///< that a complete message is available
 
 #ifdef DEVICE_USE_INTERRUPT
 /*!
@@ -173,14 +176,19 @@ byte SPIdevice::getNewData(byte *data) {
 }
 
 /*!
-      @brief print some debugging information to Serial
+      @brief print a byte buffer to DebugOut
+
+      Normally useful for debugging
+
+      @param data pointer to the buffer
+      @param n number of bytes to print
 
 */
 void SPIdevice::debugPrintData(byte *data, byte n) {
   for (int i = 0; i < n; i++) {
-    Serial.print("0x");
-    Serial.print(data[i], HEX);
-    Serial.print(' ');
+    DebugOut.print("0x");
+    DebugOut.print(data[i], HEX);
+    DebugOut.print(' ');
   }
 }
 

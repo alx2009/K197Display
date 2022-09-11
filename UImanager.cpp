@@ -30,6 +30,9 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 
+#define DEFAULT_CONTRAST                                                       \
+  0x00 ///< defines the default contrast. Can be changed via serial port
+
 #ifndef U8G2_16BIT // Trigger an error if u8g2 is not in 16 bit mode, as
                    // explained above
 #error you MUST define U8G2_16BIT in u8g2.h ! See comment at the top of UImanager.cpp
@@ -43,21 +46,38 @@
 #endif
 
 #include "UImanager.h"
+#include "debugUtil.h"
 #include "pinout.h"
 
+/*!
+    @brief  Constructor, see
+   https://github.com/olikraus/u8g2/wiki/setup_tutorial
+
+   @return no return value
+*/
 U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI
 u8g2(U8G2_R0, OLED_SS,
-     OLED_DC /*,reset_pin*/); // See pinout.h for pin definition. At the moment
-                              // we do not use the RESET pin. It does seem to
-                              // work correctly without.
+     OLED_DC /*,reset_pin*/); ///< u8g2 object. See pinout.h for pin definition.
+                              ///< At the moment we do not use the RESET pin. It
+                              ///< does seem to work correctly without.
 
+#define U8LOG_WIDTH 28                            ///< Size of the log window
+#define U8LOG_HEIGHT 9                            ///< Height of the log window
+uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT]; ///< buffer for the log window
+U8G2LOG u8g2log;                                  ///< the log window
+
+/*!
+    @brief  Constructor for the class
+
+   @param k197 pointer to the K197device object to display
+*/
 UImanager::UImanager(K197device *k197) { this->k197 = k197; }
 
 /*!
     @brief  this function is intended to include any drawing command that may be
    needed the very first time the display is used
 
-    Called from setup, there should not be called directly
+    Called from setup, it should not be called from elsewhere
 */
 void setup_draw(void) {
   // u8g2.setFont(u8g2_font_inr38_mf);  // width = 31 points (7 characters=217
@@ -69,21 +89,6 @@ void setup_draw(void) {
   u8g2.setFontPosTop();
   u8g2.setFontRefHeightExtendedText();
   u8g2.setFontDirection(0);
-  /*
-  for (int ix=0; ix<255; ix+=50) {
-      u8g2.drawHLine(ix, 5, 40);
-  }
-  for (int ix=0; ix<255; ix+=20) {
-      u8g2.drawHLine(ix, 3, 10);
-  }
-  */
-  // Serial.print("w="); Serial.print(u8g2.getDisplayWidth()); Serial.print(",
-  // h=");Serial.println(u8g2.getDisplayHeight()); Serial.print(F("raw msg width
-  // = ")); Serial.println(u8g2.getStrWidth("8888888")); Serial.print(F("Ascent
-  // = ")); Serial.println(u8g2.getAscent()); Serial.print(F("Descent = "));
-  // Serial.println(u8g2.getDescent()); Serial.print(F("Max H   = "));
-  // Serial.println(u8g2.getMaxCharHeight()); Serial.print(F("Max W   = "));
-  // Serial.println(u8g2.getMaxCharWidth()); u8g2.drawFrame(10, 10, 230, 54);
 }
 
 /*!
@@ -96,17 +101,21 @@ void UImanager::setup() {
   boolean pmap =
       SPI.swap(OLED_SPI_SWAP_OPTION); // See pinout.h for pin definition
   if (pmap) {
-    // Serial.println(F("SPI pin mapping OK!"));
-    // Serial.flush();
+    // DebugOut.println(F("SPI pin mapping OK!"));
+    // DebugOut.flush();
   } else {
-    Serial.println(F("SPI pin mapping failed!"));
-    Serial.flush();
+    DebugOut.println(F("SPI pin mapping failed!"));
+    DebugOut.flush();
     while (true)
       ;
   }
   // u8g2.setBusClock(12000000); // without this call the default clock is about
   // 5 MHz, which is more than good enough.
   u8g2.begin();
+  setContrast(DEFAULT_CONTRAST);
+  u8g2.enableUTF8Print();
+  u8g2log.begin(U8LOG_WIDTH, U8LOG_HEIGHT, u8log_buffer);
+
   u8g2.clearBuffer();
   setup_draw();
   u8g2.sendBuffer();
@@ -126,6 +135,81 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
+  if (display_mode == displayNormal)
+    updateDisplayNormal();
+  else
+    updateDisplaySplit();
+}
+
+/*!
+    @brief  update the display, used when in debug and other modes with split
+   screen.
+*/
+void UImanager::updateDisplaySplit() {
+  u8g2_uint_t x = 147;
+  u8g2_uint_t y = 5;
+  u8g2.setFont(u8g2_font_8x13_mr);
+  u8g2.setCursor(x, y);
+  if (k197->isAuto())
+    u8g2.print(F("AUTO "));
+  else
+    u8g2.print(F("     "));
+  if (k197->isBAT())
+    u8g2.print(F("BAT "));
+  else
+    u8g2.print(F("    "));
+  if (k197->isREL())
+    u8g2.print("REL ");
+  else
+    u8g2.print("    ");
+  if (k197->isdB())
+    u8g2.print("dB ");
+  else
+    u8g2.print("   ");
+  if (k197->isCal())
+    u8g2.print("Cal   ");
+  else
+    u8g2.print("      ");
+
+  y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_9x18_mr);
+  u8g2.print(k197->getMessage());
+  u8g2.print(' ');
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  u8g2.print(k197->getUnit());
+  y += u8g2.getMaxCharHeight();
+  u8g2.setFont(u8g2_font_9x18_mr);
+  if (k197->isAC())
+    u8g2.print(F(" AC   "));
+  else
+    u8g2.print(F("      "));
+
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_8x13_mr);
+  if (k197->isSTO())
+    u8g2.print("STO ");
+  else
+    u8g2.print("    ");
+  if (k197->isRCL())
+    u8g2.print("RCL ");
+  else
+    u8g2.print("    ");
+  if (k197->isRMT())
+    u8g2.print("RMT   ");
+  else
+    u8g2.print("      ");
+
+  u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
+  u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
+
+  u8g2.sendBuffer();
+}
+
+/*!
+    @brief  update the display, used when in normal mode. See updateDisplay().
+*/
+void UImanager::updateDisplayNormal() {
   u8g2.setFont(
       u8g2_font_inr30_mf); // width =25  points (7 characters=175 points)
   const unsigned int xraw = 49;
@@ -219,5 +303,48 @@ void UImanager::updateDisplay() {
   else
     u8g2.drawStr(x, y, "   ");
 
+  u8g2.sendBuffer();
+}
+
+/*!
+      @brief set the screen mode
+
+      As of now two modes are defined: normal mode and debug mode. In debug mode
+   the measurements are displays on the right of the screen, while the left part
+   is reserved for debug messages. This is intended for debugging the code that
+   interacts with the serial port itself, so that Serial cannot be used.
+
+      @param mode can be displayNormal or displayDebug for normal and debug mode
+   respectively
+*/
+void UImanager::setScreenMode(byte mode) {
+  display_mode = mode;
+  u8g2.clearBuffer();
+  u8g2.sendBuffer();
+}
+
+/*!
+      @brief set the display contrast
+
+      @param value contrast value (0 to 255)
+*/
+void UImanager::setContrast(uint8_t value) { u8g2.setContrast(value); }
+
+/*!
+      @brief display the BT module status (detected or not detected)
+
+      @param present true if a BT module is detected, false otherwise
+*/
+void UImanager::updateBtStatus(bool present) {
+  if (display_mode != displayNormal)
+    return;
+  unsigned int x = 95;
+  unsigned int y = 0;
+  u8g2.setFont(u8g2_font_5x7_mr);
+  if (present) {
+    u8g2.drawStr(x, y, "bt ");
+  } else {
+    u8g2.drawStr(x, y, "   ");
+  }
   u8g2.sendBuffer();
 }

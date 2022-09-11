@@ -21,12 +21,12 @@
 #define SPI_DEVICE_H
 #include <Arduino.h>
 
-#define PACKET 18      // our SPI packet is 18 bytes
-#define PACKET_DATA 17 // size of the packet when it contains normal data
+#define PACKET 18      ///< our SPI packet is 18 bytes max
+#define PACKET_DATA 17 ///< size of the packet when it contains normal data
 
-#define DEVICE_USE_INTERRUPT
-
-// TODO: when interrupt are not used, implement the new buffered mode for SPI
+#define DEVICE_USE_INTERRUPT ///< when defined, the code will use interrupt to
+                             ///< interface to the SPI peripheral. Otherwise it
+                             ///< will use polling.
 
 /**************************************************************************/
 /*!

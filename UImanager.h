@@ -22,6 +22,9 @@
 #define UIMANAGER_H__
 #include "K197device.h"
 #include <Arduino.h>
+#include <U8g2lib.h>
+
+extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 
 /**************************************************************************/
 /*!
@@ -36,16 +39,38 @@
 */
 /**************************************************************************/
 class UImanager {
+public:
+  static const byte displayNormal =
+      0; ///< constant used to indicate the normal display layout
+  static const byte displayDebug =
+      1; ///< constamnt used to indicate a display layout including showing the
+         ///< debug output
+
 private:
   K197device *k197;
-  bool show_volt = false; // Show voltages if true
-  bool show_temp = false; // Show temperature is true
+  bool show_volt = false; ///< Show voltages if true (not currently used)
+  bool show_temp = false; ///< Show temperature if true  (not currently used)
+  byte display_mode = displayNormal; // Keep track of how to display stuff...
+
+  void updateDisplayNormal();
+  void updateDisplaySplit();
 
 public:
   UImanager(K197device *k197);
   void setup();
+  void setScreenMode(byte mode);
+
+  /*!
+    @brief  get the screen mode
+   @return screen mode, it must be one of the displayXXX constants defined in
+   class UImanager
+*/
+  byte getScreenMode() { return display_mode; };
 
   void updateDisplay();
+  void updateBtStatus(bool present);
+
+  void setContrast(uint8_t value);
 };
 
 #endif // UIMANAGER_H__

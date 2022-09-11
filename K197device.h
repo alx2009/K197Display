@@ -28,31 +28,31 @@
 // define bitmaps for the various annunciators
 
 // annunciators0
-#define K197_AUTO_bm 0x01
-#define K197_REL_bm 0x02
-#define K197_STO_bm 0x04
-#define K197_dB_bm 0x08
-#define K197_AC_bm 0x10
-#define K197_RCL_bm 0x20
-#define K197_BAT_bm 0x40
-#define K197_MINUS_bm 0x80
+#define K197_AUTO_bm 0x01  ///< bitmap for the AUTO annunciator
+#define K197_REL_bm 0x02   ///< bitmap for the REL annunciator
+#define K197_STO_bm 0x04   ///< bitmap for the STO annunciator
+#define K197_dB_bm 0x08    ///< bitmap for the dB annunciator
+#define K197_AC_bm 0x10    ///< bitmap for the AC annunciator
+#define K197_RCL_bm 0x20   ///< bitmap for the RCL annunciator
+#define K197_BAT_bm 0x40   ///< bitmap for the MAT annunciator
+#define K197_MINUS_bm 0x80 ///< bitmap for the "-" annunciator
 
 // annunciators7
-#define K197_mV_bm 0x01
-#define K197_M_bm 0x02
-#define K197_micro_bm 0x04
-#define K197_V_bm 0x08
-#define K197_k_bm 0x10
-#define K197_mA_bm 0x20
+#define K197_mV_bm 0x01    ///< bitmap for the "m" annunciator used for mV
+#define K197_M_bm 0x02     ///< bitmap for the "M" annunciator
+#define K197_micro_bm 0x04 ///< bitmap for the "µ" annunciator
+#define K197_V_bm 0x08     ///< bitmap for the "V" annunciator
+#define K197_k_bm 0x10     ///< bitmap for the "k" annunciator
+#define K197_mA_bm 0x20    ///< bitmap for the "m" annunciator used for mA
 
 // annunciators8
-#define K197_Cal_bm 0x01
-#define K197_Omega_bm 0x02
-#define K197_A_bm 0x04
-#define K197_RMT_bm 0x20
+#define K197_Cal_bm 0x01   ///< bitmap for the CAL annunciator
+#define K197_Omega_bm 0x02 ///< bitmap for the "Ω" annunciator
+#define K197_A_bm 0x04     ///< bitmap for the "A" annunciator
+#define K197_RMT_bm 0x20   ///< bitmap for the RMT annunciator
 
-#define K197_MSG_SIZE 9     // 6 digits + [sign] + [dot] + null
-#define K197_RAW_MSG_SIZE 8 // 6 digits + [sign] + null
+#define K197_MSG_SIZE 9     ///< message size = 6 digits + [sign] + [dot] + null
+#define K197_RAW_MSG_SIZE 8 ///< raw message size = 6 digits + [sign] + null
 
 /**************************************************************************/
 /*!
@@ -193,28 +193,100 @@ public:
 
 public:
   // annunciators0
+  /*!
+      @brief  test if AUTO is on
+      @return returns true if on, false otherwise
+  */
   inline bool isAuto() { return (annunciators0 & K197_AUTO_bm) != 0; };
 
+  /*!
+      @brief  test if REL is on
+      @return returns true if on, false otherwise
+  */
   inline bool isREL() { return (annunciators0 & K197_REL_bm) != 0; };
+  /*!
+      @brief  test if STO is on
+      @return returns true if on, false otherwise
+  */
   inline bool isSTO() { return (annunciators0 & K197_STO_bm) != 0; };
+  /*!
+      @brief  test if dB is on
+      @return returns true if on, false otherwise
+  */
   inline bool isdB() { return (annunciators0 & K197_dB_bm) != 0; };
+  /*!
+      @brief  test if AC is on
+      @return returns true if on, false otherwise
+  */
   inline bool isAC() { return (annunciators0 & K197_AC_bm) != 0; };
+  /*!
+      @brief  test if RCL is on
+      @return returns true if on, false otherwise
+  */
   inline bool isRCL() { return (annunciators0 & K197_RCL_bm) != 0; };
+  /*!
+      @brief  test if BAT is on
+      @return returns true if on, false otherwise
+  */
   inline bool isBAT() { return (annunciators0 & K197_BAT_bm) != 0; };
+  /*!
+      @brief  test if "-" is on (negative number displayed)
+      @return returns true if on, false otherwise
+  */
   inline bool isMINUS() { return (annunciators0 & K197_MINUS_bm) != 0; };
 
   // annunciators7
+  /*!
+      @brief  test if "m" used for V is on
+      @return returns true if on, false otherwise
+  */
   inline bool ismV() { return (annunciators7 & K197_mV_bm) != 0; };
+  /*!
+      @brief  test if "M" is on
+      @return returns true if on, false otherwise
+  */
   inline bool isM() { return (annunciators7 & K197_M_bm) != 0; };
+  /*!
+      @brief  test if "µ" is on
+      @return returns true if on, false otherwise
+  */
   inline bool ismicro() { return (annunciators7 & K197_micro_bm) != 0; };
+  /*!
+      @brief  test if "V" is on
+      @return returns true if on, false otherwise
+  */
   inline bool isV() { return (annunciators7 & K197_V_bm) != 0; };
+  /*!
+      @brief  test if "k" is on
+      @return returns true if on, false otherwise
+  */
   inline bool isk() { return (annunciators7 & K197_k_bm) != 0; };
+  /*!
+      @brief  test if "m" used for A is on
+      @return returns true if on, false otherwise
+  */
   inline bool ismA() { return (annunciators7 & K197_mA_bm) != 0; };
 
   // annunciators8
+  /*!
+      @brief  test if CAL is on
+      @return returns true if on, false otherwise
+  */
   inline bool isCal() { return (annunciators8 & K197_Cal_bm) != 0; };
+  /*!
+      @brief  test if "Ω" is on
+      @return returns true if on, false otherwise
+  */
   inline bool isOmega() { return (annunciators8 & K197_Omega_bm) != 0; };
+  /*!
+      @brief  test if "A" is on
+      @return returns true if on, false otherwise
+  */
   inline bool isA() { return (annunciators8 & K197_A_bm) != 0; };
+  /*!
+      @brief  test if RMT is on
+      @return returns true if on, false otherwise
+  */
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
 };
 

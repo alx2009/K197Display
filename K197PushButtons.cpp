@@ -24,6 +24,8 @@
 #include "K197PushButtons.h"
 #include <Arduino.h>
 
+#include "debugUtil.h"
+
 #include "pinout.h"
 
 // In the following we instantiate a bunch of arrays to keep track of the status
@@ -31,19 +33,24 @@
 // projects But essentially we need timers to keep track of various time
 // intervals (debouncing, pressed, released, log press, etc.)
 
-uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL, UI_DB};
-uint8_t buttonPinOut[] = {MB_STO, MB_RCL, MB_REL, MB_DB};
-k197ButtonCluster::buttonCallBack callBack[] = {NULL, NULL, NULL, NULL};
+uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL,
+                         UI_DB}; ///< index to pin mapping for UI push buttons
+uint8_t buttonPinOut[] = {MB_STO, MB_RCL, MB_REL,
+                          MB_DB}; ///< index to pin mapping for output
+k197ButtonCluster::buttonCallBack callBack[] = {
+    NULL, NULL, NULL, NULL}; ///< Stores the call back for each button
 uint8_t buttonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
-    BUTTON_IDLE_STATE}; // the current reading from the button pin
+    BUTTON_IDLE_STATE}; ///< the current reading from the button pin
 uint8_t lastButtonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
-    BUTTON_IDLE_STATE}; // the previous reading from the button pin
+    BUTTON_IDLE_STATE}; ///< the previous reading from the button pin
 unsigned long lastDebounceTime[] = {
-    0UL, 0UL, 0UL, 0UL}; // the last time the button pin was toggled
-unsigned long startPressed[] = {0UL, 0UL, 0UL, 0UL};
-unsigned long lastReleased[] = {0UL, 0UL, 0UL, 0UL};
+    0UL, 0UL, 0UL, 0UL}; ///< millis() the last time the button pin was toggled
+unsigned long startPressed[] = {0UL, 0UL, 0UL,
+                                0UL}; ///< millis() when last pressed
+unsigned long lastReleased[] = {0UL, 0UL, 0UL,
+                                0UL}; ///< millis() when last released
 
 // The following four functions are the interrupt handlers for each push button.
 // They are normal functions because we are using attachInterrupt (not the most
@@ -52,6 +59,12 @@ unsigned long lastReleased[] = {0UL, 0UL, 0UL, 0UL};
 // board this is completely independent from the handling of the butto events in
 // the rest of the sketch
 
+/*!
+      @brief interrupt handler for STO push button
+
+      The interrupt handler is used when the push button event is sent
+   transparently to the meter
+*/
 void UI_STO_changing() {
   if (UI_STO_VPORT.IN & UI_STO_bm) { // Button is not pressed
     MB_STO_VPORT.DIR &=
@@ -63,6 +76,12 @@ void UI_STO_changing() {
   }
 }
 
+/*!
+      @brief interrupt handler for RCL push button
+
+      The interrupt handler is used when the push button event is sent
+   transparently to the meter
+*/
 void UI_RCL_changing() {
   if (UI_RCL_VPORT.IN & UI_RCL_bm) { // Button is not pressed
     MB_RCL_VPORT.DIR &=
@@ -74,6 +93,12 @@ void UI_RCL_changing() {
   }
 }
 
+/*!
+      @brief interrupt handler for REL push button
+
+      The interrupt handler is used when the push button event is sent
+   transparently to the meter
+*/
 void UI_REL_changing() {
   if (UI_REL_VPORT.IN & UI_REL_bm) { // Button is not pressed
     MB_REL_VPORT.DIR &=
@@ -85,6 +110,12 @@ void UI_REL_changing() {
   }
 }
 
+/*!
+      @brief interrupt handler for DB push button
+
+      The interrupt handler is used when the push button event is sent
+   transparently to the meter
+*/
 void UI_DB_changing() {
   if (UI_DB_VPORT.IN & UI_DB_bm) { // Button is not pressed
     MB_DB_VPORT.DIR &=
@@ -96,8 +127,17 @@ void UI_DB_changing() {
   }
 }
 
+/*!
+      @brief default constructor for class k197ButtonCluster
+*/
 k197ButtonCluster::k197ButtonCluster() {}
 
+/*!
+    @brief  setup the push butto cluster. Must be called first, before any other
+   member function
+
+    Note that for simplicity the pins used are hardwired in setup()
+*/
 void k197ButtonCluster::setup() {
   pinConfigure(UI_STO, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                         PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
@@ -125,6 +165,18 @@ void k197ButtonCluster::setup() {
   UI_DB_changing();
 }
 
+/*!
+    @brief  set a call back for a push button in the cluster
+
+    Set pinCallBack to NULL to remove call back
+
+    @param pin the pin identifying the button
+    @param pinCallBack the function (of type k197ButtonCluster:buttonCallBack)
+   that will be called to handle button events
+    @return true if pin corresponds to one of the buttons in the cluster,
+   idnicating that the callback has been set or removed succesfully. False
+   otherwise.
+*/
 boolean k197ButtonCluster::setCallback(uint8_t pin,
                                        buttonCallBack pinCallBack) {
   for (unsigned int i = 0; i < sizeof(buttonPinIn) / sizeof(buttonPinIn[0]);
@@ -137,11 +189,26 @@ boolean k197ButtonCluster::setCallback(uint8_t pin,
   return false;
 }
 
+/*!
+    @brief  utility function to invoke a call back
+
+    This function is used only within K197PushButton.cpp
+
+    @param i the array index assigned to the push button
+    @param buttonEvent the button event passed to the call back
+*/
 inline void invoke_callback(int i, uint8_t buttonEvent) {
   if (callBack[i] != NULL)
     callBack[i](buttonPinIn[i], buttonEvent);
 }
 
+/*!
+    @brief  utility function to check for button events for a specific button
+
+    This function is used only within K197PushButton.cpp
+
+    @param i the array index assigned to the push button
+*/
 void k197ButtonCluster::check(
     uint8_t i) { // Check Index i (note: we assume the caller function checks
                  // that i is in range
@@ -150,8 +217,8 @@ void k197ButtonCluster::check(
   if (btnow != lastButtonState[i]) {
     // reset the debouncing timer
     lastDebounceTime[i] = now;
-    // Serial.print(F("pin ")); Serial.print(buttonPinIn[i]); Serial.print(F("
-    // now="));Serial.println(btnow);
+    // DebugOut.print(F("pin ")); DebugOut.print(buttonPinIn[i]);
+    // DebugOut.print(F(" now="));DebugOut.println(btnow);
   }
 
   if ((now - lastDebounceTime[i]) > debounceDelay) {
@@ -181,32 +248,47 @@ void k197ButtonCluster::check(
   lastButtonState[i] = btnow;
 }
 
+/*!
+    @brief  check for button events
+
+    This function should be called frequently, e.g. inside loop()
+
+    It will check if the button pin changed status, debounce and call the call
+   back for the relevant events
+*/
 void k197ButtonCluster::check(void) {
   for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
     check(i);
   }
 }
 
-void k197ButtonCluster::Serial_printEventName(uint8_t event) {
+/*!
+    @brief  print event name to DebugOut
+
+    Printing the event name can be useful during troubleshooting
+
+    @param event the event to print
+*/
+void k197ButtonCluster::DebugOut_printEventName(uint8_t event) {
   switch (event) {
   case eventClick:
-    Serial.print(F("eventClick"));
+    DebugOut.print(F("eventClick"));
     break;
   case eventDoubleClick:
-    Serial.print(F("eventDoubleClick"));
+    DebugOut.print(F("eventDoubleClick"));
     break;
   case eventLongPress:
-    Serial.print(F("eventLongPress"));
+    DebugOut.print(F("eventLongPress"));
     break;
   case eventPress:
-    Serial.print(F("eventPress"));
+    DebugOut.print(F("eventPress"));
     break;
   case eventRelease:
-    Serial.print(F("eventRelease"));
+    DebugOut.print(F("eventRelease"));
     break;
   default:
-    Serial.print(F("unknown ev. "));
-    Serial.print(event);
+    DebugOut.print(F("unknown ev. "));
+    DebugOut.print(event);
     break;
   }
 }
