@@ -68,7 +68,7 @@ public:
   byte getScreenMode() { return display_mode; };
 
   void updateDisplay();
-  void updateBtStatus(bool present);
+  void updateBtStatus(bool present, bool connected);
 
   void setContrast(uint8_t value);
 };

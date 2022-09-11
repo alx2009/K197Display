@@ -54,6 +54,8 @@ UImanager uiman(&k197dev);
 
 bool msg_printout = false;      ///< if true prints raw messages to DebugOut
 bool bt_module_present = false; ///< true if BT module is powered on
+bool bt_module_connected =
+    false; ///< true if connection detected via BT_STATE pin
 
 /*!
       @brief print the prompt to Serial
@@ -346,7 +348,12 @@ void loop() {
     if (n == 9)
       uiman.updateDisplay();
     // checkBluetoothModulePresence();
-    uiman.updateBtStatus(bt_module_present);
+    if (BT_STATE_VPORT.IN & BT_STATE_bm) { // BT_STATE == HIGH
+      bt_module_connected = false;         // no connection
+    } else {                               // BT_STATE == LOW ==> connected
+      bt_module_connected = true;
+    }
+    uiman.updateBtStatus(bt_module_present, bt_module_connected);
   }
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {

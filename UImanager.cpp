@@ -334,8 +334,9 @@ void UImanager::setContrast(uint8_t value) { u8g2.setContrast(value); }
       @brief display the BT module status (detected or not detected)
 
       @param present true if a BT module is detected, false otherwise
+      @param connected true if a BT connection is detected, false otherwise
 */
-void UImanager::updateBtStatus(bool present) {
+void UImanager::updateBtStatus(bool present, bool connected) {
   if (display_mode != displayNormal)
     return;
   unsigned int x = 95;
@@ -343,6 +344,12 @@ void UImanager::updateBtStatus(bool present) {
   u8g2.setFont(u8g2_font_5x7_mr);
   if (present) {
     u8g2.drawStr(x, y, "bt ");
+  } else {
+    u8g2.drawStr(x, y, "   ");
+  }
+  x += u8g2.getStrWidth("   ");
+  if (connected) {
+    u8g2.drawStr(x, y, "<->");
   } else {
     u8g2.drawStr(x, y, "   ");
   }

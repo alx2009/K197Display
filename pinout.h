@@ -38,9 +38,12 @@
 #define SERIAL_RX PIN_PA1 ///< pin corresponding to Serial RX
 #define OLED_DC PIN_PA2   ///< connected to OLED Data/command pin
 #define OLED_SS PIN_PA3   ///< connected to OLED Slave Select pin
+#define OLED_MOSI                                                              \
   PIN_PA4 ///< SPI0 MOSI, normally used via SPI but we need to use pinMode to
           ///< work around a bug in the micro...
-#define BT_STATE PIN_PA5 ///< Bluetooth module STAE, also SPI0 MISO
+#define BT_STATE                                                               \
+  PIN_PA5 ///< Bluetooth module STATE, also SPI0 MISO (since we do not need MISO
+          ///< for the OLED we use it for BT_STATE)
 //                PIN_PA6 is SPI0 SCK,  used via SPI for the OLED
 //                PIN_PA7 is the built i LED, already defined by dxCore as
 //                LED_BUILTIN
@@ -65,16 +68,16 @@
 #define UI_DB PIN_PF1  ///< connected to DB push button
 
 // VPORT definitions (when using direct port manipulation)
-#define SERIAL_VPORT VPORTA ///< VPORT for Serial pins
+#define SERIAL_VPORT VPORTA   ///< VPORT for Serial pins
 #define BT_STATE_VPORT VPORTA ///< VPORT for BT_STATE pin
-#define MB_STO_VPORT VPORTD ///< VPORT for MB_STO pin
-#define MB_RCL_VPORT VPORTD ///< VPORT for MB_RCL pin
-#define MB_REL_VPORT VPORTD ///< VPORT for MB_REL pin
-#define MB_DB_VPORT VPORTD  ///< VPORT for MB_DB pin
-#define UI_STO_VPORT VPORTD ///< VPORT for UI_STO pin
-#define UI_RCL_VPORT VPORTD ///< VPORT for UI_RCL pin
-#define UI_REL_VPORT VPORTF ///< VPORT for UI_REL pin
-#define UI_DB_VPORT VPORTF  ///< VPORT for UI_DB pin
+#define MB_STO_VPORT VPORTD   ///< VPORT for MB_STO pin
+#define MB_RCL_VPORT VPORTD   ///< VPORT for MB_RCL pin
+#define MB_REL_VPORT VPORTD   ///< VPORT for MB_REL pin
+#define MB_DB_VPORT VPORTD    ///< VPORT for MB_DB pin
+#define UI_STO_VPORT VPORTD   ///< VPORT for UI_STO pin
+#define UI_RCL_VPORT VPORTD   ///< VPORT for UI_RCL pin
+#define UI_REL_VPORT VPORTF   ///< VPORT for UI_REL pin
+#define UI_DB_VPORT VPORTF    ///< VPORT for UI_DB pin
 
 // UART definitions
 #define BT_USART USART0 ///< This is the UART connected to the bluetooth module
