@@ -34,6 +34,8 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 
 The SW has initial support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
 
+Functionality:
+-------------
 The current SW is implementing the same functions available in the 197/197A, with minor differences due to the different display technology used (plus any unintended differences - the Issues section is available for reporting them, as well as new feature requests). Additional functions:
 - At startup the module tries to detemine if Serial is connected. If it is, BT is displayed (assuming a Bluetooth module is connected)
 - Pin PA5 is monitored continuosly. When low, "<->" is displayed next to "BT" to indicate an active bluetooth connection
