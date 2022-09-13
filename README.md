@@ -1,4 +1,4 @@
-# K197Display (initial BETA release)
+# K197Display
 This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on dxCore (see references below) 
 
 DISCLAIMER: Please note that the purpose of this repository is educational. Any use of the information for any other purpose is under own responsibility.
@@ -32,7 +32,13 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 - PD1-PD4 connected to the pushbutton cluster on the front panel
 - PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
 
-The current SW is implementing the same functions available in the 197/197A, with minor differences due to the different display technology used (plus any unintended differences - the Issues section is available for reporting them, as well as new feature requests). 
+Tyhe SW has initial support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
+
+The current SW is implementing the same functions available in the 197/197A, with minor differences due to the different display technology used (plus any unintended differences - the Issues section is available for reporting them, as well as new feature requests). Additional functions:
+- At startup the module tries to detemine if Serial is connected. If it is, BT is displayed (assuming a Bluetooth module is connected)
+- if pin PA5 is low, "<->" is displayed next to "BT" to indicate that a bluetooth connection
+- some commands can be entered via Serial connection (press ? for a list)
+- holding the "REL" button for 0.8 s or more and then releasing it will show the debug output on the left half of the OLED screen. Hold again to go back to the normal display.
 
 Porting:
 -------
