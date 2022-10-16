@@ -35,6 +35,13 @@ but statistically we should print out something if there are recurring issues
 
 */
 /**************************************************************************/
+//TODO wish list:
+// Watchdog reset
+// Configuration menu (set contrast)
+// Datalogging to bluetooth
+// Non transparent push buttons/Thermocouple option
+// Display Max/Min
+// Autohold
 
 #include "K197device.h"
 K197device k197dev;
@@ -215,48 +222,61 @@ void myButtonCallback(uint8_t buttonPinIn, uint8_t buttonEvent) {
 }
 
 /*!
-      @brief check bluetoot module presence
+      @brief initial setup of Bluetooth module
 
-      Note: works but due to the delay to enter command mode interferes with
-   serial debugging Not recommended to be used!
+      @details this function should be called within setup(). It will (attempt) to detect the presence of the BT module and configure it if present
+
+      Note: Reliable detection requires the BT_POWER pin to be defined and connected to detect wether or not the module has power
+*/
+void setupBTModule() {
+#ifdef BT_POWER
+  // Check BT_POWER pin to understand if BT Power is on
+  pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF | PIN_INPUT_ENABLE);
+  if (digitalReadFast(BT_POWER)) {
+     bt_module_present = true;  
+  }
+#else //BT_POWER not defined
+  // We don't have a pin to sense the BT Power, so we infer its status in a different way
+  if (dxUtil.resetReasonHWReset() ||
+      (SERIAL_VPORT.IN &
+       SERIAL_RX_bm)) { // Serial autoreset ==> Serial is in use
+    bt_module_present = true;
+  }
+#endif //BT_POWER
+
+  if (bt_module_present) {
+    Serial.begin(115200);
+    DebugOut.useSerial(true);
+  } else {
+    pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
+    pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF | PIN_INPUT_ENABLE);
+  }
+  pinConfigure(BT_EN, PIN_DIR_OUTPUT | PIN_OUT_LOW);
+}
+
+/*!
+      @brief check bluetoot module presence and reconfigure accordingly
+
+      Note: has no effect unless BT_POWER pin is defined and connected to detect wether or not the Bt module has power
 */
 void checkBluetoothModulePresence() {
-  if (!bt_module_present)
-    return; // when the module is turned on the autoreset circuit takes care of
-            // detection
-  bool serlogbkp = DebugOut.useSerial();
-  DebugOut.useSerial(false);
-  Serial.flush(); // first we make sure to empty the queue   // TODO: use
-                  // Serial.availableForWrite() to avoid blocking
-  if (Serial.available())
-    return; // Then we need to be sure we have no data in the receive queue
-
-  // Ok, there is no activity currently on the serial port. We will enter
-  // command mode and see if the module is still there...
-  digitalWriteFast(BT_EN, HIGH);
-  delay(55);
-  Serial.print(F("AT\n\r"));
-  Serial.flush();
-  delay(40);
-  int nchar = 0;
-  while (Serial.available()) {
-    nchar++;
-    Serial.read();
-  }
-  digitalWriteFast(BT_EN, LOW);
-  if (nchar > 0) {
-    DebugOut.useSerial(serlogbkp);
-  } else { // BT Module was turned off
-    // DebugOut.useSerial(serlogbkp);
-    Serial.end();
-    BT_USART.CTRLB &= (~(USART_RXEN_bm |
+#ifdef  BT_POWER
+    bool bt_module_present_now = digitalReadFast(BT_POWER);
+    if (  bt_module_present == bt_module_present_now) return; //Nothing to do
+    bt_module_present = bt_module_present_now;
+    if (bt_module_present) { //Module was turned on after setup().
+       Serial.begin(115200); //Note: If this is the second time Serial.begin is called, a bug in old dxCore releases may hang the SW
+       DebugOut.useSerial(true);
+       DebugOut.println(F("BT turned on"));
+    } else { //Module was turned off
+       Serial.end();
+       BT_USART.CTRLB &= (~(USART_RXEN_bm |
                          USART_TXEN_bm)); // Disable RX and TX for good measure
-    pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
-    pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
-    bt_module_present = false;
-    DebugOut.println(F("BT turned off"));
-  }
-  return;
+       pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
+       pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
+       DebugOut.println(F("BT turned off"));
+    }
+#endif //BT_POWER
 }
 
 /*!
@@ -278,18 +298,7 @@ void setup() {
   DebugOut.begin();
 
   dxUtil.begin();
-
-  if (dxUtil.resetReasonHWReset() ||
-      (SERIAL_VPORT.IN &
-       SERIAL_RX_bm)) { // Serial autoreset ==> Serial is in use
-    bt_module_present = true;
-    Serial.begin(115200);
-    DebugOut.useSerial(true);
-  } else {
-    pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
-    pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF | PIN_INPUT_ENABLE);
-  }
-  pinConfigure(BT_EN, PIN_DIR_OUTPUT | PIN_OUT_LOW);
+  setupBTModule();
 
   // We acquire one value and discard it, this may be needed before we can have
   // a stable value
@@ -347,11 +356,15 @@ void loop() {
     }
     if (n == 9)
       uiman.updateDisplay();
-    // checkBluetoothModulePresence();
+#   ifdef BT_POWER    
+    checkBluetoothModulePresence();
+#   endif //BT_POWER
     if (BT_STATE_VPORT.IN & BT_STATE_bm) { // BT_STATE == HIGH
       bt_module_connected = false;         // no connection
-    } else {                               // BT_STATE == LOW ==> connected
+    } else if (bt_module_present) {   // BT_STATE == LOW ==> connected if BT module present                            
       bt_module_connected = true;
+    } else { //cannot be connected if BT module not present
+      bt_module_connected = false;
     }
     uiman.updateBtStatus(bt_module_present, bt_module_connected);
   }
