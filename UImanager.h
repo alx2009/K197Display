@@ -28,6 +28,17 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 
 /**************************************************************************/
 /*!
+    @brief  Simple enum to identify the screen mode being displayed
+*/
+/**************************************************************************/
+enum K197screenMode {
+   K197sc_normal   = 0x01,  ///< equivalent to original K197 
+   K197sc_mainMenu = 0x02,  ///< display main menu
+   K197sc_debug    = 0x03,  ///< display log window
+};
+
+/**************************************************************************/
+/*!
     @brief  Simple class to handle the display
 
     This class is responsible to handle the user interface displayed to the user
@@ -39,18 +50,11 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 */
 /**************************************************************************/
 class UImanager {
-public:
-  static const byte displayNormal =
-      0; ///< constant used to indicate the normal display layout
-  static const byte displayDebug =
-      1; ///< constamnt used to indicate a display layout including showing the
-         ///< debug output
-
 private:
   K197device *k197;
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
-  byte display_mode = displayNormal; // Keep track of how to display stuff...
+  K197screenMode screen_mode = K197sc_normal; // Keep track of how to display stuff...
 
   void updateDisplayNormal();
   void updateDisplaySplit();
@@ -58,14 +62,14 @@ private:
 public:
   UImanager(K197device *k197);
   void setup();
-  void setScreenMode(byte mode);
+  void setScreenMode(K197screenMode mode);
 
   /*!
     @brief  get the screen mode
    @return screen mode, it must be one of the displayXXX constants defined in
    class UImanager
 */
-  byte getScreenMode() { return display_mode; };
+  K197screenMode getScreenMode() { return screen_mode; };
 
   void updateDisplay();
   void updateBtStatus(bool present, bool connected);

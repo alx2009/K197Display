@@ -204,10 +204,10 @@ void myButtonCallback(uint8_t buttonPinIn, uint8_t buttonEvent) {
   case UI_REL:
     // DebugOut.print(F("REL"));
     if (buttonEvent == k197ButtonCluster::eventLongPress) {
-      if (uiman.getScreenMode() == UImanager::displayNormal) {
-        uiman.setScreenMode(UImanager::displayDebug);
+      if (uiman.getScreenMode() == K197sc_normal) {
+        uiman.setScreenMode(K197sc_debug);
       } else {
-        uiman.setScreenMode(UImanager::displayNormal);
+        uiman.setScreenMode(K197sc_normal);
       }
     }
     break;

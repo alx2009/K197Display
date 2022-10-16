@@ -140,7 +140,7 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
-  if (display_mode == displayNormal)
+  if (screen_mode == K197sc_normal)
     updateDisplayNormal();
   else
     updateDisplaySplit();
@@ -322,8 +322,8 @@ void UImanager::updateDisplayNormal() {
       @param mode can be displayNormal or displayDebug for normal and debug mode
    respectively
 */
-void UImanager::setScreenMode(byte mode) {
-  display_mode = mode;
+void UImanager::setScreenMode(K197screenMode mode) {
+  screen_mode = mode;
   u8g2.clearBuffer();
   u8g2.sendBuffer();
 }
@@ -342,7 +342,7 @@ void UImanager::setContrast(uint8_t value) { u8g2.setContrast(value); }
       @param connected true if a BT connection is detected, false otherwise
 */
 void UImanager::updateBtStatus(bool present, bool connected) {
-  if (display_mode != displayNormal)
+  if (screen_mode != K197sc_normal)
     return;
   unsigned int x = 95;
   unsigned int y = 0;
