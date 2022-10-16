@@ -56,7 +56,7 @@ unsigned long lastReleased[] = {0UL, 0UL, 0UL,
 // They are normal functions because we are using attachInterrupt (not the most
 // efficient way with dxCore, but it is the default and it works for now) The
 // interrupt handler will simulate the push of the button on the 197/197A main
-// board this is completely independent from the handling of the butto events in
+// board this is completely independent from the handling of the button events in
 // the rest of the sketch
 
 /*!
@@ -197,7 +197,7 @@ boolean k197ButtonCluster::setCallback(uint8_t pin,
     @param i the array index assigned to the push button
     @param buttonEvent the button event passed to the call back
 */
-inline void invoke_callback(int i, uint8_t buttonEvent) {
+inline void invoke_callback(int i, K197UIeventType buttonEvent) {
   if (callBack[i] != NULL)
     callBack[i](buttonPinIn[i], buttonEvent);
 }
@@ -269,7 +269,7 @@ void k197ButtonCluster::check(void) {
 
     @param event the event to print
 */
-void k197ButtonCluster::DebugOut_printEventName(uint8_t event) {
+void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
   switch (event) {
   case UIeventClick:
     DebugOut.print(F("eventClick"));

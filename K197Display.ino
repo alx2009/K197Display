@@ -192,7 +192,7 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void myButtonCallback(uint8_t buttonPinIn, uint8_t buttonEvent) {
+void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   // Serial.print("Btn ");
   switch (buttonPinIn) {
   case UI_STO:

@@ -40,7 +40,7 @@ public:
   k197ButtonCluster();
   typedef void (*buttonCallBack)(
       uint8_t buttonPinIn,
-      uint8_t buttonEvent); ///< define the type of the callback function
+      K197UIeventType buttonEvent); ///< define the type of the callback function
   void setup();
 
 protected:
@@ -61,7 +61,7 @@ public:
 
   void check(void);
 
-  static void DebugOut_printEventName(uint8_t event);
+  static void DebugOut_printEventName(K197UIeventType event);
 };
 
 #endif //__ABUTTON_H
