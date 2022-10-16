@@ -36,7 +36,6 @@ but statistically we should print out something if there are recurring issues
 */
 /**************************************************************************/
 //TODO wish list:
-// Watchdog reset
 // Configuration menu (set contrast)
 // Datalogging to bluetooth
 // Non transparent push buttons/Thermocouple option
@@ -265,7 +264,7 @@ void checkBluetoothModulePresence() {
     if (  bt_module_present == bt_module_present_now) return; //Nothing to do
     bt_module_present = bt_module_present_now;
     if (bt_module_present) { //Module was turned on after setup().
-       Serial.begin(115200); //Note: If this is the second time Serial.begin is called, a bug in old dxCore releases may hang the SW
+       Serial.begin(115200); //Note: If this is the second time Serial.begin is called, a bug in Serial may hang the SW, and cause a WDT reset
        DebugOut.useSerial(true);
        DebugOut.println(F("BT turned on"));
     } else { //Module was turned off
@@ -327,6 +326,10 @@ void setup() {
   } else {
     DebugOut.println(F("BT is off"));
   }
+
+  //Setup watchdog
+  _PROTECTED_WRITE(WDT.CTRLA, WDT_WINDOW_8CLK_gc | WDT_PERIOD_2KCLK_gc); // enable the WDT, 1s timeout, minimum window.
+
 }
 byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
                          ///< the voltmeter main board
@@ -354,8 +357,10 @@ void loop() {
       DebugOut.println(k197dev.getRawMessage());
       k197dev.debugPrint();
     }
-    if (n == 9)
+    if (n == 9) {
       uiman.updateDisplay();
+      __asm__ __volatile__("wdr" ::);
+    }
 #   ifdef BT_POWER    
     checkBluetoothModulePresence();
 #   endif //BT_POWER
