@@ -203,7 +203,7 @@ void myButtonCallback(uint8_t buttonPinIn, uint8_t buttonEvent) {
     break;
   case UI_REL:
     // DebugOut.print(F("REL"));
-    if (buttonEvent == k197ButtonCluster::eventLongPress) {
+    if (buttonEvent == UIeventLongPress) {
       if (uiman.getScreenMode() == K197sc_normal) {
         uiman.setScreenMode(K197sc_debug);
       } else {
@@ -328,7 +328,7 @@ void setup() {
   }
 
   //Setup watchdog
-  _PROTECTED_WRITE(WDT.CTRLA, WDT_WINDOW_8CLK_gc | WDT_PERIOD_2KCLK_gc); // enable the WDT, 1s timeout, minimum window.
+  _PROTECTED_WRITE(WDT.CTRLA, WDT_WINDOW_8CLK_gc | WDT_PERIOD_8KCLK_gc); // enable the WDT, 8s timeout, minimum window.
 
 }
 byte DMMReading[PACKET]; ///< buffer used to store the raw data received from

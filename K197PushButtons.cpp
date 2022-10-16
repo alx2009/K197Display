@@ -230,17 +230,17 @@ void k197ButtonCluster::check(
       buttonState[i] = btnow;
       // The following actions are taken at Button release
       if (btnow == BUTTON_IDLE_STATE) { // button was just released
-        invoke_callback(i, eventRelease);
+        invoke_callback(i, UIeventRelease);
         if ((now - startPressed[i]) > longPressTime) {
-          invoke_callback(i, eventLongPress);
+          invoke_callback(i, UIeventLongPress);
         } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
-          invoke_callback(i, eventDoubleClick);
+          invoke_callback(i, UIeventDoubleClick);
         } else {
-          invoke_callback(i, eventClick);
+          invoke_callback(i, UIeventClick);
         }
         lastReleased[i] = now;
       } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
-        invoke_callback(i, eventPress);
+        invoke_callback(i, UIeventPress);
         startPressed[i] = now;
       }
     }
@@ -271,19 +271,19 @@ void k197ButtonCluster::check(void) {
 */
 void k197ButtonCluster::DebugOut_printEventName(uint8_t event) {
   switch (event) {
-  case eventClick:
+  case UIeventClick:
     DebugOut.print(F("eventClick"));
     break;
-  case eventDoubleClick:
+  case UIeventDoubleClick:
     DebugOut.print(F("eventDoubleClick"));
     break;
-  case eventLongPress:
+  case UIeventLongPress:
     DebugOut.print(F("eventLongPress"));
     break;
-  case eventPress:
+  case UIeventPress:
     DebugOut.print(F("eventPress"));
     break;
-  case eventRelease:
+  case UIeventRelease:
     DebugOut.print(F("eventRelease"));
     break;
   default:

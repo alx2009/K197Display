@@ -28,6 +28,18 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 
 /**************************************************************************/
 /*!
+    @brief  Simple enum to identify UI events (e.g. pushbutton events)
+*/
+/**************************************************************************/
+enum K197UIeventsource {
+   K197key_REL   = 0x01,  ///< REL key (Alt. functions: down, select) 
+   K197key_DB   = 0x01,   ///< DB key  (Alt. functions: up,   mode)
+   K197key_STO   = 0x01,  ///< STO key (Alt. functions: cancel, decrease, left)
+   K197key_RCL   = 0x01,  ///< RCL key (Alt. functions: Ok, increase, right)
+};
+
+/**************************************************************************/
+/*!
     @brief  Simple enum to identify the screen mode being displayed
 */
 /**************************************************************************/
@@ -58,6 +70,8 @@ private:
 
   void updateDisplayNormal();
   void updateDisplaySplit();
+
+  bool handleUIEvent();
 
 public:
   UImanager(K197device *k197);

@@ -20,8 +20,7 @@
 #define __ABUTTON_H
 #include <Arduino.h>
 
-#define BUTTON_PRESSED_STATE LOW ///< logical level when pressed
-#define BUTTON_IDLE_STATE HIGH   ///< logical level when not pressed
+#include "UIevents.h"
 
 /**************************************************************************/
 /*!
@@ -57,14 +56,7 @@ protected:
       500L; ///< double click event when pressed within doubleClicktime ms from
             ///< a previous release
 
-public: // Define Button events, switches and callbacks
-  static const uint8_t eventClick = 0x01;       ///< detected after relase
-  static const uint8_t eventDoubleClick = 0x02; ///< detected after relase
-  static const uint8_t eventLongPress = 0x03;   ///< detected after relase
-  static const uint8_t eventPress = 0x11; ///< detected imediately when pressed
-  static const uint8_t eventRelease =
-      0x12; ///< detected imediately when released
-
+public: 
   boolean setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
 
   void check(void);
