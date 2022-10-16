@@ -371,6 +371,6 @@ void UImanager::updateBtStatus(bool present, bool connected) {
 
     @return true if the event has been completely handled, false otherwise
 */
-bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
-    return FALSE;
+bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    return false;
 }

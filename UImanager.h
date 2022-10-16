@@ -24,6 +24,8 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 
+#include "UIevents.h"
+
 extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 
 /**************************************************************************/
