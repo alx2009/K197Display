@@ -36,8 +36,10 @@
 // PORT A
 #define SERIAL_TX PIN_PA0 ///< pin corresponding to Serial TX
 #define SERIAL_RX PIN_PA1 ///< pin corresponding to Serial RX
-#define OLED_DC PIN_PA2   ///< connected to OLED Data/command pin
-#define OLED_SS PIN_PA3   ///< connected to OLED Slave Select pin
+// If the OLED is configured for 3Wire SPI PA2 is used to detect BT module, otherwise it is used as D/C pin for OLED
+#define BT_POWER PIN_PA2   ///< high when BT module has power
+//#define OLED_DC PIN_PA2   ///< OLED Data/command pin [4Wire SPI]
+#define OLED_SS PIN_PA3   ///< OLED Slave Select pin
 #define OLED_MOSI                                                              \
   PIN_PA4 ///< SPI0 MOSI, normally used via SPI but we need to use pinMode to
           ///< work around a bug in the micro...

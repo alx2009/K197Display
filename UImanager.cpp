@@ -55,11 +55,16 @@
 
    @return no return value
 */
-U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI
-u8g2(U8G2_R0, OLED_SS,
-     OLED_DC /*,reset_pin*/); ///< u8g2 object. See pinout.h for pin definition.
-                              ///< At the moment we do not use the RESET pin. It
-                              ///< does seem to work correctly without.
+// At the moment we do not use the RESET pin. It does seem to work correctly without.
+#ifdef OLED_DC //4Wire SPI
+   U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI
+   u8g2(U8G2_R0, OLED_SS,
+       OLED_DC /*,reset_pin*/); ///< u8g2 object. See pinout.h for pin definition.
+#else // 3Wire SPI
+   U8G2_SSD1322_NHD_256X64_F_3W_HW_SPI
+   u8g2(U8G2_R0, OLED_SS
+       /*,reset_pin*/); ///< u8g2 object. See pinout.h for pin definition.
+#endif
 
 #define U8LOG_WIDTH 28                            ///< Size of the log window
 #define U8LOG_HEIGHT 9                            ///< Height of the log window
