@@ -71,7 +71,7 @@ private:
   void updateDisplayNormal();
   void updateDisplaySplit();
 
-  bool handleUIEvent();
+  bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
 public:
   UImanager(K197device *k197);

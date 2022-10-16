@@ -360,3 +360,17 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   }
   u8g2.sendBuffer();
 }
+
+/*!
+    @brief  handle UI event
+
+    @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
+
+    @param eventSource identifies the source of the event (REL, DB, etc.)
+    @param eventType identifies the source of the event (REL, DB, etc.)
+
+    @return true if the event has been completely handled, false otherwise
+*/
+bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    return FALSE;
+}
