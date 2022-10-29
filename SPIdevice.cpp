@@ -186,7 +186,7 @@ byte SPIdevice::getNewData(byte *data) {
 */
 void SPIdevice::debugPrintData(byte *data, byte n) {
   for (int i = 0; i < n; i++) {
-    DebugOut.print("0x");
+    DebugOut.print(F("0x"));
     DebugOut.print(data[i], HEX);
     DebugOut.print(' ');
   }

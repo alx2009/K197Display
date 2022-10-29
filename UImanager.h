@@ -25,20 +25,9 @@
 #include <U8g2lib.h>
 
 #include "UIevents.h"
+#include "UImenu.h"
 
 extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
-
-/**************************************************************************/
-/*!
-    @brief  Simple enum to identify UI events (e.g. pushbutton events)
-*/
-/**************************************************************************/
-enum K197UIeventsource {
-   K197key_REL   = 0x01,  ///< REL key (Alt. functions: down, select) 
-   K197key_DB   = 0x01,   ///< DB key  (Alt. functions: up,   mode)
-   K197key_STO   = 0x01,  ///< STO key (Alt. functions: cancel, decrease, left)
-   K197key_RCL   = 0x01,  ///< RCL key (Alt. functions: Ok, increase, right)
-};
 
 /**************************************************************************/
 /*!
@@ -73,7 +62,7 @@ private:
   void updateDisplayNormal();
   void updateDisplaySplit();
 
-  bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  void setupMainMenu();
 
 public:
   UImanager(K197device *k197);
@@ -91,6 +80,8 @@ public:
   void updateBtStatus(bool present, bool connected);
 
   void setContrast(uint8_t value);
+
+  bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 };
 
 #endif // UIMANAGER_H__

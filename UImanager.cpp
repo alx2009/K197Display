@@ -94,6 +94,12 @@ void setup_draw(void) {
   u8g2.setFontPosTop();
   u8g2.setFontRefHeightExtendedText();
   u8g2.setFontDirection(0);
+
+  u8g2.setFont(u8g2_font_6x12_mr);  
+  DebugOut.print(F("Disp. H=")); DebugOut.print(u8g2.getDisplayHeight());
+  DebugOut.print(F(", font h=")); DebugOut.print(u8g2.getAscent()); 
+  DebugOut.print(F("/")); DebugOut.print(u8g2.getDescent());
+  DebugOut.print(F("/")); DebugOut.println(u8g2.getMaxCharHeight());
 }
 
 /*!
@@ -103,7 +109,7 @@ void setup_draw(void) {
 void UImanager::setup() {
   pinMode(OLED_MOSI, OUTPUT); // Needed to work around a bug in the micro or
                               // dxCore with certain swap options
-  boolean pmap =
+  bool pmap =
       SPI.swap(OLED_SPI_SWAP_OPTION); // See pinout.h for pin definition
   if (pmap) {
     // DebugOut.println(F("SPI pin mapping OK!"));
@@ -124,6 +130,8 @@ void UImanager::setup() {
   u8g2.clearBuffer();
   setup_draw();
   u8g2.sendBuffer();
+
+  setupMainMenu();
 }
 
 /*!
@@ -164,17 +172,17 @@ void UImanager::updateDisplaySplit() {
   else
     u8g2.print(F("    "));
   if (k197->isREL())
-    u8g2.print("REL ");
+    u8g2.print(F("REL "));
   else
-    u8g2.print("    ");
+    u8g2.print(F("    "));
   if (k197->isdB())
-    u8g2.print("dB ");
+    u8g2.print(F("dB "));
   else
-    u8g2.print("   ");
+    u8g2.print(F("   "));
   if (k197->isCal())
-    u8g2.print("Cal   ");
+    u8g2.print(F("Cal   "));
   else
-    u8g2.print("      ");
+    u8g2.print(F("      "));
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
@@ -193,21 +201,24 @@ void UImanager::updateDisplaySplit() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
   if (k197->isSTO())
-    u8g2.print("STO ");
+    u8g2.print(F("STO "));
   else
-    u8g2.print("    ");
+    u8g2.print(F("    "));
   if (k197->isRCL())
-    u8g2.print("RCL ");
+    u8g2.print(F("RCL "));
   else
-    u8g2.print("    ");
+    u8g2.print(F("    "));
   if (k197->isRMT())
-    u8g2.print("RMT   ");
+    u8g2.print(F("RMT   "));
   else
-    u8g2.print("      ");
+    u8g2.print(F("      "));
 
-  u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
-  u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
-
+  if (screen_mode == K197sc_debug) {
+      u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
+      u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
+  }  else {
+      UImainMenu.draw(&u8g2, 0, 10); 
+  }
   u8g2.sendBuffer();
 }
 
@@ -361,6 +372,23 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   u8g2.sendBuffer();
 }
 
+//TODO: documentation
+const char  additionalModes_txt[] PROGMEM = "Additional Modes";
+const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
+const char  ContrastSetting_txt[] PROGMEM = "Contrast";
+const char  closeMenu_txt[] PROGMEM = "Exit";
+const char  saveSettings_txt[] PROGMEM = "Save settings";
+const char  openLog_txt[] PROGMEM = "Show log";
+
+UIMenuButtonItem additionalModes(20, reinterpret_cast<const __FlashStringHelper *>(additionalModes_txt));
+UIMenuButtonItem bluetoothMenu(20, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
+UIMenuButtonItem ContrastSetting(20, reinterpret_cast<const __FlashStringHelper *>(ContrastSetting_txt));
+UIMenuButtonItem closeMenu(20, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
+UIMenuButtonItem saveSettings(20, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
+UIMenuButtonItem openLog(20, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
+
+UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &ContrastSetting, &closeMenu, &saveSettings, &openLog};
+
 /*!
     @brief  handle UI event
 
@@ -372,5 +400,23 @@ void UImanager::updateBtStatus(bool present, bool connected) {
     @return true if the event has been completely handled, false otherwise
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    if (screen_mode != K197sc_mainMenu) return false;
+    if (UImainMenu.handleUIEvent(eventSource, eventType) ) return true;
+    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
+    // If we are here we have a menu selection event
+    const UImenuItem *selectedItem = UImainMenu.getSelectedItem();
+    if (selectedItem == &closeMenu) {
+        setScreenMode(K197sc_normal);
+        return true;
+    }
+    if (selectedItem == &openLog) {
+        setScreenMode(K197sc_debug);
+        return true;      
+    }
     return false;
+}
+
+void UImanager::setupMainMenu() {
+  UImainMenu.items = mainMenuItems;
+  UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
 }

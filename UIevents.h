@@ -38,4 +38,16 @@ enum K197UIeventType {
   UIeventRelease = 0x12 ///< detected imediately when released
 };
 
+/**************************************************************************/
+/*!
+    @brief  Simple enum to identify UI event source
+*/
+/**************************************************************************/
+enum K197UIeventsource {
+   K197key_REL   = 0x01,  ///< REL key (Alt. functions: down, select) 
+   K197key_DB   = 0x02,   ///< DB key  (Alt. functions: up,   mode)
+   K197key_STO   = 0x03,  ///< STO key (Alt. functions: cancel, decrease, left)
+   K197key_RCL   = 0x04,  ///< RCL key (Alt. functions: Ok, increase, right)
+};
+
 #endif //UIEVENTS_H__

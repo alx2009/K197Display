@@ -145,7 +145,7 @@ float dxUtilClass::getTKelvin() {
   uint16_t adc_reading =
       analogRead(ADC_TEMPERATURE); // Note: temp. will be way out of range in
                                    // case analogRead reports an ADC error
-  // DebugOut.print("ADC="); DebugOut.println(adc_reading);
+  // DebugOut.print(F("ADC=")); DebugOut.println(adc_reading);
 
   // Using the datasheet recommended method with precision 1/4th Kelvin
   uint16_t sigrow_offset =

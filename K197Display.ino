@@ -42,6 +42,9 @@ but statistically we should print out something if there are recurring issues
 // Display Max/Min
 // Autohold
 
+//Bugs
+// dB indicator not visible in split mode
+
 #include "K197device.h"
 K197device k197dev;
 
@@ -81,7 +84,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
   Serial.println(F(" swr  ==> triger software reset"));
   Serial.println(F(" jmp0 ==> jump to 0 (dirty reset)"));
   Serial.println(F(" volt ==> check voltages & temperature"));
-  Serial.println(F(" msg ==> toggle printoput of data to/from main board"));
+  Serial.println(F(" msg ==> toggle printout of data to/from main board"));
   Serial.println(F(" contrast n ==> set display contrast [0-255]"));
 
   printPrompt();
@@ -95,7 +98,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 
       @param buf null terminated char array with the invalid command
 */
-void printError(char *buf) { // Here we want to use Serial, rather than DebugOut
+void printError(const char *buf) { // Here we want to use Serial, rather than DebugOut
   Serial.print(F("Invalid command: "));
   Serial.println(buf);
   printHelp();
@@ -140,12 +143,12 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     return;
   }
   // Check help
-  if (strcasecmp("?", buf) == 0) {
+  if (strcasecmp_P(buf, PSTR("?")) == 0) {
     printHelp();
     return;
   }
 
-  if (strcasecmp("wdt", buf) == 0) {
+  if (strcasecmp_P(buf, PSTR("wdt")) == 0) {
     Serial.println(F("Testing watchdog reset"));
     Serial.flush();
     _PROTECTED_WRITE(WDT.CTRLA,
@@ -154,28 +157,28 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
                                               // timeout, minimum window.
     while (1)
       __asm__ __volatile__("wdr" ::);
-  } else if ((strcasecmp("swr", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
     Serial.println(F("Testing SW reset"));
     Serial.flush();
     _PROTECTED_WRITE(RSTCTRL.SWRR, 1);
-  } else if ((strcasecmp("jmp0", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("jmp0")) == 0)) {
     Serial.println(F("Testing dirty reset"));
     Serial.flush();
     asm volatile("jmp 0");
-  } else if ((strcasecmp("volt", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("volt")) == 0)) {
     // Serial.println(F("Check voltages")); Serial.flush();
     dxUtil.checkVoltages(false);
     DebugOut.print(F(", "));
     dxUtil.checkTemperature();
-  } else if ((strcasecmp("msg", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("msg")) == 0)) {
     // Serial.println(F("MSG printout toggle")); Serial.flush();
     if (msg_printout)
       msg_printout = false;
     else
       msg_printout = true;
-  } else if ((strcasecmp("contrast", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
     cmdContrast();
-  } else if ((strcasecmp(" ", buf) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
     printError(buf);
@@ -185,39 +188,124 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 k197ButtonCluster pushbuttons; ///< this object is used to interact with the
                                ///< push-button cluster
 
+K197UIeventsource pin2EventSource(uint8_t buttonPin) {
+  if (buttonPin==UI_STO) return K197key_STO;
+  else if (buttonPin==UI_RCL) return K197key_RCL;
+  else if (buttonPin==UI_REL) return K197key_REL;
+  else return K197key_DB;
+}
+
+#define K197_MB_CLICK_TIME 75 ///< how much a click should last when sent to the K197
+
+/*!
+      @brief Callback for push button events in split screen mode
+
+      @details this call back should be invoked while in split screen mode, when the events must be processed by the UI instead of being sent to the voltmeter
+
+      @param buttonPinIn pin identifying the UI button
+      @param buttonEvent one of the eventXXX constants define in class
+   k197ButtonCluster
+*/
+void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+  K197UIeventsource evsource = pin2EventSource(buttonPinIn);
+  //DebugOut.print(F("*Btn "));
+  if (uiman.handleUIEvent(evsource, buttonEvent)) {
+       //DebugOut.print(F("Btn handled by UI"));
+       return;
+  }
+  switch (buttonPinIn) {
+  case UI_STO:
+    //DebugOut.print(F("STO"));
+    break;
+  case UI_RCL:
+    //DebugOut.print(F("RCL"));
+    break;
+  case UI_REL:
+    //DebugOut.print(F("REL"));
+    if (buttonEvent == UIeventLongPress) {
+        uiman.setScreenMode(K197sc_normal);
+    }
+    break;
+  case UI_DB:
+    //DebugOut.print(F("DB"));
+    break;
+  }
+  //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+  //DebugOut.println();
+}
+
+/*!
+      @brief Callback for push button events in normal screen mode
+
+      @details this call back should be invoked in split screen mode.
+      Most events will be forward to the voltmenters, except those that change the screen mode or add new features
+
+      @param buttonPinIn pin identifying the UI button
+      @param buttonEvent one of the eventXXX constants define in class
+   k197ButtonCluster
+*/
+void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+  //DebugOut.print(F("Btn "));
+  bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
+  switch (buttonPinIn) {
+  case UI_STO:
+    //DebugOut.print(F("STO"));
+    if ( handleClicks && (buttonEvent==UIeventPress) ) {
+        pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
+        pinConfigure(MB_STO, PIN_DIR_INPUT | PIN_OUT_LOW);
+    }
+    break;
+  case UI_RCL:
+    //DebugOut.print(F("RCL"));
+    if ( handleClicks && (buttonEvent==UIeventPress) ) {
+        pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
+        pinConfigure(MB_RCL, PIN_DIR_INPUT | PIN_OUT_LOW);
+    }
+    break;
+  case UI_REL:
+    //DebugOut.print(F("REL"));
+    if ( handleClicks && (buttonEvent==UIeventClick) ) {
+        pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+        delay(K197_MB_CLICK_TIME); //TODO: implement differently in order to remove delay()
+        pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
+    } else if (buttonEvent == UIeventLongPress) {
+        if (uiman.getScreenMode() == K197sc_normal) {
+            uiman.setScreenMode(K197sc_mainMenu);
+            //uiman.setScreenMode(K197sc_debug);
+      } else {
+            uiman.setScreenMode(K197sc_normal);
+      }
+    }
+    break;
+  case UI_DB:
+    //DebugOut.print(F("DB"));
+    if ( handleClicks && (buttonEvent==UIeventPress) ) {
+        pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
+        pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
+    }
+    break;
+  }
+  //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+  //DebugOut.println();
+}
+
 /*!
       @brief Callback for push button events
+
+      @details this function should be set as call back for all push buttons
 
       @param buttonPinIn pin identifying the UI button
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
 void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
-  // Serial.print("Btn ");
-  switch (buttonPinIn) {
-  case UI_STO:
-    // DebugOut.print(F("STO"));
-    break;
-  case UI_RCL:
-    // DebugOut.print(F("RCL"));
-    break;
-  case UI_REL:
-    // DebugOut.print(F("REL"));
-    if (buttonEvent == UIeventLongPress) {
-      if (uiman.getScreenMode() == K197sc_normal) {
-        uiman.setScreenMode(K197sc_debug);
-      } else {
-        uiman.setScreenMode(K197sc_normal);
-      }
-    }
-    break;
-  case UI_DB:
-    // DebugOut.print(F("DB"));
-    break;
-  }
-  // DebugOut.print(", PIN="); DebugOut.print(buttonPinIn); DebugOut.print(",
-  // "); k197ButtonCluster::DebugOut_printEventName(buttonEvent);
-  // DebugOut.println();
+  if (uiman.getScreenMode() == K197sc_normal ) normalScreenCallBack(buttonPinIn, buttonEvent);
+  else splitScreenCallBack(buttonPinIn, buttonEvent);
 }
 
 /*!
@@ -327,6 +415,9 @@ void setup() {
     DebugOut.println(F("BT is off"));
   }
 
+  pushbuttons.setTransparentMode(false);
+  delay(100);
+  
   //Setup watchdog
   _PROTECTED_WRITE(WDT.CTRLA, WDT_WINDOW_8CLK_gc | WDT_PERIOD_8KCLK_gc); // enable the WDT, 8s timeout, minimum window.
 
@@ -353,7 +444,7 @@ void loop() {
       DebugOut.print(F(": "));
       k197dev.debugPrintData(DMMReading, n);
       DebugOut.println();
-      DebugOut.print("raw: ");
+      DebugOut.print(F("raw: "));
       DebugOut.println(k197dev.getRawMessage());
       k197dev.debugPrint();
     }

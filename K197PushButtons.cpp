@@ -147,6 +147,11 @@ void k197ButtonCluster::setup() {
                         PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
+  if (transparentMode) attachInterrupts();
+}
+
+void k197ButtonCluster::attachInterrupts() {
+  DebugOut.println(F("Attach Interrupts"));
   attachInterrupt(
       digitalPinToInterrupt(UI_STO), UI_STO_changing,
       CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
@@ -165,6 +170,32 @@ void k197ButtonCluster::setup() {
   UI_DB_changing();
 }
 
+void k197ButtonCluster::detachInterrupts() {
+  DebugOut.println(F("Detach Interrupts"));
+  detachInterrupt(digitalPinToInterrupt(UI_DB));
+  detachInterrupt(digitalPinToInterrupt(UI_REL));
+  detachInterrupt(digitalPinToInterrupt(UI_RCL));
+  detachInterrupt(digitalPinToInterrupt(UI_STO));
+
+  setup();
+
+  for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
+      unsigned long now = millis();
+      int btnow = digitalRead(buttonPinIn[i]);
+      //DebugOut.print(F("Btn. ")); DebugOut.print(i); DebugOut.print(F(", Pin ")); DebugOut.print(buttonPinIn[i]); DebugOut.print(F("=")); DebugOut.println(btnow);
+      lastButtonState[i] = btnow;
+      buttonState[i] = btnow;
+      lastDebounceTime[i] = now;
+  }
+}
+
+void k197ButtonCluster::setTransparentMode(bool newMode) {
+  if (newMode==transparentMode) return;  //Nothing to do
+  transparentMode=newMode;
+  if (newMode) attachInterrupts();
+  else detachInterrupts();
+}
+
 /*!
     @brief  set a call back for a push button in the cluster
 
@@ -177,7 +208,7 @@ void k197ButtonCluster::setup() {
    idnicating that the callback has been set or removed succesfully. False
    otherwise.
 */
-boolean k197ButtonCluster::setCallback(uint8_t pin,
+bool k197ButtonCluster::setCallback(uint8_t pin,
                                        buttonCallBack pinCallBack) {
   for (unsigned int i = 0; i < sizeof(buttonPinIn) / sizeof(buttonPinIn[0]);
        i++) {

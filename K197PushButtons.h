@@ -36,32 +36,38 @@
 */
 /**************************************************************************/
 class k197ButtonCluster {
-public:
-  k197ButtonCluster();
-  typedef void (*buttonCallBack)(
-      uint8_t buttonPinIn,
-      K197UIeventType buttonEvent); ///< define the type of the callback function
-  void setup();
+  public:
+    k197ButtonCluster();
+    typedef void (*buttonCallBack)(
+        uint8_t buttonPinIn,
+        K197UIeventType buttonEvent); ///< define the type of the callback function
+    void setup();
 
-protected:
-  void check(uint8_t i);
-  static const unsigned long debounceDelay =
-      50; ///< the debounce time; decrease if the button is not responsive
-          ///< enough, increase in case yoyu experience unintended double
-          ///< presses
-  static const unsigned long longPressTime =
-      800L; ///< long press event will be generated when pressed more than
-            ///< longPressTime ms
-  static const unsigned long doubleClicktime =
-      500L; ///< double click event when pressed within doubleClicktime ms from
-            ///< a previous release
+  protected:
+    void check(uint8_t i);
+    static const unsigned long debounceDelay =
+        50; ///< the debounce time; decrease if the button is not responsive
+            ///< enough, increase in case yoyu experience unintended double
+            ///< presses
+    static const unsigned long longPressTime =
+        800L; ///< long press event will be generated when pressed more than
+              ///< longPressTime ms
+    static const unsigned long doubleClicktime =
+        500L; ///< double click event when pressed within doubleClicktime ms from
+              ///< a previous release
+    bool transparentMode = true;
+    void attachInterrupts();
+    void detachInterrupts();
 
 public: 
-  boolean setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
+  bool setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
 
   void check(void);
 
   static void DebugOut_printEventName(K197UIeventType event);
+
+  bool isTransparentMode() {return transparentMode;};
+  void setTransparentMode(bool newMode);
 };
 
 #endif //__ABUTTON_H

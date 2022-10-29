@@ -45,10 +45,9 @@ size_t debugUtil::write(uint8_t c) {
 }
 
 /*!
-        @brief  write a zero terminated string to the all the enabled debug
-   streams
+        @brief  write a zero terminated string to all the enabled debug streams
 
-        Note: it is ublikely the return value is used: if there is an eror
+        @details it is unlikely the return value is used: if there is an error
    writing to the debug stream, there is usually very little that can be done by
    the caller. But the Print interface requires us to provide a return value and
    we try our best here
