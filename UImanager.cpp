@@ -248,76 +248,84 @@ void UImanager::updateDisplayNormal() {
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   const unsigned int xunit = 229;
   const unsigned int yunit = 20;
-  u8g2.drawUTF8(xunit, yunit, k197->getUnit());
+  u8g2.setCursor(xunit, yunit);
+  u8g2.print(k197->getUnit());
 
   // set the AC/DC indicator
   // u8g2.setFont(u8g2_font_10x20_mf);
   u8g2.setFont(u8g2_font_9x18_mr);
   const unsigned int xac = xraw + 3;
   const unsigned int yac = 40;
+  u8g2.setCursor(xac, yac);
   if (k197->isAC())
-    u8g2.drawStr(xac, yac, "AC");
+    u8g2.print(F("AC"));
   else
-    u8g2.drawStr(xac, yac, "  ");
+    u8g2.print(F("  "));
 
   // set the other announciators
   // u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setFont(u8g2_font_8x13_mr);
   unsigned int x = 0;
   unsigned int y = 5;
-  const char *AUTO = "AUTO";
+  u8g2.setCursor(x, y);
   if (k197->isAuto())
-    u8g2.drawStr(x, y, AUTO);
+    u8g2.print(F("AUTO"));
   else
-    u8g2.drawStr(x, y, "    ");
-  x += u8g2.getStrWidth(AUTO);
+    u8g2.print(F("    "));
+  x = u8g2.tx;
   x += u8g2.getMaxCharWidth() * 2;
   u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setCursor(x, y);
   if (k197->isBAT())
-    u8g2.drawStr(x, y, "BAT");
+    u8g2.print(F("BAT"));
   else
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
 
   u8g2.setFont(u8g2_font_8x13_mr);
   y += u8g2.getMaxCharHeight();
   x = 0;
-  const char *REL = "REL";
+  u8g2.setCursor(x, y);
   if (k197->isREL())
-    u8g2.drawStr(x, y, REL);
+    u8g2.print(F("REL"));
   else
-    u8g2.drawStr(x, y, "   ");
-  x += u8g2.getStrWidth(REL);
+    u8g2.print(F("   "));
+  x = u8g2.tx;
   x += (u8g2.getMaxCharWidth() / 2);
+  u8g2.setCursor(x, y);
   if (k197->isdB())
-    u8g2.drawStr(x, y, "dB");
+    u8g2.print(F("dB"));
   else
-    u8g2.drawStr(x, y, "  ");
+    u8g2.print(F("  "));
 
   y += u8g2.getMaxCharHeight();
   x = 0;
+  u8g2.setCursor(x, y);
   if (k197->isSTO())
-    u8g2.drawStr(x, y, "STO");
+    u8g2.print(F("STO"));
   else
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
 
   y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
   if (k197->isRCL())
-    u8g2.drawStr(x, y, "RCL");
+    u8g2.print(F("RCL"));
   else
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
 
   x = 229;
   y = 0;
+  u8g2.setCursor(x, y);
   if (k197->isCal())
-    u8g2.drawStr(x, y, "Cal");
+    u8g2.print(F("Cal"));
   else
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
 
   y += u8g2.getMaxCharHeight() * 3;
+  u8g2.setCursor(x, y);
   if (k197->isRMT())
-    u8g2.drawStr(x, y, "RMT");
+    u8g2.print(F("RMT"));
   else
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
 
   u8g2.sendBuffer();
 }
@@ -357,17 +365,19 @@ void UImanager::updateBtStatus(bool present, bool connected) {
     return;
   unsigned int x = 95;
   unsigned int y = 0;
+  u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (present) {
-    u8g2.drawStr(x, y, "bt ");
+    u8g2.print(F("bt "));
   } else {
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
   }
   x += u8g2.getStrWidth("   ");
+  u8g2.setCursor(x, y);  
   if (connected) {
-    u8g2.drawStr(x, y, "<->");
+    u8g2.print(F("<->"));
   } else {
-    u8g2.drawStr(x, y, "   ");
+    u8g2.print(F("   "));
   }
   u8g2.sendBuffer();
 }

@@ -82,6 +82,9 @@ public:
   void setContrast(uint8_t value);
 
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+
+  //TODO: document and implement via settings menu
+  bool isExtraModeEnabled() {return true; };
 };
 
 #endif // UIMANAGER_H__

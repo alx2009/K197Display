@@ -25,6 +25,8 @@
 #include <stdlib.h> // atof()
 #include <string.h> // strstr()
 
+#include "dxUtil.h"
+
 #include "debugUtil.h"
 
 // Lookup table to convert from segments to char
@@ -182,7 +184,48 @@ byte K197device::getNewReading(byte *data) {
     }
     msg_value = 0.0;
   }
+  if (isTKModeActive() && msg_is_num) {
+      tkConvertV2C();  
+  }
   return n;
+}
+
+/*!
+    @brief  convert a Voltage reading to a Temperature reading in Celsius
+    @details Assumes the current value is V or mV coming from a K type thermocouple. Cold junction compensation uses the AVR internal temperature sensor and no linear compensation. The result of the conversion replaces the current measurement result
+*/
+void K197device::tkConvertV2C() {
+    if (isOvrange() || (!isTKModeActive()) ) return;
+    float tcold = dxUtil.getTCelsius();
+    float t = msg_value*24.2271538 + tcold; // msg_value = mV
+    if (t>2200.0) { // Way more than needed...
+         setOverrange();
+         return;
+    }
+    msg_value=t;
+    dtostrf(t, K197_MSG_SIZE-1, 2, message);
+    int j=0;
+    for (int i=0; i<K197_MSG_SIZE; i++) {
+        if(message[i]!='.') {
+            raw_msg[j] =  message[i];
+            j++;       
+        }
+        if (j>=K197_RAW_MSG_SIZE)
+           break;
+    }
+    raw_msg[K197_RAW_MSG_SIZE-1]=0;
+    raw_dp = 0x20;
+}
+
+/*!
+    @brief  set the displayed message to Overrange
+*/
+void K197device::setOverrange() {
+    msg_is_ovrange = true;
+    raw_msg[0] = message[0] = '0';
+    raw_msg[1] = message[1] = 'L';
+    raw_msg[2] = message[2] = 0;
+    
 }
 
 /*!
@@ -190,28 +233,30 @@ byte K197device::getNewReading(byte *data) {
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
-const char *K197device::getUnit() { // Note: includes UTF-8 characters
+const __FlashStringHelper *K197device::getUnit() { // Note: includes UTF-8 characters
   if (isV()) {
-    if (ismV())
-      return "mV";
+    if (tkMode && ismV())
+      return F("°C");
+    else if (ismV())
+      return F("mV");
     else
-      return " V";
+      return F(" V");
   } else if (isOmega()) {
     if (isM())
-      return "MΩ";
+      return F("MΩ");
     else if (isk())
-      return "kΩ";
+      return F("kΩ");
     else
-      return " Ω";
+      return F(" Ω");
   } else if (isA()) {
     if (ismicro())
-      return "µA";
+      return F("µA");
     else if (ismA())
-      return "mA";
+      return F("mA");
     else
-      return " A";
+      return F(" A");
   } else {
-    return "  ";
+    return F("  ");
   }
 }
 

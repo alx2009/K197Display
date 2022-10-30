@@ -74,6 +74,8 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
+  bool tkMode=false; ///< show T instead of V (K type thermocouple)     
+  
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
                                    ///< term. char array)
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
@@ -108,6 +110,11 @@ private:
       return true;
     return false;
   };
+
+  float tcold=0.0; ///< temperature used for cold junction compensation
+
+  void setOverrange();
+  void tkConvertV2C();  
 
 public:
   /*!
@@ -160,7 +167,7 @@ public:
   */
   bool isDecPointOn(byte char_n) { return bitRead(raw_dp, char_n); };
 
-  const char *getUnit(); // Note: includes UTF-8 characters
+  const __FlashStringHelper *getUnit(); // Note: includes UTF-8 characters
 
   /*!
       @brief  check if overange is detected
@@ -288,6 +295,38 @@ public:
       @return returns true if on, false otherwise
   */
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
+
+  /*!
+      @brief  set Thermocuple mode
+      @return returns true if on, false otherwise
+  */
+  void setTKMode(bool mode) {
+        tkMode = mode;
+  }
+
+  /*!
+      @brief  get Thermocuple mode 
+      @return returns true when K Thermocouple mode is enabled
+  */
+  bool getTKMode() {
+        return tkMode;
+  }
+
+  /*!
+      @brief  check if the Thermocuple mode is active now
+      @return returns true when K Thermocouple mode is enabled and active,
+  */
+  bool isTKModeActive() {
+        return isV() && ismV() && tkMode;
+  }
+
+  /*!
+      @brief  returns the temperature used for cold junction compensation 
+      @return temperature in celsius
+  */
+  float getTColdJunction() {
+        return tcold;
+  }
 };
 
 #endif // K197_DEVICE_H

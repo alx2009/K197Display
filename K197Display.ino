@@ -283,6 +283,14 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   case UI_DB:
     //DebugOut.print(F("DB"));
     if ( handleClicks && (buttonEvent==UIeventPress) ) {
+        if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV()) {
+           if (!k197dev.getTKMode()) { // TK mode is not yet enabled
+              k197dev.setTKMode(true); // Activate TK mode
+              break;           // break so we do not activate the Db mode
+           } else {
+              k197dev.setTKMode(false); // No break so we also activate dB mode
+           }
+        }
         pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
         pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
