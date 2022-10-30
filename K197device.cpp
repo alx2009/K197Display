@@ -196,7 +196,7 @@ byte K197device::getNewReading(byte *data) {
 */
 void K197device::tkConvertV2C() {
     if (isOvrange() || (!isTKModeActive()) ) return;
-    float tcold = dxUtil.getTCelsius();
+    tcold = dxUtil.getTCelsius();
     float t = msg_value*24.2271538 + tcold; // msg_value = mV
     if (t>2200.0) { // Way more than needed...
          setOverrange();

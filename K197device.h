@@ -325,7 +325,7 @@ public:
       @return temperature in celsius
   */
   float getTColdJunction() {
-        return tcold;
+        return abs(tcold)<999.99 ? tcold : 999.99; // Keep it in the display range just to be on the safe side
   }
 };
 

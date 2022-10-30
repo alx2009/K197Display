@@ -327,6 +327,16 @@ void UImanager::updateDisplayNormal() {
   else
     u8g2.print(F("   "));
 
+  if (k197->isTKModeActive()) { // Display local temperature
+      char buf[8];
+      dtostrf(k197->getTColdJunction(), K197_MSG_SIZE-1, 2, buf);
+      unsigned int x = 140;
+      unsigned int y = 2;
+      u8g2.setCursor(x, y);
+      u8g2.setFont(u8g2_font_5x7_mr);
+      u8g2.print(buf); u8g2.print(k197->getUnit());
+  }
+
   u8g2.sendBuffer();
 }
 
@@ -364,7 +374,7 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   if (screen_mode != K197sc_normal)
     return;
   unsigned int x = 95;
-  unsigned int y = 0;
+  unsigned int y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (present) {
