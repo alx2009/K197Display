@@ -358,13 +358,6 @@ void UImanager::setScreenMode(K197screenMode mode) {
 }
 
 /*!
-      @brief set the display contrast
-
-      @param value contrast value (0 to 255)
-*/
-void UImanager::setContrast(uint8_t value) { u8g2.setContrast(value); }
-
-/*!
       @brief display the BT module status (detected or not detected)
 
       @param present true if a BT module is detected, false otherwise
@@ -393,21 +386,21 @@ void UImanager::updateBtStatus(bool present, bool connected) {
 }
 
 //TODO: documentation
-const char  additionalModes_txt[] PROGMEM = "Additional Modes";
+const char  extraModes_txt[] PROGMEM = "Extra Modes";
 const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
-const char  ContrastSetting_txt[] PROGMEM = "Contrast";
+const char  contrastCtrl_txt[] PROGMEM = "Contrast";
 const char  closeMenu_txt[] PROGMEM = "Exit";
 const char  saveSettings_txt[] PROGMEM = "Save settings";
 const char  openLog_txt[] PROGMEM = "Show log";
 
-UIMenuButtonItem additionalModes(20, reinterpret_cast<const __FlashStringHelper *>(additionalModes_txt));
+MenuInputBool additionalModes(20, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
 UIMenuButtonItem bluetoothMenu(20, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
-UIMenuButtonItem ContrastSetting(20, reinterpret_cast<const __FlashStringHelper *>(ContrastSetting_txt));
+MenuInputBool contrastCtrl(20, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
 UIMenuButtonItem closeMenu(20, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
 UIMenuButtonItem saveSettings(20, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
 UIMenuButtonItem openLog(20, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
-UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &ContrastSetting, &closeMenu, &saveSettings, &openLog};
+UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &openLog};
 
 /*!
     @brief  handle UI event
@@ -437,6 +430,19 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 }
 
 void UImanager::setupMainMenu() {
+  additionalModes.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
 }
+
+/*!
+      @brief set the display contrast
+
+      @param value contrast value (0 to 255)
+*/
+void UImanager::setContrast(uint8_t value) { 
+  u8g2.setContrast(value);
+  contrastCtrl.setValue(value);  
+}
+
+bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };

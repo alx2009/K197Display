@@ -84,7 +84,7 @@ public:
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
   //TODO: document and implement via settings menu
-  bool isExtraModeEnabled() {return true; };
+  bool isExtraModeEnabled();
 };
 
 #endif // UIMANAGER_H__

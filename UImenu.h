@@ -33,8 +33,13 @@ class UImanager;
 class UImenuItem {
    protected:
       friend class UIMenu;
-   public:
       u8g2_uint_t height;
+   public:
+#     pragma GCC diagnostic push
+#     pragma GCC diagnostic ignored "-Wunused-parameter"  // A derived class may eturn a different valuse depending on being selected
+      virtual u8g2_uint_t getHeight(bool selected=true) {return height;}; 
+#     pragma GCC diagnostic pop
+      
       UImenuItem(u8g2_uint_t height) {this->height = height;};
       virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
@@ -70,8 +75,24 @@ class UImenu {
       const UImenuItem *getSelectedItem() {return items[selectedItem];};
 };
 
+class MenuInputBool : public UIMenuButtonItem {
+   protected:
+      static const u8g2_uint_t checkbox_size = 10;
+      static const u8g2_uint_t checkbox_margin = 5;
+   
+      bool value = false;
+
+   public:
+      MenuInputBool(u8g2_uint_t height, const __FlashStringHelper *text) : UIMenuButtonItem(height, text) {};
+      void setValue(bool newValue) {value = newValue;};
+      bool getValue() {return value;};
+
+      virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
+      virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+};
+
 extern UImenu
-    UImainMenu; ///< this is the predefined oubject that is used with pribnt(),
+    UImainMenu; ///< this is the predefined oubject that is used with print(),
                 ///< etc. (similar to how Serial is used for debug output)
 
 

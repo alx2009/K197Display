@@ -52,6 +52,9 @@ class k197ButtonCluster {
     static const unsigned long longPressTime =
         800L; ///< long press event will be generated when pressed more than
               ///< longPressTime ms
+    static const unsigned long holdTime =
+        200L; ///< long press event will be generated when pressed more than
+              ///< longPressTime ms
     static const unsigned long doubleClicktime =
         500L; ///< double click event when pressed within doubleClicktime ms from
               ///< a previous release

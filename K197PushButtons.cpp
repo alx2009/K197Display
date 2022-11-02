@@ -263,7 +263,7 @@ void k197ButtonCluster::check(
       if (btnow == BUTTON_IDLE_STATE) { // button was just released
         invoke_callback(i, UIeventRelease);
         if ((now - startPressed[i]) > longPressTime) {
-          invoke_callback(i, UIeventLongPress);
+          invoke_callback(i, UIeventLongClick);
         } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
           invoke_callback(i, UIeventDoubleClick);
         } else {
@@ -308,7 +308,7 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
   case UIeventDoubleClick:
     DebugOut.print(F("eventDoubleClick"));
     break;
-  case UIeventLongPress:
+  case UIeventLongClick:
     DebugOut.print(F("eventLongPress"));
     break;
   case UIeventPress:

@@ -34,10 +34,13 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, b
     u8g2->drawFrame(x+2, y+2, w-2, height-2);
   }
 }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 bool UImenuItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   return false;
 }
+#pragma GCC diagnostic pop
+
 
 void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
   UImenuItem::draw(u8g2, x, y, w, selected);
@@ -47,9 +50,12 @@ void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_
   u8g2->print( reinterpret_cast<const __FlashStringHelper *>(text) );
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 bool UIMenuButtonItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   return false;
 }
+#pragma GCC diagnostic pop
 
 void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->setFont(u8g2_font_6x12_mr);
@@ -62,7 +68,7 @@ void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->setDrawColor(1);
     for (int i=firstVisibleItem; i<num_items; i++) {
         items[i]->draw(u8g2, x, y, width,  i==selectedItem ? true : false);
-        y+=items[i]->height;
+        y+=items[i]->getHeight(i==selectedItem ? true : false);
         if (y>ymax) break;
     }
     u8g2->setFontMode(0);
@@ -76,7 +82,7 @@ bool UImenu::selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
     if (selectedItem < firstVisibleItem) return false;
     if (selectedItem==firstVisibleItem) return true;
     for (int i=firstVisibleItem; i<num_items; i++) {
-        y0+=items[i]->height;
+        y0+=items[i]->getHeight(i==selectedItem ? true : false);
         if (y0>y1) break;
         if (selectedItem==i) return true;
     }  
@@ -96,13 +102,34 @@ void UImenu::makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
 
 bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   if (items[selectedItem]->handleUIEvent(eventSource, eventType)) return true;
-  if (eventSource==K197key_REL && eventType==UIeventClick) { // down
+  if (eventSource==K197key_DB && eventType==UIeventClick) { // down
      if (selectedItem  >= (num_items-1)) return true;
      selectedItem++;
   }
-  if (eventSource==K197key_DB && eventType==UIeventClick) { // up
+  if (eventSource==K197key_REL && eventType==UIeventClick) { // up
      if (selectedItem <= 0) return true;
      selectedItem--;
   }
   return false;
+}
+
+void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
+     UIMenuButtonItem::draw(u8g2, x, y, w, selected);
+     u8g2->setDrawColor(1);
+     u8g2->setFontMode(0);
+     x=x+w-checkbox_size-checkbox_margin; 
+     y=y+MENU_TEXT_OFFSET_Y;
+     u8g2->drawFrame(x, y, checkbox_size, checkbox_size);
+     if (value) {
+           u8g2->drawLine(x, y, x+checkbox_size, y+checkbox_size);    
+           u8g2->drawLine(x, y+checkbox_size, x+checkbox_size, y);    
+     }
+}
+
+bool MenuInputBool::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    if ( (eventSource==K197key_RCL || eventSource==K197key_STO) && eventType==UIeventClick) {
+       setValue(!getValue()); 
+       return true;  
+    }
+    return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
 }
