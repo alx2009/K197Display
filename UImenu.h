@@ -94,7 +94,9 @@ class MenuInputBool : public UIMenuButtonItem {
 class MenuInputByte : public UIMenuButtonItem {
    protected:
       static const u8g2_uint_t value_size = 30;
-      static const u8g2_uint_t slide_margin = 5;
+      static const u8g2_uint_t slide_xmargin = 5;
+      static const u8g2_uint_t slide_ymargin0 = 0;
+      static const u8g2_uint_t slide_ymargin1 = 4;
    
       byte value = 0;
 

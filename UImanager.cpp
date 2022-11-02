@@ -417,9 +417,14 @@ UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, 
 bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if (screen_mode != K197sc_mainMenu) return false;
     if (UImainMenu.handleUIEvent(eventSource, eventType) ) return true;
+    const UImenuItem *selectedItem = UImainMenu.getSelectedItem();
+    if ( (selectedItem==&contrastCtrl) && (eventType==UIeventRelease) ) { // Possible change of value
+        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
+            u8g2.setContrast(contrastCtrl.getValue());
+        }
+    }
     if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
     // If we are here we have a menu selection event
-    const UImenuItem *selectedItem = UImainMenu.getSelectedItem();
     if (selectedItem == &closeMenu) {
         setScreenMode(K197sc_normal);
         return true;
