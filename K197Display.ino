@@ -271,13 +271,9 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
         pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
         delay(K197_MB_CLICK_TIME); //TODO: implement differently in order to remove delay()
         pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
-    } else if (buttonEvent == UIeventLongClick) {
-        if (uiman.getScreenMode() == K197sc_normal) {
+    } else if (buttonEvent == UIeventLongPress) {
             uiman.setScreenMode(K197sc_mainMenu);
             //uiman.setScreenMode(K197sc_debug);
-      } else {
-            uiman.setScreenMode(K197sc_normal);
-      }
     }
     break;
   case UI_DB:
