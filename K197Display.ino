@@ -246,7 +246,7 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
    k197ButtonCluster
 */
 void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
-  //DebugOut.print(F("Btn "));
+  DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
   switch (buttonPinIn) {
   case UI_STO:
@@ -266,7 +266,7 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     }
     break;
   case UI_REL:
-    //DebugOut.print(F("REL"));
+    DebugOut.print(F("REL"));
     if ( handleClicks && (buttonEvent==UIeventClick) ) {
         pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
         delay(K197_MB_CLICK_TIME); //TODO: implement differently in order to remove delay()
@@ -297,9 +297,9 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     }
     break;
   }
-  //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
-  //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
-  //DebugOut.println();
+  DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
+  k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+  DebugOut.println();
 }
 
 /*!

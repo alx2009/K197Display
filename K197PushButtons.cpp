@@ -49,6 +49,9 @@ unsigned long lastDebounceTime[] = {
     0UL, 0UL, 0UL, 0UL}; ///< millis() the last time the button pin was toggled
 unsigned long startPressed[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< millis() when last pressed
+
+unsigned long lastHold[] = {0UL, 0UL, 0UL, 0UL}; ///< millis() when last hold event generated
+
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< millis() when last released
 
@@ -256,24 +259,38 @@ void k197ButtonCluster::check(
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 
+    //if the button is pressed, we handle LongPress & Hold
+    if (buttonState[i] == BUTTON_PRESSED_STATE) {
+        if ( now - startPressed[i] > longPressTime ) {
+            if (startPressed[i] == lastHold[i]) { // 1st hold event is a LongPress
+                 invoke_callback(i, UIeventLongPress);
+                 lastHold[i] = now;
+            } else if (now - lastHold[i]> holdTime ) { // hold event
+                 invoke_callback(i, UIeventHold);         
+                 lastHold[i] = now;
+            }
+        }
+    }
+
     // if the button state has changed:
     if (btnow != buttonState[i]) {
-      buttonState[i] = btnow;
-      // The following actions are taken at Button release
-      if (btnow == BUTTON_IDLE_STATE) { // button was just released
-        invoke_callback(i, UIeventRelease);
-        if ((now - startPressed[i]) > longPressTime) {
-          invoke_callback(i, UIeventLongClick);
-        } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
-          invoke_callback(i, UIeventDoubleClick);
-        } else {
-          invoke_callback(i, UIeventClick);
+        buttonState[i] = btnow;
+        // The following actions are taken at Button release
+        if (btnow == BUTTON_IDLE_STATE) { // button was just released
+            invoke_callback(i, UIeventRelease);
+            if ((now - startPressed[i]) > longPressTime) {
+              invoke_callback(i, UIeventLongClick);
+            } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
+              invoke_callback(i, UIeventDoubleClick);
+            } else {
+              invoke_callback(i, UIeventClick);
+            }
+            lastReleased[i] = now;
+        } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
+            invoke_callback(i, UIeventPress);
+            startPressed[i] = now;
+            lastHold[i] = now;
         }
-        lastReleased[i] = now;
-      } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
-        invoke_callback(i, UIeventPress);
-        startPressed[i] = now;
-      }
     }
   }
   lastButtonState[i] = btnow;
@@ -309,10 +326,16 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
     DebugOut.print(F("eventDoubleClick"));
     break;
   case UIeventLongClick:
-    DebugOut.print(F("eventLongPress"));
+    DebugOut.print(F("eventLongClick"));
     break;
   case UIeventPress:
     DebugOut.print(F("eventPress"));
+    break;
+  case UIeventLongPress:
+    DebugOut.print(F("eventLongPress"));
+    break;
+  case UIeventHold:
+    DebugOut.print(F("eventHold"));
     break;
   case UIeventRelease:
     DebugOut.print(F("eventRelease"));
