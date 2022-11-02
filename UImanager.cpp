@@ -391,14 +391,16 @@ const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
 const char  contrastCtrl_txt[] PROGMEM = "Contrast";
 const char  closeMenu_txt[] PROGMEM = "Exit";
 const char  saveSettings_txt[] PROGMEM = "Save settings";
+const char  reloadSettings_txt[] PROGMEM = "reload settings";
 const char  openLog_txt[] PROGMEM = "Show log";
 
-MenuInputBool additionalModes(20, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
-UIMenuButtonItem bluetoothMenu(20, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
-MenuInputBool contrastCtrl(20, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
-UIMenuButtonItem closeMenu(20, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
-UIMenuButtonItem saveSettings(20, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
-UIMenuButtonItem openLog(20, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
+MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
+UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
+MenuInputByte contrastCtrl(15, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
+UIMenuButtonItem closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
+UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
+UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
+UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
 UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &openLog};
 

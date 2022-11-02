@@ -31,7 +31,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, b
   if (selected) {
     u8g2->setDrawColor(1);
     u8g2->setFontMode(0);
-    u8g2->drawFrame(x+2, y+2, w-2, height-2);
+    u8g2->drawFrame(x, y, w, getHeight(selected));
   }
 }
 #pragma GCC diagnostic push
@@ -129,6 +129,26 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w
 bool MenuInputBool::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if ( (eventSource==K197key_RCL || eventSource==K197key_STO) && eventType==UIeventClick) {
        setValue(!getValue()); 
+       return true;  
+    }
+    return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
+}
+
+void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
+     UIMenuButtonItem::draw(u8g2, x, y, w, selected);
+     u8g2->setDrawColor(1);
+     u8g2->setFontMode(0);
+     x=x+w-value_size; 
+     y=y+MENU_TEXT_OFFSET_Y;
+     u8g2->setCursor(x, y);
+     u8g2->print(value);
+     //x=x+w-checkbox_size-checkbox_margin; 
+     //y=y+MENU_TEXT_OFFSET_Y;
+     //u8g2->drawFrame(x, y, checkbox_size, checkbox_size);
+}
+
+bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    if ( (eventSource==K197key_RCL || eventSource==K197key_STO) && eventType==UIeventClick) {
        return true;  
     }
     return UIMenuButtonItem::handleUIEvent(eventSource, eventType);

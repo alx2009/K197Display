@@ -91,6 +91,23 @@ class MenuInputBool : public UIMenuButtonItem {
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 };
 
+class MenuInputByte : public UIMenuButtonItem {
+   protected:
+      static const u8g2_uint_t value_size = 30;
+      static const u8g2_uint_t slide_margin = 5;
+   
+      byte value = 0;
+
+   public:
+      MenuInputByte(u8g2_uint_t height, const __FlashStringHelper *text) : UIMenuButtonItem(height, text) {};
+      virtual u8g2_uint_t getHeight(bool selected=true) {return selected ? 2*height : height;}; 
+      void setValue(byte newValue) {value = newValue;};
+      byte getValue() {return value;};
+
+      virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
+      virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+};
+
 extern UImenu
     UImainMenu; ///< this is the predefined oubject that is used with print(),
                 ///< etc. (similar to how Serial is used for debug output)
