@@ -222,7 +222,7 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     break;
   case UI_REL:
     //DebugOut.print(F("REL"));
-    if (buttonEvent == UIeventLongClick) {
+    if (buttonEvent == UIeventLongPress) {
         uiman.setScreenMode(K197sc_normal);
     }
     break;
