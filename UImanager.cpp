@@ -402,7 +402,7 @@ UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(
 UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
 UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
-UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &openLog};
+UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
 
 /*!
     @brief  handle UI event
