@@ -64,6 +64,8 @@ private:
 
   void setupMainMenu();
 
+  bool msg_log = false;      ///< if true logs data to Serial
+
 public:
   UImanager(K197device *k197);
   void setup();
@@ -86,6 +88,24 @@ public:
   //TODO: document and implement via settings menu
   bool isExtraModeEnabled();
   bool isBtDatalogEnabled();
+
+    /*!
+      @brief  set data logging to Serial
+      @param yesno true to enabl, false to disable
+  */
+  void setLogging(bool yesno) {
+        msg_log = yesno;
+  }
+
+  /*!
+      @brief  query data logging to Serial
+      @return returns trueif logging is active
+  */
+  bool isLogging() {
+        return msg_log;
+  }
+
+  void logData();
 };
 
 #endif // UIMANAGER_H__

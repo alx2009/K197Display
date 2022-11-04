@@ -373,7 +373,7 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   }
   x += u8g2.getStrWidth("   ");
   u8g2.setCursor(x, y);  
-  if (connected && k197->isLogging()) {
+  if (connected && isLogging()) {
     u8g2.print(F("<=>"));
   } else if (connected) {
     u8g2.print(F("<->"));
@@ -456,3 +456,16 @@ void UImanager::setContrast(uint8_t value) {
 bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };
 
 bool UImanager::isBtDatalogEnabled() {return btDatalog.getValue(); };
+
+/*!
+    @brief  data logging to Serial
+    @details does the actual data logging when called
+*/
+void UImanager::logData() {
+    if (!msg_log) return;
+    Serial.print(millis());Serial.print(F(" ms; "));
+    Serial.print(k197->getMessage());Serial.print(' ');
+    Serial.print(k197->getUnit(true));
+    if (k197->isAC()) Serial.print(F(" AC"));
+    Serial.println(); 
+}

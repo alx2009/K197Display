@@ -36,13 +36,9 @@ but statistically we should print out something if there are recurring issues
 */
 /**************************************************************************/
 //TODO wish list:
-// Datalogging options (freq, unit as separate fields, log internal T)
-// Formatting for Serial terminal
+// Datalogging options (log ms, freq, unit as separate fields, log internal T)
 // Display Max/Min
 // Autohold
-
-//Bugs
-// dB indicator not visible in split mode
 
 #include "K197device.h"
 K197device k197dev;
@@ -130,7 +126,7 @@ void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
       @brief toggle data logging
 */
 void cmdLog() {
-    k197dev.setLogging(!k197dev.isLogging());
+    uiman.setLogging(!uiman.isLogging());
 }
 
 /*!
@@ -382,7 +378,7 @@ void checkBluetoothModulePresence() {
        pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
        pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
        DebugOut.println(F("BT turned off"));
-       k197dev.setLogging(false);
+       uiman.setLogging(false);
     }
 #endif //BT_POWER
 }
@@ -471,7 +467,7 @@ void loop() {
     }
     if (n == 9) {
       uiman.updateDisplay();
-      k197dev.logData();
+      uiman.logData();
       __asm__ __volatile__("wdr" ::);
     }
 #   ifdef BT_POWER    

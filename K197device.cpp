@@ -279,16 +279,3 @@ void K197device::debugPrint() {
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
 }
-
-/*!
-    @brief  data logging to Serial
-    @details does the actual data logging when called
-*/
-void K197device::logData() {
-    if (!msg_log) return;
-    Serial.print(millis());Serial.print(F(" ms; "));
-    Serial.print(getMessage());Serial.print(' ');
-    Serial.print(getUnit(true));
-    if (isAC()) Serial.print(F(" AC"));
-    Serial.println(); 
-}
