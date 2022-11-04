@@ -184,7 +184,7 @@ void UImanager::updateDisplaySplit() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_9x18_mr);
   u8g2.print(k197->getMessage());
-  u8g2.print(' ');
+  u8g2.print(CH_SPACE);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197->getUnit(true));
   y += u8g2.getMaxCharHeight();
@@ -530,7 +530,7 @@ bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventT
 
 inline void logU2U() {
    if (logSplitUnit.getValue()) Serial.print(F(" ;"));
-   else Serial.print(' ');
+   else Serial.print(CH_SPACE);
 }
 
 /*!

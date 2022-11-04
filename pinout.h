@@ -11,14 +11,14 @@
   This file is part of the Arduino K197Display sketch, please see
   https://github.com/alx2009/K197Display for more information
 
-  In this file we consolidate all I/O pin definitions for this application
+  In this file we consolidate all I/O pin definitions for this application. In addition, we include generally useful constants
 
   Pin definitions are in the form PIN_Pxn where x is PORT x and n is pin n in
   said port. This is the preferred form for dxCore (rather than the pin number
   commonly used with the AVR cores)
 
   In addition to pin numbers, we also define VPORT and bitmaps for direct port
-  manipulation
+  manipulation and a number of useful constants
 
   Note for users coming from the legacy AVR! PIN_PC1 would normally be the MISO
   pin for the SPI1 port, configured as an output. We use SPI1 to talk to the
@@ -104,4 +104,6 @@
 // PIN SWAP Options
 #define OLED_SPI_SWAP_OPTION SPI0_SWAP_DEFAULT ///< SPI swap to use for OLED
 
+// Generally useful constants
+extern const char CH_SPACE;
 #endif // PINOUT_H__

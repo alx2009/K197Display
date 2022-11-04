@@ -20,6 +20,7 @@
 #ifndef SPI_DEVICE_H
 #define SPI_DEVICE_H
 #include <Arduino.h>
+extern const char CH_SPACE;
 
 #define PACKET 18      ///< our SPI packet is 18 bytes max
 #define PACKET_DATA 17 ///< size of the packet when it contains normal data

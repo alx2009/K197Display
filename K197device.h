@@ -106,7 +106,7 @@ private:
   inline static bool isDigitOrSpace(char c) {
     if (isDigit(c))
       return true;
-    if (c == ' ')
+    if (c == CH_SPACE)
       return true;
     return false;
   };

@@ -28,6 +28,7 @@
 #include "dxUtil.h"
 
 #include "debugUtil.h"
+#include "pinout.h"
 
 // Lookup table to convert from segments to char
 // Note: before using the table, shift the 5 most significant bit one position
@@ -66,7 +67,7 @@ static char seg2char[128] = {
 */
 float getMsgValue(char *s, int len) {
   for (int i = 0; i < len; i++) {
-    if (*s != ' ') {
+    if (*s != CH_SPACE) {
       return atof(s);
     }
     s++;
@@ -136,7 +137,7 @@ byte K197device::getNewReading(byte *data) {
   for (int i = 0; i < K197_MSG_SIZE; i++)
     message[i] = 0;
   for (int i = 0; i < K197_RAW_MSG_SIZE - 1; i++)
-    raw_msg[0] = ' ';
+    raw_msg[0] = CH_SPACE;
   raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
   int nchar = 0;
   if (n > 0) {
@@ -200,6 +201,7 @@ void K197device::tkConvertV2C() {
     float t = msg_value*24.2271538 + tcold; // msg_value = mV
     if (t>2200.0) { // Way more than needed...
          setOverrange();
+         raw_dp = 0x00;
          return;
     }
     msg_value=t;
@@ -220,13 +222,17 @@ void K197device::tkConvertV2C() {
 /*!
     @brief  set the displayed message to Overrange
 */
-const char 
 void K197device::setOverrange() {
     msg_is_ovrange = true;
-    raw_msg[0] = message[0] = '0';
-    raw_msg[1] = message[1] = 'L';
-    raw_msg[2] = message[2] = 0;
-    
+    message[0] = raw_msg[0] = CH_SPACE;
+    message[1] = raw_msg[1] = CH_SPACE;
+    message[2] = raw_msg[2] = CH_SPACE;
+    message[3] = raw_msg[3] = '0';
+    message[4] = raw_msg[4] = 'L';
+    message[5] = raw_msg[5] = CH_SPACE;
+    message[6] = raw_msg[6] = CH_SPACE;
+    message[7] = CH_SPACE;
+    message[8] = raw_msg[7] = 0;
 }
 
 /*!

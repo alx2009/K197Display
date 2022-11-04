@@ -188,7 +188,7 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
   for (int i = 0; i < n; i++) {
     DebugOut.print(F("0x"));
     DebugOut.print(data[i], HEX);
-    DebugOut.print(' ');
+    DebugOut.print(CH_SPACE);
   }
 }
 

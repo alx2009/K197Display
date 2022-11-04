@@ -55,6 +55,7 @@ UImanager uiman(&k197dev);
 #include "dxUtil.h"
 
 #include "pinout.h"
+const char CH_SPACE = ' '; ///< using a constant (defined in pinout.h) saves some RAM
 
 #ifndef DB_28_PINS
 #error AVR32DB28 or AVR64DB28 or AVR128DB28 microcontroller required, using dxCore
@@ -112,7 +113,7 @@ void printError(const char *buf) { // Here we want to use Serial, rather than De
 void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
                      // does not even support input)
   static char buf[INPUT_BUFFER_SIZE];
-  size_t i = Serial.readBytesUntil(' ', buf, INPUT_BUFFER_SIZE);
+  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
   if (i == 0) { // no characters read
     Serial.println(F("Contrast: <no change>"));
@@ -144,7 +145,7 @@ void cmdLog() {
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
   static char buf[INPUT_BUFFER_SIZE];
-  size_t i = Serial.readBytesUntil(' ', buf, INPUT_BUFFER_SIZE);
+  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
   if (i == 0) { // no characters read
     return;
