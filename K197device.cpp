@@ -233,31 +233,35 @@ void K197device::setOverrange() {
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
-const __FlashStringHelper *K197device::getUnit() { // Note: includes UTF-8 characters
-  if (isV()) {
+const __FlashStringHelper *K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
+  if (isV()) {            // Voltage units
     if (tkMode && ismV())
       return F("°C");
     else if (ismV())
       return F("mV");
     else
       return F(" V");
-  } else if (isOmega()) {
+  } else if (isOmega()) { // Resistence units
     if (isM())
       return F("MΩ");
     else if (isk())
       return F("kΩ");
     else
       return F(" Ω");
-  } else if (isA()) {
+  } else if (isA()) {     // Current units
     if (ismicro())
       return F("µA");
     else if (ismA())
       return F("mA");
     else
       return F(" A");
-  } else {
-    return F("  ");
+  } else {                // No unit found
+    if (include_dB && isdB())
+      return F("dB");
+    else 
+      return F("  ");
   }
+
 }
 
 /*!
@@ -284,8 +288,7 @@ void K197device::logData() {
     if (!msg_log) return;
     Serial.print(millis());Serial.print(F(" ms; "));
     Serial.print(getMessage());Serial.print(' ');
-    Serial.print(getUnit());
+    Serial.print(getUnit(true));
     if (isAC()) Serial.print(F(" AC"));
-    if (isdB()) Serial.print(F(" dB")); 
     Serial.println(); 
 }

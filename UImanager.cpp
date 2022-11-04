@@ -159,7 +159,7 @@ void UImanager::updateDisplay() {
    screen.
 */
 void UImanager::updateDisplaySplit() {
-  u8g2_uint_t x = 147;
+  u8g2_uint_t x = 140;
   u8g2_uint_t y = 5;
   u8g2.setFont(u8g2_font_8x13_mr);
   u8g2.setCursor(x, y);
@@ -175,10 +175,6 @@ void UImanager::updateDisplaySplit() {
     u8g2.print(F("REL "));
   else
     u8g2.print(F("    "));
-  if (k197->isdB())
-    u8g2.print(F("dB "));
-  else
-    u8g2.print(F("   "));
   if (k197->isCal())
     u8g2.print(F("Cal   "));
   else
@@ -190,7 +186,7 @@ void UImanager::updateDisplaySplit() {
   u8g2.print(k197->getMessage());
   u8g2.print(' ');
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197->getUnit());
+  u8g2.print(k197->getUnit(true));
   y += u8g2.getMaxCharHeight();
   u8g2.setFont(u8g2_font_9x18_mr);
   if (k197->isAC())

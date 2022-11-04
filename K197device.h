@@ -169,7 +169,14 @@ public:
   */
   bool isDecPointOn(byte char_n) { return bitRead(raw_dp, char_n); };
 
-  const __FlashStringHelper *getUnit(); // Note: includes UTF-8 characters
+  /*!
+      @brief  return the currently displayed unit
+
+ 
+      @param  include_dB if true considers dB as a unit   
+      @return a flash string with the unit 
+  */
+  const __FlashStringHelper *getUnit(bool include_dB=false); // Note: includes UTF-8 characters
 
   /*!
       @brief  check if overange is detected
