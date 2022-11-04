@@ -38,7 +38,7 @@ enum K197screenMode {
    K197sc_normal   = 0x01,  ///< equivalent to original K197 
    K197sc_mainMenu = 0x02,  ///< display main menu
    K197sc_debug    = 0x03,  ///< display log window
-   K197sc_logMenu = 0x02,  ///< display main menu
+   K197sc_logMenu  = 0x04,  ///< display main menu
 };
 
 /**************************************************************************/

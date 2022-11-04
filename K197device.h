@@ -234,6 +234,11 @@ public:
   */
   inline bool isAC() { return (annunciators0 & K197_AC_bm) != 0; };
   /*!
+      @brief  test if AC is on
+      @return returns true if on, false otherwise
+  */
+  inline bool isDC() { return (annunciators0 & K197_AC_bm) == 0; };
+  /*!
       @brief  test if RCL is on
       @return returns true if on, false otherwise
   */
@@ -327,7 +332,7 @@ public:
       @return returns true when K Thermocouple mode is enabled and active,
   */
   bool isTKModeActive() {
-        return isV() && ismV() && tkMode;
+        return isV() && ismV() && tkMode && isDC();
   }
 
   /*!

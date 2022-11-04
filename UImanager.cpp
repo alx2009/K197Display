@@ -325,14 +325,16 @@ void UImanager::updateDisplayNormal() {
   else
     u8g2.print(F("   "));
 
+  x = 140;
+  y = 2;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_5x7_mr);
   if (k197->isTKModeActive()) { // Display local temperature
       char buf[8];
       dtostrf(k197->getTColdJunction(), K197_MSG_SIZE-1, 2, buf);
-      unsigned int x = 140;
-      unsigned int y = 2;
-      u8g2.setCursor(x, y);
-      u8g2.setFont(u8g2_font_5x7_mr);
       u8g2.print(buf); u8g2.print(k197->getUnit());
+  } else {
+      u8g2.print(F("          "));
   }
 
   u8g2.sendBuffer();
@@ -514,8 +516,7 @@ void UImanager::setupMenus() {
 bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
     if (UIlogMenu.handleUIEvent(eventSource, eventType) ) return true;
     const UImenuItem *selectedItem = UIlogMenu.getSelectedItem();
-    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
-    if (eventSource==K197key_STO && eventType==UIeventLongPress ) {
+    if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
         setScreenMode(K197sc_normal);
         return true;             
     }
@@ -539,14 +540,20 @@ inline void logU2U() {
 */
 void UImanager::logData() {
     if (!msg_log) return;
-    if (logskip<logSkip.getValue()) return;
-    logskip++;
-    Serial.print(millis()); logU2U(); Serial.print(F(" ms; "));
+    if (logskip<logSkip.getValue()) {
+        logskip++;
+        return;
+    }
+    logskip=0;
+    if (logTimestamp.getValue()) {
+        Serial.print(millis()); logU2U(); 
+        Serial.print(F(" ms; "));
+    }
     Serial.print(k197->getMessage()); logU2U(); 
     Serial.print(k197->getUnit(true));
     if (k197->isAC()) Serial.print(F(" AC"));
     if (k197->isTKModeActive() && logTamb.getValue() ) {
-        k197->getTColdJunction(); logU2U(); k197->getUnit(); 
+        Serial.print(k197->getTColdJunction()); logU2U(); Serial.print(k197->getUnit()); 
     }
     Serial.println(); 
 }

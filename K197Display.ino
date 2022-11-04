@@ -40,10 +40,6 @@ but statistically we should print out something if there are recurring issues
 // Display Max/Min
 // Autohold
 
-// Bug Overrange on T not displayed correctly
-// Bug AC is not checked for T mode
-// Internal T is not erased after T mode 
-
 #include "K197device.h"
 K197device k197dev;
 
@@ -294,7 +290,7 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   case UI_DB:
     //DebugOut.print(F("DB"));
     if ( handleClicks && (buttonEvent==UIeventPress) ) {
-        if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV()) {
+        if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
            if (!k197dev.getTKMode()) { // TK mode is not yet enabled
               k197dev.setTKMode(true); // Activate TK mode
               break;           // break so we do not activate the Db mode
