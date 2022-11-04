@@ -36,9 +36,8 @@ but statistically we should print out something if there are recurring issues
 */
 /**************************************************************************/
 //TODO wish list:
-// Configuration menu (set contrast)
-// Datalogging to bluetooth
-// Non transparent push buttons/Thermocouple option
+// Datalogging options (freq, unit as separate fields, log internal T)
+// Formatting for Serial terminal
 // Display Max/Min
 // Autohold
 
@@ -85,6 +84,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
   Serial.println(F(" jmp0 ==> jump to 0 (dirty reset)"));
   Serial.println(F(" volt ==> check voltages & temperature"));
   Serial.println(F(" msg ==> toggle printout of data to/from main board"));
+  Serial.println(F(" log ==> toggle data logging"));
   Serial.println(F(" contrast n ==> set display contrast [0-255]"));
 
   printPrompt();
@@ -124,6 +124,13 @@ void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
   Serial.println(value);
   Serial.flush();
   uiman.setContrast(value);
+}
+
+/*!
+      @brief toggle data logging
+*/
+void cmdLog() {
+    k197dev.setLogging(!k197dev.isLogging());
 }
 
 /*!
@@ -176,6 +183,8 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
       msg_printout = false;
     else
       msg_printout = true;
+  } else if ((strcasecmp_P(buf, PSTR("log")) == 0)) {
+    cmdLog();
   } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
     cmdContrast();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
@@ -246,12 +255,17 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
    k197ButtonCluster
 */
 void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
-  DebugOut.print(F("Btn "));
+  //DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
+  bool datalogMode = uiman.isBtDatalogEnabled();
   switch (buttonPinIn) {
   case UI_STO:
     //DebugOut.print(F("STO"));
-    if ( handleClicks && (buttonEvent==UIeventPress) ) {
+    if (datalogMode) {
+        if ( (buttonEvent==UIeventClick) && bt_module_present && bt_module_connected) {
+            cmdLog();
+        }
+    } else if ( handleClicks && (buttonEvent==UIeventPress) ) {
         pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
         pinConfigure(MB_STO, PIN_DIR_INPUT | PIN_OUT_LOW);
@@ -259,14 +273,16 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     break;
   case UI_RCL:
     //DebugOut.print(F("RCL"));
-    if ( handleClicks && (buttonEvent==UIeventPress) ) {
+    if (datalogMode) {
+        
+    } else if ( handleClicks && (buttonEvent==UIeventPress) ) {
         pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
         pinConfigure(MB_RCL, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   case UI_REL:
-    DebugOut.print(F("REL"));
+    //DebugOut.print(F("REL"));
     if ( handleClicks && (buttonEvent==UIeventClick) ) {
         pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
         delay(K197_MB_CLICK_TIME); //TODO: implement differently in order to remove delay()
@@ -293,9 +309,9 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     }
     break;
   }
-  DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
-  k197ButtonCluster::DebugOut_printEventName(buttonEvent);
-  DebugOut.println();
+  //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+  //DebugOut.println();
 }
 
 /*!
@@ -366,6 +382,7 @@ void checkBluetoothModulePresence() {
        pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
        pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
        DebugOut.println(F("BT turned off"));
+       k197dev.setLogging(false);
     }
 #endif //BT_POWER
 }
@@ -454,6 +471,7 @@ void loop() {
     }
     if (n == 9) {
       uiman.updateDisplay();
+      k197dev.logData();
       __asm__ __volatile__("wdr" ::);
     }
 #   ifdef BT_POWER    

@@ -74,6 +74,8 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
+  bool msg_log = false;      ///< if true logs data to Serial
+
   bool tkMode=false; ///< show T instead of V (K type thermocouple)     
   
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
@@ -298,7 +300,7 @@ public:
 
   /*!
       @brief  set Thermocuple mode
-      @return returns true if on, false otherwise
+      @param mode true if enabled, false if disabled
   */
   void setTKMode(bool mode) {
         tkMode = mode;
@@ -327,6 +329,25 @@ public:
   float getTColdJunction() {
         return abs(tcold)<999.99 ? tcold : 999.99; // Keep it in the display range just to be on the safe side
   }
+
+  /*!
+      @brief  set data logging to Serial
+      @param yesno true to enabl, false to disable
+  */
+  void setLogging(bool yesno) {
+        msg_log = yesno;
+  }
+
+  /*!
+      @brief  query data logging to Serial
+      @return returns trueif logging is active
+  */
+  bool isLogging() {
+        return msg_log;
+  }
+
+  void logData();
+  
 };
 
 #endif // K197_DEVICE_H

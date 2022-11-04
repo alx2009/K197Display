@@ -377,7 +377,9 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   }
   x += u8g2.getStrWidth("   ");
   u8g2.setCursor(x, y);  
-  if (connected) {
+  if (connected && k197->isLogging()) {
+    u8g2.print(F("<=>"));
+  } else if (connected) {
     u8g2.print(F("<->"));
   } else {
     u8g2.print(F("   "));
@@ -387,6 +389,7 @@ void UImanager::updateBtStatus(bool present, bool connected) {
 
 //TODO: documentation
 const char  extraModes_txt[] PROGMEM = "Extra Modes";
+const char  btDatalog_txt[] PROGMEM = "BT datalog";
 const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
 const char  contrastCtrl_txt[] PROGMEM = "Contrast";
 const char  closeMenu_txt[] PROGMEM = "Exit";
@@ -395,6 +398,7 @@ const char  reloadSettings_txt[] PROGMEM = "reload settings";
 const char  openLog_txt[] PROGMEM = "Show log";
 
 MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
+MenuInputBool btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt));
 UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
 MenuInputByte contrastCtrl(15, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
 UIMenuButtonItem closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
@@ -402,7 +406,7 @@ UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(
 UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
 UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
-UImenuItem *mainMenuItems[] = {&additionalModes, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
+UImenuItem *mainMenuItems[] = {&additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
 
 /*!
     @brief  handle UI event
@@ -438,6 +442,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 
 void UImanager::setupMainMenu() {
   additionalModes.setValue(true);
+  btDatalog.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
 }
@@ -453,3 +458,5 @@ void UImanager::setContrast(uint8_t value) {
 }
 
 bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };
+
+bool UImanager::isBtDatalogEnabled() {return btDatalog.getValue(); };

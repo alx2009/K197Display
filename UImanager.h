@@ -85,6 +85,7 @@ public:
 
   //TODO: document and implement via settings menu
   bool isExtraModeEnabled();
+  bool isBtDatalogEnabled();
 };
 
 #endif // UIMANAGER_H__

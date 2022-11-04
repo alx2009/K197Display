@@ -46,7 +46,7 @@ class k197ButtonCluster {
   protected:
     void check(uint8_t i);
     static const unsigned long debounceDelay =
-        50; ///< the debounce time; decrease if the button is not responsive
+        1; ///< the debounce time; decrease if the button is not responsive
             ///< enough, increase in case yoyu experience unintended double
             ///< presses
     static const unsigned long longPressTime =
