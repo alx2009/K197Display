@@ -220,6 +220,7 @@ void K197device::tkConvertV2C() {
 /*!
     @brief  set the displayed message to Overrange
 */
+const char 
 void K197device::setOverrange() {
     msg_is_ovrange = true;
     raw_msg[0] = message[0] = '0';

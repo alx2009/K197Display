@@ -114,5 +114,8 @@ extern UImenu
     UImainMenu; ///< this is the predefined oubject that is used with print(),
                 ///< etc. (similar to how Serial is used for debug output)
 
+extern UImenu
+    UIlogMenu; ///< this is the predefined oubject that is used with print(),
+                ///< etc. (similar to how Serial is used for debug output)
 
 #endif //UIMENU_H__

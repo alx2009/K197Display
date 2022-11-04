@@ -38,6 +38,7 @@ enum K197screenMode {
    K197sc_normal   = 0x01,  ///< equivalent to original K197 
    K197sc_mainMenu = 0x02,  ///< display main menu
    K197sc_debug    = 0x03,  ///< display log window
+   K197sc_logMenu = 0x02,  ///< display main menu
 };
 
 /**************************************************************************/
@@ -62,9 +63,13 @@ private:
   void updateDisplayNormal();
   void updateDisplaySplit();
 
-  void setupMainMenu();
+  void setupMenus();
 
   bool msg_log = false;      ///< if true logs data to Serial
+  byte logskip=0;
+
+  bool handleUIEventMainMenu(K197UIeventsource eventSource, K197UIeventType eventType);
+  bool handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType);
 
 public:
   UImanager(K197device *k197);
@@ -94,6 +99,7 @@ public:
       @param yesno true to enabl, false to disable
   */
   void setLogging(bool yesno) {
+        if (!yesno) logskip=0;
         msg_log = yesno;
   }
 

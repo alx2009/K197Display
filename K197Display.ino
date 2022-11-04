@@ -40,6 +40,10 @@ but statistically we should print out something if there are recurring issues
 // Display Max/Min
 // Autohold
 
+// Bug Overrange on T not displayed correctly
+// Bug AC is not checked for T mode
+// Internal T is not erased after T mode 
+
 #include "K197device.h"
 K197device k197dev;
 
@@ -219,21 +223,18 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
        return;
   }
   switch (buttonPinIn) {
-  case UI_STO:
-    //DebugOut.print(F("STO"));
-    break;
-  case UI_RCL:
-    //DebugOut.print(F("RCL"));
-    break;
-  case UI_REL:
-    //DebugOut.print(F("REL"));
-    if (buttonEvent == UIeventLongPress) {
-        uiman.setScreenMode(K197sc_normal);
-    }
-    break;
-  case UI_DB:
-    //DebugOut.print(F("DB"));
-    break;
+    case UI_STO:
+      //DebugOut.print(F("STO"));
+      break;
+    case UI_RCL:
+      //DebugOut.print(F("RCL"));
+      break;
+    case UI_REL:
+      //DebugOut.print(F("REL"));
+      break;
+    case UI_DB:
+      //DebugOut.print(F("DB"));
+      break;
   }
   //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
   //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
@@ -260,6 +261,8 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     if (datalogMode) {
         if ( (buttonEvent==UIeventClick) && bt_module_present && bt_module_connected) {
             cmdLog();
+        } else if (buttonEvent==UIeventLongPress) {
+            uiman.setScreenMode(K197sc_logMenu);            
         }
     } else if ( handleClicks && (buttonEvent==UIeventPress) ) {
         pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
@@ -285,7 +288,6 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
         pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
     } else if (buttonEvent == UIeventLongPress) {
             uiman.setScreenMode(K197sc_mainMenu);
-            //uiman.setScreenMode(K197sc_debug);
     }
     break;
   case UI_DB:

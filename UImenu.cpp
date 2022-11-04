@@ -24,6 +24,7 @@
 #define MENU_TEXT_OFFSET_Y 2
 
 UImenu UImainMenu(130);
+UImenu UIlogMenu(130);
 
 //TODO: documentation
 

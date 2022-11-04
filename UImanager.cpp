@@ -131,7 +131,7 @@ void UImanager::setup() {
   setup_draw();
   u8g2.sendBuffer();
 
-  setupMainMenu();
+  setupMenus();
 }
 
 /*!
@@ -212,8 +212,10 @@ void UImanager::updateDisplaySplit() {
   if (screen_mode == K197sc_debug) {
       u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
       u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
-  }  else {
+  } else if (screen_mode == K197sc_mainMenu) {
       UImainMenu.draw(&u8g2, 0, 10); 
+  } else {
+      UIlogMenu.draw(&u8g2, 0, 10);     
   }
   u8g2.sendBuffer();
 }
@@ -383,6 +385,22 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   u8g2.sendBuffer();
 }
 
+/*!
+    @brief  handle UI event
+
+    @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
+
+    @param eventSource identifies the source of the event (REL, DB, etc.)
+    @param eventType identifies the source of the event (REL, DB, etc.)
+
+    @return true if the event has been completely handled, false otherwise
+*/
+bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    if (screen_mode == K197sc_mainMenu) return handleUIEventMainMenu(eventSource, eventType);
+    else if (screen_mode == K197sc_logMenu) return handleUIEventLogMenu(eventSource, eventType);
+    return false;
+}
+
 //TODO: documentation
 const char  extraModes_txt[] PROGMEM = "Extra Modes";
 const char  btDatalog_txt[] PROGMEM = "BT datalog";
@@ -405,7 +423,7 @@ UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openL
 UImenuItem *mainMenuItems[] = {&additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
 
 /*!
-    @brief  handle UI event
+    @brief  handle UI event for the main menu
 
     @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
 
@@ -414,14 +432,17 @@ UImenuItem *mainMenuItems[] = {&additionalModes, &btDatalog, &bluetoothMenu, &co
 
     @return true if the event has been completely handled, false otherwise
 */
-bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
-    if (screen_mode != K197sc_mainMenu) return false;
+bool UImanager::handleUIEventMainMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
     if (UImainMenu.handleUIEvent(eventSource, eventType) ) return true;
     const UImenuItem *selectedItem = UImainMenu.getSelectedItem();
     if ( (selectedItem==&contrastCtrl) && (eventType==UIeventRelease) ) { // Possible change of value
         if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
             u8g2.setContrast(contrastCtrl.getValue());
         }
+    }
+    if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
+        setScreenMode(K197sc_normal);
+        return true;             
     }
     if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
     // If we are here we have a menu selection event
@@ -434,13 +455,6 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
         return true;      
     }
     return false;
-}
-
-void UImanager::setupMainMenu() {
-  additionalModes.setValue(true);
-  btDatalog.setValue(true);
-  UImainMenu.items = mainMenuItems;
-  UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
 }
 
 /*!
@@ -457,15 +471,82 @@ bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };
 
 bool UImanager::isBtDatalogEnabled() {return btDatalog.getValue(); };
 
+//TODO: documentation
+//log ms, freq, unit as separate fields, log internal T
+const char  logSkip_txt[] PROGMEM = "Samples to skip";
+const char  logSplitUnit_txt[] PROGMEM = "Split unit";
+const char  logTimestamp_txt[] PROGMEM = "Log timestamp";
+const char  logTamb_txt[] PROGMEM = "Include Tamb";
+
+MenuInputByte logSkip(15, reinterpret_cast<const __FlashStringHelper *>(logSkip_txt));
+MenuInputBool logSplitUnit(15, reinterpret_cast<const __FlashStringHelper *>(logSplitUnit_txt));
+MenuInputBool logTimestamp(15, reinterpret_cast<const __FlashStringHelper *>(logTimestamp_txt));
+MenuInputBool logTamb(15, reinterpret_cast<const __FlashStringHelper *>(logTamb_txt));
+
+UImenuItem *logMenuItems[] = {&logSkip, &logSplitUnit, &logTimestamp, &logTamb, &closeMenu};
+
+
+void UImanager::setupMenus() {
+  additionalModes.setValue(true);
+  btDatalog.setValue(true);
+  UImainMenu.items = mainMenuItems;
+  UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
+
+  logSkip.setValue(0);
+  logSplitUnit.setValue(false);
+  logTimestamp.setValue(true);
+  logTamb.setValue(true);
+  UIlogMenu.items = logMenuItems;
+  UIlogMenu.num_items = sizeof(logMenuItems)/sizeof(UImenuItem *);  
+}
+
+
+/*!
+    @brief  handle UI event for the main menu
+
+    @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
+
+    @param eventSource identifies the source of the event (REL, DB, etc.)
+    @param eventType identifies the source of the event (REL, DB, etc.)
+
+    @return true if the event has been completely handled, false otherwise
+*/
+bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
+    if (UIlogMenu.handleUIEvent(eventSource, eventType) ) return true;
+    const UImenuItem *selectedItem = UIlogMenu.getSelectedItem();
+    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
+    if (eventSource==K197key_STO && eventType==UIeventLongPress ) {
+        setScreenMode(K197sc_normal);
+        return true;             
+    }
+    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
+    // If we are here we have a menu selection event
+    if (selectedItem == &closeMenu) {
+        setScreenMode(K197sc_normal);
+        return true;
+    }
+    return false;
+}
+
+inline void logU2U() {
+   if (logSplitUnit.getValue()) Serial.print(F(" ;"));
+   else Serial.print(' ');
+}
+
 /*!
     @brief  data logging to Serial
     @details does the actual data logging when called
 */
 void UImanager::logData() {
     if (!msg_log) return;
-    Serial.print(millis());Serial.print(F(" ms; "));
-    Serial.print(k197->getMessage());Serial.print(' ');
+    if (logskip<logSkip.getValue()) return;
+    logskip++;
+    Serial.print(millis()); logU2U(); Serial.print(F(" ms; "));
+    Serial.print(k197->getMessage()); logU2U(); 
     Serial.print(k197->getUnit(true));
     if (k197->isAC()) Serial.print(F(" AC"));
+    if (k197->isTKModeActive() && logTamb.getValue() ) {
+        k197->getTColdJunction(); logU2U(); k197->getUnit(); 
+    }
     Serial.println(); 
 }

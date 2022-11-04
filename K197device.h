@@ -307,6 +307,9 @@ public:
       @brief  set Thermocuple mode
       @param mode true if enabled, false if disabled
   */
+
+  // Extra modes/annnunciators not available on original K197
+  
   void setTKMode(bool mode) {
         tkMode = mode;
   }
