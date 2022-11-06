@@ -157,7 +157,7 @@ class_name instance_name(height,                                         \
    reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name)) \
 
 #define DEF_MENU_SEPARATOR(instance_name, height, text) DEF_MENU_CLASS(UIMenuSeparator, instance_name, height, text)
-#define DEF_MENU_BUTTON(instance_name, height, text) DEF_MENU_CLASS(UIMenuSeparator, instance_name, height, text)
+#define DEF_MENU_BUTTON(instance_name, height, text) DEF_MENU_CLASS(UIMenuButtonItem, instance_name, height, text)
 #define DEF_MENU_BOOL(instance_name, height, text) DEF_MENU_CLASS(MenuInputBool, instance_name, height, text)
 #define DEF_MENU_BYTE(instance_name, height, text) DEF_MENU_CLASS(MenuInputByte, instance_name, height, text)
 

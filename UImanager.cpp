@@ -50,6 +50,7 @@ UImenu UImainMenu(130, true);
 UImenu UIlogMenu(130);
 
 #include "UImanager.h"
+#include "BTmanager.h"
 #include "debugUtil.h"
 #include "pinout.h"
 
@@ -211,10 +212,8 @@ void UImanager::updateDisplaySplit() {
   if (screen_mode == K197sc_debug) {
       u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
       u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
-  } else if (screen_mode == K197sc_mainMenu) {
-      UImenu::getCurrentMenu()->draw(&u8g2, 0, 10); 
   } else {
-      //UIlogMenu.draw(&u8g2, 0, 10);     
+      UImenu::getCurrentMenu()->draw(&u8g2, 0, 10); 
   }
   u8g2.sendBuffer();
 }
@@ -362,20 +361,21 @@ void UImanager::setScreenMode(K197screenMode mode) {
       @param present true if a BT module is detected, false otherwise
       @param connected true if a BT connection is detected, false otherwise
 */
-void UImanager::updateBtStatus(bool present, bool connected) {
+void UImanager::updateBtStatus() {
   if (screen_mode != K197sc_normal)
     return;
   unsigned int x = 95;
   unsigned int y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (present) {
+  if (BTman.isPresent()) {
     u8g2.print(F("bt "));
   } else {
     u8g2.print(F("   "));
   }
   x += u8g2.getStrWidth("   ");
   u8g2.setCursor(x, y);  
+  bool connected = BTman.isConnected();
   if (connected && isLogging()) {
     u8g2.print(F("<=>"));
   } else if (connected) {
@@ -396,18 +396,20 @@ DEF_MENU_ACTION(exitMenu,  15, "Exit", uiman.setScreenMode(K197sc_normal););
 
 DEF_MENU_SEPARATOR(mainSeparator0,15, "< Options >");
 DEF_MENU_BOOL(additionalModes,  15, "Extra Modes");
+DEF_MENU_BOOL(reassignStoRcl,   15, "Reassign STO/RCL");
 DEF_MENU_OPEN(btDatalog,           15, "Data logging >>>", &UIlogMenu);
 DEF_MENU_BUTTON(bluetoothMenu,  15, "Bluetooth");
 DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast", u8g2.setContrast(getValue()););
 DEF_MENU_BUTTON(saveSettings,   15, "Save settings");
-DEF_MENU_BUTTON(reloadSettings, 15, "reload settings");
+DEF_MENU_BUTTON(reloadSettings, 15, "Reload settings");
 DEF_MENU_ACTION(openLog,        15, "Show log", uiman.setScreenMode(K197sc_debug););
 
-UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, 
+UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog, 
                                &bluetoothMenu, &contrastCtrl, &exitMenu, 
                                &saveSettings, &reloadSettings, &openLog};
 
-DEF_MENU_SEPARATOR(logSeparator0, 15, "< Datalogging >");
+DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >");
+DEF_MENU_BOOL(logEnable,       15, "Enabled");
 DEF_MENU_BYTE(logSkip,         15, "Samples to skip");
 DEF_MENU_BOOL(logSplitUnit,    15, "Split unit");
 DEF_MENU_BOOL(logTimestamp,    15, "Log timestamp");
@@ -418,7 +420,7 @@ DEF_MENU_BYTE_ACT(logStatSamples,  15, "Num. Samples", k197dev.setNsamples(getVa
 
 //DEF_MENU_BOOL_ACT(enableLog, 15, "Log to BT", );
 
-UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
+UImenuItem *logMenuItems[] = {&logSeparator0, &logEnable, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
 
 /*!
     @brief  handle UI event
@@ -437,7 +439,11 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
             setScreenMode(K197sc_normal);
             return true;             
         }
-      
+    } else if (screen_mode == K197sc_debug) {
+        if (eventType==UIeventClick || eventType==UIeventLongClick ) {
+            setScreenMode(K197sc_normal);
+            return true;             
+        }
     }
     return false;
 }
@@ -452,13 +458,31 @@ void UImanager::setContrast(uint8_t value) {
   contrastCtrl.setValue(value);  
 }
 
-bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };
+    /*!
+      @brief  set data logging to Serial
+      @param yesno true to enabl, false to disable
+  */
+  void UImanager::setLogging(bool yesno) {
+        if (!yesno) logskip_counter=0;
+        logEnable.setValue(yesno);
+  }
+
+  /*!
+      @brief  query data logging to Serial
+      @return returns true if logging is active
+  */
+  bool UImanager::isLogging() {
+        return logEnable.getValue();
+  }
+
+bool UImanager::isExtraModeEnabled() { return additionalModes.getValue(); };
 
 //TODO: remove together with all the code using it (now implemented via sub-menus)
-bool UImanager::isBtDatalogEnabled() {return false; /*btDatalog.getValue();*/ };  
+bool UImanager::reassignStoRcl() { return ::reassignStoRcl.getValue(); } 
 
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
+  ::reassignStoRcl.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
@@ -496,12 +520,12 @@ const char *formatNumber(char buf[K197_MSG_SIZE], float f) {
     @details does the actual data logging when called
 */
 void UImanager::logData() {
-    if (!msg_log) return;
-    if (logskip<logSkip.getValue()) {
-        logskip++;
+    if (!logEnable.getValue()) return;
+    if (logskip_counter<logSkip.getValue()) {
+        logskip_counter++;
         return;
     }
-    logskip=0;
+    logskip_counter=0;
     if (logTimestamp.getValue()) {
         Serial.print(millis()); logU2U(); 
         Serial.print(F(" ms; "));

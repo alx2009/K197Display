@@ -124,7 +124,7 @@ void UImenu::selectFirstItem() {
 
 bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   if (items[selectedItem]->handleUIEvent(eventSource, eventType)) return true;
-  if (eventSource==K197key_DB && eventType==UIeventClick) { // down
+  if (eventSource==K197key_DB && (eventType==UIeventPress || eventType==UIeventLongPress || eventType==UIeventHold) ) { // down
      if (selectedItem>=(num_items-1)) return false;        
      for(byte i=selectedItem+1; i<num_items; i++) {
          if (items[i]->selectable()) {
@@ -133,7 +133,8 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventT
          }
      }
   }
-  if (eventSource==K197key_REL && eventType==UIeventClick) { // up
+  // In the following we use click events to be able to assign the LongPress to other events
+  if (eventSource==K197key_REL && (eventType==UIeventClick || eventType==UIeventDoubleClick) ) { // up
      if (selectedItem==0) return false;        
      for(byte i=selectedItem; i>0; i--) {
          if (items[i-1]->selectable()) {

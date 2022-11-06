@@ -37,7 +37,6 @@ enum K197screenMode {
    K197sc_normal   = 0x01,  ///< equivalent to original K197 
    K197sc_mainMenu = 0x02,  ///< display main menu
    K197sc_debug    = 0x03,  ///< display log window
-   K197sc_logMenu  = 0x04,  ///< display main menu
 };
 
 /**************************************************************************/
@@ -63,10 +62,7 @@ private:
 
   void setupMenus();
 
-  bool msg_log = false;      ///< if true logs data to Serial
-  byte logskip=0;
-
-  bool handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType);
+  byte logskip_counter=0;
 
 public:
   UImanager() {}; ///< default constructor for the class
@@ -81,32 +77,18 @@ public:
   K197screenMode getScreenMode() { return screen_mode; };
 
   void updateDisplay();
-  void updateBtStatus(bool present, bool connected);
+  void updateBtStatus();
 
   void setContrast(uint8_t value);
 
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
-  //TODO: document and implement via settings menu
+  //TODO: document
   bool isExtraModeEnabled();
-  bool isBtDatalogEnabled();
-
-    /*!
-      @brief  set data logging to Serial
-      @param yesno true to enabl, false to disable
-  */
-  void setLogging(bool yesno) {
-        if (!yesno) logskip=0;
-        msg_log = yesno;
-  }
-
-  /*!
-      @brief  query data logging to Serial
-      @return returns trueif logging is active
-  */
-  bool isLogging() {
-        return msg_log;
-  }
+  bool reassignStoRcl(); 
+  
+  void setLogging(bool yesno);
+  bool isLogging();
 
   void logData();
 };

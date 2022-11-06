@@ -51,6 +51,8 @@ but statistically we should print out something if there are recurring issues
 #include "debugUtil.h"
 #include "dxUtil.h"
 
+#include "BTmanager.h"
+
 #include "pinout.h"
 const char CH_SPACE = ' '; ///< using a constant (defined in pinout.h) saves some RAM
 
@@ -59,9 +61,6 @@ const char CH_SPACE = ' '; ///< using a constant (defined in pinout.h) saves som
 #endif
 
 bool msg_printout = false;      ///< if true prints raw messages to DebugOut
-bool bt_module_present = false; ///< true if BT module is powered on
-bool bt_module_connected =
-    false; ///< true if connection detected via BT_STATE pin
 
 /*!
       @brief print the prompt to Serial
@@ -217,7 +216,9 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   K197UIeventsource evsource = pin2EventSource(buttonPinIn);
   //DebugOut.print(F("*Btn "));
   if (uiman.handleUIEvent(evsource, buttonEvent)) {
-       //DebugOut.print(F("Btn handled by UI"));
+       //DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn); DebugOut.print(F(" "));
+       //k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+       //DebugOut.println(F("Btn handled by UI"));
        return;
   }
   switch (buttonPinIn) {
@@ -252,16 +253,12 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
 void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   //DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
-  bool datalogMode = uiman.isBtDatalogEnabled();
+  bool reassignStoRcl = uiman.reassignStoRcl();
   switch (buttonPinIn) {
   case UI_STO:
     //DebugOut.print(F("STO"));
-    if (datalogMode) {
-        if ( (buttonEvent==UIeventClick) && bt_module_present && bt_module_connected) {
-            cmdLog();
-        } else if (buttonEvent==UIeventLongPress) {
-            uiman.setScreenMode(K197sc_logMenu);            
-        }
+    if (reassignStoRcl) {
+        //TODO: implement new button use cases for average/max/min/hold/autohold
     } else if ( handleClicks && (buttonEvent==UIeventPress) ) {
         pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
@@ -270,8 +267,8 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     break;
   case UI_RCL:
     //DebugOut.print(F("RCL"));
-    if (datalogMode) {
-        
+    if (reassignStoRcl) {
+        //TODO: implement new button use cases for average/max/min/hold/autohold
     } else if ( handleClicks && (buttonEvent==UIeventPress) ) {
         pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if ( handleClicks && (buttonEvent==UIeventRelease) ) {
@@ -325,65 +322,6 @@ void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
 }
 
 /*!
-      @brief initial setup of Bluetooth module
-
-      @details this function should be called within setup(). It will (attempt) to detect the presence of the BT module and configure it if present
-
-      Note: Reliable detection requires the BT_POWER pin to be defined and connected to detect wether or not the module has power
-*/
-void setupBTModule() {
-#ifdef BT_POWER
-  // Check BT_POWER pin to understand if BT Power is on
-  pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF | PIN_INPUT_ENABLE);
-  if (digitalReadFast(BT_POWER)) {
-     bt_module_present = true;  
-  }
-#else //BT_POWER not defined
-  // We don't have a pin to sense the BT Power, so we infer its status in a different way
-  if (dxUtil.resetReasonHWReset() ||
-      (SERIAL_VPORT.IN &
-       SERIAL_RX_bm)) { // Serial autoreset ==> Serial is in use
-    bt_module_present = true;
-  }
-#endif //BT_POWER
-
-  if (bt_module_present) {
-    Serial.begin(115200);
-    DebugOut.useSerial(true);
-  } else {
-    pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
-    pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF | PIN_INPUT_ENABLE);
-  }
-  pinConfigure(BT_EN, PIN_DIR_OUTPUT | PIN_OUT_LOW);
-}
-
-/*!
-      @brief check bluetoot module presence and reconfigure accordingly
-
-      Note: has no effect unless BT_POWER pin is defined and connected to detect wether or not the Bt module has power
-*/
-void checkBluetoothModulePresence() {
-#ifdef  BT_POWER
-    bool bt_module_present_now = digitalReadFast(BT_POWER);
-    if (  bt_module_present == bt_module_present_now) return; //Nothing to do
-    bt_module_present = bt_module_present_now;
-    if (bt_module_present) { //Module was turned on after setup().
-       Serial.begin(115200); //Note: If this is the second time Serial.begin is called, a bug in Serial may hang the SW, and cause a WDT reset
-       DebugOut.useSerial(true);
-       DebugOut.println(F("BT turned on"));
-    } else { //Module was turned off
-       Serial.end();
-       BT_USART.CTRLB &= (~(USART_RXEN_bm |
-                         USART_TXEN_bm)); // Disable RX and TX for good measure
-       pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
-       pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
-       DebugOut.println(F("BT turned off"));
-       uiman.setLogging(false);
-    }
-#endif //BT_POWER
-}
-
-/*!
       @brief Arduino setup function
 */
 void setup() {
@@ -402,7 +340,7 @@ void setup() {
   DebugOut.begin();
 
   dxUtil.begin();
-  setupBTModule();
+  BTman.setup();
 
   // We acquire one value and discard it, this may be needed before we can have
   // a stable value
@@ -426,7 +364,7 @@ void setup() {
   dxUtil.pollMVIOstatus();
   dxUtil.checkTemperature();
 
-  if (bt_module_present) {
+  if (BTman.isPresent()) {
     DebugOut.println(F("BT is on"));
   } else {
     DebugOut.println(F("BT is off"));
@@ -470,17 +408,9 @@ void loop() {
       uiman.logData();
       __asm__ __volatile__("wdr" ::);
     }
-#   ifdef BT_POWER    
-    checkBluetoothModulePresence();
-#   endif //BT_POWER
-    if (BT_STATE_VPORT.IN & BT_STATE_bm) { // BT_STATE == HIGH
-      bt_module_connected = false;         // no connection
-    } else if (bt_module_present) {   // BT_STATE == LOW ==> connected if BT module present                            
-      bt_module_connected = true;
-    } else { //cannot be connected if BT module not present
-      bt_module_connected = false;
-    }
-    uiman.updateBtStatus(bt_module_present, bt_module_connected);
+    BTman.checkPresence();
+    if ( BTman.checkConnection()==BTmoduleTurnedOff ) uiman.setLogging(false);
+    uiman.updateBtStatus();
   }
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {
