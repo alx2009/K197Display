@@ -44,6 +44,7 @@ class UImenuItem {
       virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
       virtual bool selectable() {return true;};
+      virtual void change() {};
 };
 
 class UIMenuSeparator : public UImenuItem {
@@ -128,13 +129,20 @@ class MenuInputByte : public UIMenuButtonItem {
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 };
 
-/*
-extern UImenu
-    UImainMenu; ///< this is the predefined oubject that is used with print(),
-                ///< etc. (similar to how Serial is used for debug output)
+class UIMenuActionClose : public UIMenuButtonItem {
+   public:
+      virtual void change() {UImenu::getCurrentMenu()->closeMenu();};
+};
 
-extern UImenu
-    UIlogMenu; ///< this is the predefined oubject that is used with print(),
-                ///< etc. (similar to how Serial is used for debug output)
-*/
+class UIMenuActionOpen : public UIMenuButtonItem {
+  private:
+     UImenu *child;
+   
+   public:
+      UIMenuActionOpen(u8g2_uint_t height, const __FlashStringHelper *text, UImenu *menu) : UIMenuButtonItem(height, text) {child=menu;};
+      virtual void change() {UImenu::getCurrentMenu()->openMenu(child);};
+};
+
+
+
 #endif //UIMENU_H__

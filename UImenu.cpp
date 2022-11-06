@@ -60,12 +60,15 @@ void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_
   u8g2->print( reinterpret_cast<const __FlashStringHelper *>(text) );
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 bool UIMenuButtonItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+  if (selectable()) {
+    if ( (eventSource==K197key_RCL) && (eventType==UIeventClick) ) {
+      change();
+      return true;
+    }
+  }
   return false;
 }
-#pragma GCC diagnostic pop
 
 void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->setFont(u8g2_font_6x12_mr);
@@ -158,6 +161,7 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w
 bool MenuInputBool::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if ( (eventSource==K197key_RCL || eventSource==K197key_STO) && eventType==UIeventClick) {
        setValue(!getValue()); 
+       change();
        return true;  
     }
     return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
@@ -202,7 +206,7 @@ bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource, K197UIeventType
            case UIeventPress:     value=calcIncrement(value, eventSource,  1); break;
            case UIeventLongPress: value=calcIncrement(value, eventSource, 10); break;
            case UIeventHold:      value=calcIncrement(value, eventSource,  5); break;
-           case UIeventRelease:   return false;
+           case UIeventRelease:   change(); break;
            default: break;
        }
        return true;  
