@@ -510,7 +510,6 @@ bool UImanager::isBtDatalogEnabled() {return false; /*btDatalog.getValue();*/ };
 
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
-  btDatalog.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
