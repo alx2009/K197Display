@@ -23,7 +23,7 @@
 #define MENU_TEXT_OFFSET_X 5
 #define MENU_TEXT_OFFSET_Y 2
 
-static UImenu *UImenu::currentMenu=NULL; 
+UImenu *UImenu::currentMenu=NULL; 
 
 //TODO: documentation
 
