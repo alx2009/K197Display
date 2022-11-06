@@ -330,7 +330,7 @@ void UImanager::updateDisplayNormal() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197->isTKModeActive()) { // Display local temperature
-      char buf[8];
+      char buf[K197_MSG_SIZE];
       dtostrf(k197->getTColdJunction(), K197_MSG_SIZE-1, 2, buf);
       u8g2.print(buf); u8g2.print(k197->getUnit());
   } else {
@@ -404,6 +404,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 }
 
 //TODO: documentation
+const char  mainSeparator0_txt[] PROGMEM = "< Options >";
 const char  extraModes_txt[] PROGMEM = "Extra Modes";
 const char  btDatalog_txt[] PROGMEM = "BT datalog";
 const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
@@ -413,6 +414,7 @@ const char  saveSettings_txt[] PROGMEM = "Save settings";
 const char  reloadSettings_txt[] PROGMEM = "reload settings";
 const char  openLog_txt[] PROGMEM = "Show log";
 
+UIMenuSeparator mainSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(mainSeparator0_txt));
 MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
 MenuInputBool btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt));
 UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
@@ -422,7 +424,7 @@ UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(
 UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
 UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
-UImenuItem *mainMenuItems[] = {&additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
+UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
 
 /*!
     @brief  handle UI event for the main menu
@@ -475,31 +477,41 @@ bool UImanager::isBtDatalogEnabled() {return btDatalog.getValue(); };
 
 //TODO: documentation
 //log ms, freq, unit as separate fields, log internal T
+const char  logSeparator0_txt[] PROGMEM = "< Datalogging >";
 const char  logSkip_txt[] PROGMEM = "Samples to skip";
 const char  logSplitUnit_txt[] PROGMEM = "Split unit";
 const char  logTimestamp_txt[] PROGMEM = "Log timestamp";
 const char  logTamb_txt[] PROGMEM = "Include Tamb";
+const char  logStat_txt[] PROGMEM = "Include Statistics";
+const char  logSeparator1_txt[] PROGMEM = "< Statistics >";
+const char  logStatSamples_txt[] PROGMEM = "Num. Samples";
 
+UIMenuSeparator logSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator0_txt));
 MenuInputByte logSkip(15, reinterpret_cast<const __FlashStringHelper *>(logSkip_txt));
 MenuInputBool logSplitUnit(15, reinterpret_cast<const __FlashStringHelper *>(logSplitUnit_txt));
 MenuInputBool logTimestamp(15, reinterpret_cast<const __FlashStringHelper *>(logTimestamp_txt));
 MenuInputBool logTamb(15, reinterpret_cast<const __FlashStringHelper *>(logTamb_txt));
+MenuInputBool logStat(15, reinterpret_cast<const __FlashStringHelper *>(logStat_txt));
+UIMenuSeparator logSeparator1(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator1_txt));
+MenuInputByte logStatSamples(15, reinterpret_cast<const __FlashStringHelper *>(logStatSamples_txt));
 
-UImenuItem *logMenuItems[] = {&logSkip, &logSplitUnit, &logTimestamp, &logTamb, &closeMenu};
-
+UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu};
 
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
   btDatalog.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems)/sizeof(UImenuItem *);
+  UImainMenu.selectFirstItem();
 
   logSkip.setValue(0);
   logSplitUnit.setValue(false);
   logTimestamp.setValue(true);
   logTamb.setValue(true);
+  logStatSamples.setValue(k197->getNsamples());
   UIlogMenu.items = logMenuItems;
   UIlogMenu.num_items = sizeof(logMenuItems)/sizeof(UImenuItem *);  
+  UIlogMenu.selectFirstItem();
 }
 
 
@@ -516,6 +528,11 @@ void UImanager::setupMenus() {
 bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
     if (UIlogMenu.handleUIEvent(eventSource, eventType) ) return true;
     const UImenuItem *selectedItem = UIlogMenu.getSelectedItem();
+    if ( (selectedItem==&logStatSamples) && (eventType==UIeventRelease) ) { // Possible change of value
+        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
+            k197->setNsamples(logStatSamples.getValue());
+        }
+    }
     if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
         setScreenMode(K197sc_normal);
         return true;             
@@ -534,6 +551,19 @@ inline void logU2U() {
    else Serial.print(CH_SPACE);
 }
 
+const char *formatNumber(char buf[K197_MSG_SIZE], float f) {
+    if (f>999999.0) f=999999.0;
+    else if (f<-999999.0)f=-999999.0;
+    float f_abs=abs(f);
+    int ndec=0;
+    if (f_abs<=9.99999) ndec=5;
+    else if (f_abs<=99.9999) ndec=4;
+    else if (f_abs<=999.999) ndec=3;
+    else if (f_abs<=9999.99) ndec=2;
+    else if (f_abs<=99999.9) ndec=1;
+    return dtostrf(f, K197_MSG_SIZE-1, ndec, buf);
+}
+
 /*!
     @brief  data logging to Serial
     @details does the actual data logging when called
@@ -550,10 +580,17 @@ void UImanager::logData() {
         Serial.print(F(" ms; "));
     }
     Serial.print(k197->getMessage()); logU2U(); 
-    Serial.print(k197->getUnit(true));
+    const __FlashStringHelper *unit = k197->getUnit(true);
+    Serial.print(unit);
     if (k197->isAC()) Serial.print(F(" AC"));
     if (k197->isTKModeActive() && logTamb.getValue() ) {
-        Serial.print(k197->getTColdJunction()); logU2U(); Serial.print(k197->getUnit()); 
+        Serial.print(F("; ")); Serial.print(k197->getTColdJunction()); logU2U(); Serial.print(unit); 
+    }
+    if (logStat.getValue()) {
+        char buf[K197_MSG_SIZE];
+        Serial.print(F("; ")); Serial.print(formatNumber(buf, k197->getMin())); logU2U(); Serial.print(unit); 
+        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197->getAverage())); logU2U(); Serial.print(unit); 
+        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197->getMax())); logU2U(); Serial.print(unit); 
     }
     Serial.println(); 
 }

@@ -188,6 +188,7 @@ byte K197device::getNewReading(byte *data) {
   if (isTKModeActive() && msg_is_num) {
       tkConvertV2C();  
   }
+  updateCache();
   return n;
 }
 
@@ -286,3 +287,27 @@ void K197device::debugPrint() {
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
 }
+
+  /*!
+      @brief  update the cache
+   */
+  void K197device::updateCache() {
+       if (   cache.tkMode!=tkMode || 
+              cache.annunciators0!=annunciators0 ||
+              cache.annunciators7!=annunciators7 ||
+              cache.annunciators8!=annunciators8    ) {  
+           // Something changed, reset stats 
+           cache.average=msg_value;
+           cache.min=msg_value;
+           cache.max=msg_value;    
+       } else {
+           cache.average+=(msg_value-cache.average)/float(cache.nsamples); // This not perfect but good enough in most practical cases.
+           if (msg_value < cache.min) cache.min = msg_value;
+           if (msg_value > cache.max) cache.max = msg_value;
+       }
+       cache.msg_value=msg_value;
+       cache.tkMode=tkMode;
+       cache.annunciators0=annunciators0;
+       cache.annunciators7=annunciators7;
+       cache.annunciators8=annunciators8;
+  }

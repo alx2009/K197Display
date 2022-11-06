@@ -85,7 +85,7 @@ private:
 
   bool msg_is_num = false;     ///< true if message is numeric
   bool msg_is_ovrange = false; ///< true if overange detected
-  float msg_value;             ///< numeric value of message
+  float msg_value=0.0;         ///< numeric value of message
 
   byte annunciators0 = 0x00; ///< Stores MINUS BAT RCL AC dB STO REL AUTO
   byte annunciators7 = 0x00; ///< Stores mA, k, V, u (micro), M, m (mV)
@@ -205,6 +205,57 @@ public:
 
   void debugPrint();
 
+  /*!
+      @brief  structure used to store previus vales, average, max, min, etc.
+   */
+  struct {
+    public:
+       byte nsamples=3;
+       bool tkMode=false;
+       float msg_value=0.0;
+       byte annunciators0=0x00;
+       byte annunciators7=0x00;
+       byte annunciators8=0x00;
+
+       float average=0.0;
+       float min=0.0;
+       float max=0.0;
+  } cache;
+
+  void updateCache();
+
+  /*!
+      @brief  set the number of samples for rolling average calculation
+      
+      @details Note that because this is a rolling average, the effect of a change is not immediate, it requires on the order of nsamples before it takes effect
+      
+      @param nsamples number of samples
+  */
+  void setNsamples(byte nsamples) { cache.nsamples=nsamples; };
+  /*!
+      @brief get the number of samples for rolling average calculation
+      @return number of samples
+  */
+  float getNsamples() { return cache.nsamples; };
+ 
+  /*!
+      @brief  returns the average value (see also setNsamples())
+      @return average value
+  */
+  float getAverage() { return cache.average; };
+
+  /*!
+      @brief  returns the minimum value
+      @return minimum value
+  */
+  float getMin() { return cache.min; };
+
+  /*!
+      @brief  returns the maximum value
+      @return maximum value
+  */
+  float getMax() { return cache.max; };
+  
 public:
   // annunciators0
   /*!

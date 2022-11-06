@@ -36,9 +36,11 @@ but statistically we should print out something if there are recurring issues
 */
 /**************************************************************************/
 //TODO wish list:
-// Datalogging options (log ms, freq, unit as separate fields, log internal T)
+// Keep min/max value across ranges
 // Display Max/Min
 // Autohold
+
+//Bugs: adjust statistic significant digits
 
 #include "K197device.h"
 K197device k197dev;
