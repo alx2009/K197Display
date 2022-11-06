@@ -36,11 +36,12 @@ but statistically we should print out something if there are recurring issues
 */
 /**************************************************************************/
 //TODO wish list:
+// Scroll menus with longPress/repeat
 // Keep min/max value across ranges
 // Display Max/Min
 // Autohold
 
-//Bugs: adjust statistic significant digits
+//Bugs: Enable scrolling menu backward even if the item is not selectable
 
 #include "K197device.h"
 

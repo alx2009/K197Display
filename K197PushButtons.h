@@ -50,11 +50,9 @@ class k197ButtonCluster {
             ///< enough, increase in case yoyu experience unintended double
             ///< presses
     static const unsigned long longPressTime =
-        800L; ///< long press event will be generated when pressed more than
+        500L; ///< long press event will be generated when pressed more than
               ///< longPressTime ms
-    static const unsigned long holdTime =
-        200L; ///< long press event will be generated when pressed more than
-              ///< longPressTime ms
+    static const unsigned long holdTime = 200L; ///< After a LongPress Hold events will be generated every holdTime while the butto is still pressed
     static const unsigned long doubleClicktime =
         500L; ///< double click event when pressed within doubleClicktime ms from
               ///< a previous release

@@ -66,7 +66,6 @@ private:
   bool msg_log = false;      ///< if true logs data to Serial
   byte logskip=0;
 
-  bool handleUIEventMainMenu(K197UIeventsource eventSource, K197UIeventType eventType);
   bool handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType);
 
 public:

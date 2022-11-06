@@ -386,6 +386,40 @@ void UImanager::updateBtStatus(bool present, bool connected) {
   u8g2.sendBuffer();
 }
 
+// ***************************************************************************************
+//  Menu definition/handling
+// ***************************************************************************************
+
+//TODO: documentation
+DEF_MENU_CLOSE(closeMenu,     15, "< Back");
+DEF_MENU_ACTION(exitMenu,  15, "Exit", uiman.setScreenMode(K197sc_normal););
+
+DEF_MENU_SEPARATOR(mainSeparator0,15, "< Options >");
+DEF_MENU_BOOL(additionalModes,  15, "Extra Modes");
+DEF_MENU_OPEN(btDatalog,           15, "Data logging >>>", &UIlogMenu);
+DEF_MENU_BUTTON(bluetoothMenu,  15, "Bluetooth");
+DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast", u8g2.setContrast(getValue()););
+DEF_MENU_BUTTON(saveSettings,   15, "Save settings");
+DEF_MENU_BUTTON(reloadSettings, 15, "reload settings");
+DEF_MENU_ACTION(openLog,        15, "Show log", uiman.setScreenMode(K197sc_debug););
+
+UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, 
+                               &bluetoothMenu, &contrastCtrl, &exitMenu, 
+                               &saveSettings, &reloadSettings, &openLog};
+
+DEF_MENU_SEPARATOR(logSeparator0, 15, "< Datalogging >");
+DEF_MENU_BYTE(logSkip,         15, "Samples to skip");
+DEF_MENU_BOOL(logSplitUnit,    15, "Split unit");
+DEF_MENU_BOOL(logTimestamp,    15, "Log timestamp");
+DEF_MENU_BOOL(logTamb,         15, "Include Tamb");
+DEF_MENU_BOOL(logStat,         15, "Include Statistics");
+DEF_MENU_SEPARATOR(logSeparator1, 15, "< Statistics >");
+DEF_MENU_BYTE_ACT(logStatSamples,  15, "Num. Samples", k197dev.setNsamples(getValue()); );
+
+//DEF_MENU_BOOL_ACT(enableLog, 15, "Log to BT", );
+
+UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
+
 /*!
     @brief  handle UI event
 
@@ -397,105 +431,13 @@ void UImanager::updateBtStatus(bool present, bool connected) {
     @return true if the event has been completely handled, false otherwise
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
-    if (screen_mode == K197sc_mainMenu) return handleUIEventMainMenu(eventSource, eventType);
-    //else if (screen_mode == K197sc_logMenu) return handleUIEventLogMenu(eventSource, eventType);
-    return false;
-}
-
-// ***************************************************************************************
-//  Menu definition/handling
-// ***************************************************************************************
-
-//TODO: documentation
-
-//const char  exitMenu_txt[] PROGMEM = "Exit";
-const char  closeMenu_txt[] PROGMEM = "< Back";
-UIMenuActionClose closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
-
-DEFINE_MENU_ACTION(exitMenu, 15, "Exit", uiman.setScreenMode(K197sc_normal););
-
-//UIMenuButtonItem exitMenu(15, reinterpret_cast<const __FlashStringHelper *>(exitMenu_txt));
-
-
-const char  mainSeparator0_txt[] PROGMEM = "< Options >";
-const char  extraModes_txt[] PROGMEM = "Extra Modes";
-const char  btDatalog_txt[] PROGMEM = "Data logging >>>";
-const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
-const char  contrastCtrl_txt[] PROGMEM = "Contrast";
-const char  saveSettings_txt[] PROGMEM = "Save settings";
-const char  reloadSettings_txt[] PROGMEM = "reload settings";
-const char  openLog_txt[] PROGMEM = "Show log";
-
-UIMenuSeparator mainSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(mainSeparator0_txt));
-MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
-UIMenuActionOpen btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt), &UIlogMenu);
-UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
-MenuInputByte contrastCtrl(15, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
-UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
-UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
-UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
-
-UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &exitMenu, &saveSettings, &reloadSettings, &openLog};
-
-//TODO: documentation
-//log ms, freq, unit as separate fields, log internal T
-const char  logSeparator0_txt[] PROGMEM = "< Datalogging >";
-const char  logSkip_txt[] PROGMEM = "Samples to skip";
-const char  logSplitUnit_txt[] PROGMEM = "Split unit";
-const char  logTimestamp_txt[] PROGMEM = "Log timestamp";
-const char  logTamb_txt[] PROGMEM = "Include Tamb";
-const char  logStat_txt[] PROGMEM = "Include Statistics";
-const char  logSeparator1_txt[] PROGMEM = "< Statistics >";
-const char  logStatSamples_txt[] PROGMEM = "Num. Samples";
-
-UIMenuSeparator logSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator0_txt));
-MenuInputByte logSkip(15, reinterpret_cast<const __FlashStringHelper *>(logSkip_txt));
-MenuInputBool logSplitUnit(15, reinterpret_cast<const __FlashStringHelper *>(logSplitUnit_txt));
-MenuInputBool logTimestamp(15, reinterpret_cast<const __FlashStringHelper *>(logTimestamp_txt));
-MenuInputBool logTamb(15, reinterpret_cast<const __FlashStringHelper *>(logTamb_txt));
-MenuInputBool logStat(15, reinterpret_cast<const __FlashStringHelper *>(logStat_txt));
-UIMenuSeparator logSeparator1(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator1_txt));
-MenuInputByte logStatSamples(15, reinterpret_cast<const __FlashStringHelper *>(logStatSamples_txt));
-
-UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
-
-
-/*!
-    @brief  handle UI event for the main menu
-
-    @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
-
-    @param eventSource identifies the source of the event (REL, DB, etc.)
-    @param eventType identifies the source of the event (REL, DB, etc.)
-
-    @return true if the event has been completely handled, false otherwise
-*/
-bool UImanager::handleUIEventMainMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
-    if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType) ) return true;
-    const UImenuItem *selectedItem = UImenu::getCurrentMenu()->getSelectedItem();
-    if ( (selectedItem==&contrastCtrl) && (eventType==UIeventRelease) ) { // Possible change of value
-        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
-            u8g2.setContrast(contrastCtrl.getValue());
+    if (screen_mode == K197sc_mainMenu) {
+        if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType) ) return true;
+        if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
+            setScreenMode(K197sc_normal);
+            return true;             
         }
-    }
-    if ( (selectedItem==&logStatSamples) && (eventType==UIeventRelease) ) { // Possible change of value
-        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
-            k197dev.setNsamples(logStatSamples.getValue());
-        }
-    }
-    if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
-        setScreenMode(K197sc_normal);
-        return true;             
-    }
-    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
-    // If we are here we have a menu selection event
-    if (selectedItem == &exitMenu) {
-        setScreenMode(K197sc_normal);
-        return true;
-    }
-    if (selectedItem == &openLog) {
-        setScreenMode(K197sc_debug);
-        return true;      
+      
     }
     return false;
 }
@@ -529,38 +471,6 @@ void UImanager::setupMenus() {
   UIlogMenu.items = logMenuItems;
   UIlogMenu.num_items = sizeof(logMenuItems)/sizeof(UImenuItem *);  
   UIlogMenu.selectFirstItem();
-}
-
-
-/*!
-    @brief  handle UI event for the main menu
-
-    @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
-
-    @param eventSource identifies the source of the event (REL, DB, etc.)
-    @param eventType identifies the source of the event (REL, DB, etc.)
-
-    @return true if the event has been completely handled, false otherwise
-*/
-bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
-    if (UIlogMenu.handleUIEvent(eventSource, eventType) ) return true;
-    const UImenuItem *selectedItem = UIlogMenu.getSelectedItem();
-    if ( (selectedItem==&logStatSamples) && (eventType==UIeventRelease) ) { // Possible change of value
-        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
-            k197dev.setNsamples(logStatSamples.getValue());
-        }
-    }
-    if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
-        setScreenMode(K197sc_normal);
-        return true;             
-    }
-    if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
-    // If we are here we have a menu selection event
-    if (selectedItem == &exitMenu) {
-        setScreenMode(K197sc_normal);
-        return true;
-    }
-    return false;
 }
 
 inline void logU2U() {

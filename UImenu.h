@@ -144,13 +144,41 @@ class UIMenuActionOpen : public UIMenuButtonItem {
       virtual void change() {UImenu::getCurrentMenu()->openMenu(child);};
 };
 
-#define DEFINE_MENU_ACTION(instance_name, height, text, action_code) \
-class class##instance_name : public UIMenuButtonItem {               \
-  public:                                                            \
-     class##instance_name() : UIMenuButtonItem(height, F(text)) {};  \
-     virtual void change() {                                         \
-      action_code                                                    \
-     };                                                              \
-} instance_name                                                      \
+// *********************************************************************************
+// *  The following macros do not add any extra functionality, but simplify
+// *  the definition of menu classes and subclasses
+// *  all macros need a terminating ';' character when they are used
+// *  so that they look as instructions
+// *********************************************************************************
+
+#define DEF_MENU_CLASS(class_name, instance_name, height, text)          \
+const char __txt_##instance_name[] PROGMEM = text;                       \
+class_name instance_name(height,                                         \
+   reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name)) \
+
+#define DEF_MENU_SEPARATOR(instance_name, height, text) DEF_MENU_CLASS(UIMenuSeparator, instance_name, height, text)
+#define DEF_MENU_BUTTON(instance_name, height, text) DEF_MENU_CLASS(UIMenuSeparator, instance_name, height, text)
+#define DEF_MENU_BOOL(instance_name, height, text) DEF_MENU_CLASS(MenuInputBool, instance_name, height, text)
+#define DEF_MENU_BYTE(instance_name, height, text) DEF_MENU_CLASS(MenuInputByte, instance_name, height, text)
+
+#define DEF_MENU_CLOSE(instance_name, height, text) DEF_MENU_CLASS(UIMenuActionClose, instance_name, height, text)
+
+#define DEF_MENU_OPEN(instance_name, height, text, menuptr)                       \
+const char __txt_##instance_name[] PROGMEM = text;                                \
+UIMenuActionOpen instance_name(height,                                            \
+   reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name), menuptr)
+
+#define DEF_MENU_ACTION_SUBCLASS(parent_class, instance_name, height, text, action_code) \
+class __class_##instance_name : public parent_class {                                    \
+  public:                                                                                \
+     __class_##instance_name() : parent_class(height, F(text)) {};                       \
+     virtual void change() {                                                             \
+      action_code                                                                        \
+     };                                                                                  \
+} instance_name                                                                     
+
+#define DEF_MENU_ACTION(instance_name, height, text, action_code)   DEF_MENU_ACTION_SUBCLASS(UIMenuButtonItem, instance_name, height, text, action_code)
+#define DEF_MENU_BOOL_ACT(instance_name, height, text, action_code) DEF_MENU_ACTION_SUBCLASS(MenuInputBool, instance_name, height, text, action_code)
+#define DEF_MENU_BYTE_ACT(instance_name, height, text, action_code) DEF_MENU_ACTION_SUBCLASS(MenuInputByte, instance_name, height, text, action_code)
 
 #endif //UIMENU_H__
