@@ -408,10 +408,14 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
     return false;
 }
 
+// ***************************************************************************************
+//  Menu definition/handling
+// ***************************************************************************************
+
 //TODO: documentation
 const char  mainSeparator0_txt[] PROGMEM = "< Options >";
 const char  extraModes_txt[] PROGMEM = "Extra Modes";
-const char  btDatalog_txt[] PROGMEM = "BT datalog";
+const char  btDatalog_txt[] PROGMEM = "Data logging >>>";
 const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
 const char  contrastCtrl_txt[] PROGMEM = "Contrast";
 const char  closeMenu_txt[] PROGMEM = "Exit";
@@ -421,7 +425,7 @@ const char  openLog_txt[] PROGMEM = "Show log";
 
 UIMenuSeparator mainSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(mainSeparator0_txt));
 MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
-MenuInputBool btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt));
+UIMenuButtonItem btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt));
 UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
 MenuInputByte contrastCtrl(15, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
 UIMenuButtonItem closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
@@ -430,6 +434,29 @@ UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *
 UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
 UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
+
+//TODO: documentation
+//log ms, freq, unit as separate fields, log internal T
+const char  logSeparator0_txt[] PROGMEM = "< Datalogging >";
+const char  logSkip_txt[] PROGMEM = "Samples to skip";
+const char  logSplitUnit_txt[] PROGMEM = "Split unit";
+const char  logTimestamp_txt[] PROGMEM = "Log timestamp";
+const char  logTamb_txt[] PROGMEM = "Include Tamb";
+const char  logStat_txt[] PROGMEM = "Include Statistics";
+const char  logSeparator1_txt[] PROGMEM = "< Statistics >";
+const char  logStatSamples_txt[] PROGMEM = "Num. Samples";
+
+UIMenuSeparator logSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator0_txt));
+MenuInputByte logSkip(15, reinterpret_cast<const __FlashStringHelper *>(logSkip_txt));
+MenuInputBool logSplitUnit(15, reinterpret_cast<const __FlashStringHelper *>(logSplitUnit_txt));
+MenuInputBool logTimestamp(15, reinterpret_cast<const __FlashStringHelper *>(logTimestamp_txt));
+MenuInputBool logTamb(15, reinterpret_cast<const __FlashStringHelper *>(logTamb_txt));
+MenuInputBool logStat(15, reinterpret_cast<const __FlashStringHelper *>(logStat_txt));
+UIMenuSeparator logSeparator1(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator1_txt));
+MenuInputByte logStatSamples(15, reinterpret_cast<const __FlashStringHelper *>(logStatSamples_txt));
+
+UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu};
+
 
 /*!
     @brief  handle UI event for the main menu
@@ -478,29 +505,8 @@ void UImanager::setContrast(uint8_t value) {
 
 bool UImanager::isExtraModeEnabled() {return additionalModes.getValue(); };
 
-bool UImanager::isBtDatalogEnabled() {return btDatalog.getValue(); };
-
-//TODO: documentation
-//log ms, freq, unit as separate fields, log internal T
-const char  logSeparator0_txt[] PROGMEM = "< Datalogging >";
-const char  logSkip_txt[] PROGMEM = "Samples to skip";
-const char  logSplitUnit_txt[] PROGMEM = "Split unit";
-const char  logTimestamp_txt[] PROGMEM = "Log timestamp";
-const char  logTamb_txt[] PROGMEM = "Include Tamb";
-const char  logStat_txt[] PROGMEM = "Include Statistics";
-const char  logSeparator1_txt[] PROGMEM = "< Statistics >";
-const char  logStatSamples_txt[] PROGMEM = "Num. Samples";
-
-UIMenuSeparator logSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator0_txt));
-MenuInputByte logSkip(15, reinterpret_cast<const __FlashStringHelper *>(logSkip_txt));
-MenuInputBool logSplitUnit(15, reinterpret_cast<const __FlashStringHelper *>(logSplitUnit_txt));
-MenuInputBool logTimestamp(15, reinterpret_cast<const __FlashStringHelper *>(logTimestamp_txt));
-MenuInputBool logTamb(15, reinterpret_cast<const __FlashStringHelper *>(logTamb_txt));
-MenuInputBool logStat(15, reinterpret_cast<const __FlashStringHelper *>(logStat_txt));
-UIMenuSeparator logSeparator1(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator1_txt));
-MenuInputByte logStatSamples(15, reinterpret_cast<const __FlashStringHelper *>(logStatSamples_txt));
-
-UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu};
+//TODO: remove together with all the code using it (now implemented via sub-menus)
+bool UImanager::isBtDatalogEnabled() {return false; /*btDatalog.getValue();*/ };  
 
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
