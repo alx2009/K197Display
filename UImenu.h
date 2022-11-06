@@ -90,6 +90,7 @@ class UImenu {
       void selectFirstItem();
       void openMenu(UImenu *child) {child->parent=this; currentMenu=child;};
       void closeMenu() {if(parent==NULL) return; currentMenu=parent; parent=NULL; };
+      static UImenu *getCurrentMenu() {return currentMenu;};
 };
 
 class MenuInputBool : public UIMenuButtonItem {
