@@ -43,10 +43,8 @@ but statistically we should print out something if there are recurring issues
 //Bugs: adjust statistic significant digits
 
 #include "K197device.h"
-K197device k197dev;
 
 #include "UImanager.h"
-UImanager uiman(&k197dev);
 
 #include "K197PushButtons.h"
 #include "debugUtil.h"

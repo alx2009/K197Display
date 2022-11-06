@@ -54,7 +54,6 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 private:
-  K197device *k197;
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
   K197screenMode screen_mode = K197sc_normal; // Keep track of how to display stuff...
@@ -71,7 +70,7 @@ private:
   bool handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventType eventType);
 
 public:
-  UImanager(K197device *k197);
+  UImanager() {}; ///< default constructor for the class
   void setup();
   void setScreenMode(K197screenMode mode);
 
@@ -112,5 +111,7 @@ public:
 
   void logData();
 };
+
+extern UImanager uiman;
 
 #endif // UIMANAGER_H__

@@ -53,6 +53,7 @@ UImenu UIlogMenu(130);
 #include "debugUtil.h"
 #include "pinout.h"
 
+UImanager uiman; ///< defines the UImanager instance to use in the application
 
 /*!
     @brief  Constructor, see
@@ -75,13 +76,6 @@ UImenu UIlogMenu(130);
 #define U8LOG_HEIGHT 9                            ///< Height of the log window
 uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT]; ///< buffer for the log window
 U8G2LOG u8g2log;                                  ///< the log window
-
-/*!
-    @brief  Constructor for the class
-
-   @param k197 pointer to the K197device object to display
-*/
-UImanager::UImanager(K197device *k197) { this->k197 = k197; }
 
 /*!
     @brief  this function is intended to include any drawing command that may be
@@ -168,19 +162,19 @@ void UImanager::updateDisplaySplit() {
   u8g2_uint_t y = 5;
   u8g2.setFont(u8g2_font_8x13_mr);
   u8g2.setCursor(x, y);
-  if (k197->isAuto())
+  if (k197dev.isAuto())
     u8g2.print(F("AUTO "));
   else
     u8g2.print(F("     "));
-  if (k197->isBAT())
+  if (k197dev.isBAT())
     u8g2.print(F("BAT "));
   else
     u8g2.print(F("    "));
-  if (k197->isREL())
+  if (k197dev.isREL())
     u8g2.print(F("REL "));
   else
     u8g2.print(F("    "));
-  if (k197->isCal())
+  if (k197dev.isCal())
     u8g2.print(F("Cal   "));
   else
     u8g2.print(F("      "));
@@ -188,28 +182,28 @@ void UImanager::updateDisplaySplit() {
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_9x18_mr);
-  u8g2.print(k197->getMessage());
+  u8g2.print(k197dev.getMessage());
   u8g2.print(CH_SPACE);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197->getUnit(true));
+  u8g2.print(k197dev.getUnit(true));
   y += u8g2.getMaxCharHeight();
   u8g2.setFont(u8g2_font_9x18_mr);
-  if (k197->isAC())
+  if (k197dev.isAC())
     u8g2.print(F(" AC   "));
   else
     u8g2.print(F("      "));
 
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
-  if (k197->isSTO())
+  if (k197dev.isSTO())
     u8g2.print(F("STO "));
   else
     u8g2.print(F("    "));
-  if (k197->isRCL())
+  if (k197dev.isRCL())
     u8g2.print(F("RCL "));
   else
     u8g2.print(F("    "));
-  if (k197->isRMT())
+  if (k197dev.isRMT())
     u8g2.print(F("RMT   "));
   else
     u8g2.print(F("      "));
@@ -218,9 +212,9 @@ void UImanager::updateDisplaySplit() {
       u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
       u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
   } else if (screen_mode == K197sc_mainMenu) {
-      UImainMenu.draw(&u8g2, 0, 10); 
+      UImenu::getCurrentMenu()->draw(&u8g2, 0, 10); 
   } else {
-      UIlogMenu.draw(&u8g2, 0, 10);     
+      //UIlogMenu.draw(&u8g2, 0, 10);     
   }
   u8g2.sendBuffer();
 }
@@ -238,9 +232,9 @@ void UImanager::updateDisplayNormal() {
   unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
-  u8g2.drawStr(xraw, yraw, k197->getRawMessage());
+  u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
   for (byte i = 1; i <= 7; i++) {
-    if (k197->isDecPointOn(i)) {
+    if (k197dev.isDecPointOn(i)) {
       u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
                    yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
     }
@@ -252,7 +246,7 @@ void UImanager::updateDisplayNormal() {
   const unsigned int xunit = 229;
   const unsigned int yunit = 20;
   u8g2.setCursor(xunit, yunit);
-  u8g2.print(k197->getUnit());
+  u8g2.print(k197dev.getUnit());
 
   // set the AC/DC indicator
   // u8g2.setFont(u8g2_font_10x20_mf);
@@ -260,7 +254,7 @@ void UImanager::updateDisplayNormal() {
   const unsigned int xac = xraw + 3;
   const unsigned int yac = 40;
   u8g2.setCursor(xac, yac);
-  if (k197->isAC())
+  if (k197dev.isAC())
     u8g2.print(F("AC"));
   else
     u8g2.print(F("  "));
@@ -271,7 +265,7 @@ void UImanager::updateDisplayNormal() {
   unsigned int x = 0;
   unsigned int y = 5;
   u8g2.setCursor(x, y);
-  if (k197->isAuto())
+  if (k197dev.isAuto())
     u8g2.print(F("AUTO"));
   else
     u8g2.print(F("    "));
@@ -279,7 +273,7 @@ void UImanager::updateDisplayNormal() {
   x += u8g2.getMaxCharWidth() * 2;
   u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setCursor(x, y);
-  if (k197->isBAT())
+  if (k197dev.isBAT())
     u8g2.print(F("BAT"));
   else
     u8g2.print(F("   "));
@@ -288,14 +282,14 @@ void UImanager::updateDisplayNormal() {
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
-  if (k197->isREL())
+  if (k197dev.isREL())
     u8g2.print(F("REL"));
   else
     u8g2.print(F("   "));
   x = u8g2.tx;
   x += (u8g2.getMaxCharWidth() / 2);
   u8g2.setCursor(x, y);
-  if (k197->isdB())
+  if (k197dev.isdB())
     u8g2.print(F("dB"));
   else
     u8g2.print(F("  "));
@@ -303,14 +297,14 @@ void UImanager::updateDisplayNormal() {
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
-  if (k197->isSTO())
+  if (k197dev.isSTO())
     u8g2.print(F("STO"));
   else
     u8g2.print(F("   "));
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
-  if (k197->isRCL())
+  if (k197dev.isRCL())
     u8g2.print(F("RCL"));
   else
     u8g2.print(F("   "));
@@ -318,14 +312,14 @@ void UImanager::updateDisplayNormal() {
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
-  if (k197->isCal())
+  if (k197dev.isCal())
     u8g2.print(F("Cal"));
   else
     u8g2.print(F("   "));
 
   y += u8g2.getMaxCharHeight() * 3;
   u8g2.setCursor(x, y);
-  if (k197->isRMT())
+  if (k197dev.isRMT())
     u8g2.print(F("RMT"));
   else
     u8g2.print(F("   "));
@@ -334,10 +328,10 @@ void UImanager::updateDisplayNormal() {
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (k197->isTKModeActive()) { // Display local temperature
+  if (k197dev.isTKModeActive()) { // Display local temperature
       char buf[K197_MSG_SIZE];
-      dtostrf(k197->getTColdJunction(), K197_MSG_SIZE-1, 2, buf);
-      u8g2.print(buf); u8g2.print(k197->getUnit());
+      dtostrf(k197dev.getTColdJunction(), K197_MSG_SIZE-1, 2, buf);
+      u8g2.print(buf); u8g2.print(k197dev.getUnit());
   } else {
       u8g2.print(F("          "));
   }
@@ -404,7 +398,7 @@ void UImanager::updateBtStatus(bool present, bool connected) {
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if (screen_mode == K197sc_mainMenu) return handleUIEventMainMenu(eventSource, eventType);
-    else if (screen_mode == K197sc_logMenu) return handleUIEventLogMenu(eventSource, eventType);
+    //else if (screen_mode == K197sc_logMenu) return handleUIEventLogMenu(eventSource, eventType);
     return false;
 }
 
@@ -413,27 +407,39 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 // ***************************************************************************************
 
 //TODO: documentation
+
+//const char  exitMenu_txt[] PROGMEM = "Exit";
+const char  closeMenu_txt[] PROGMEM = "< Back";
+UIMenuActionClose closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
+
+class exitMenu_class : public UIMenuButtonItem {
+  public:
+     exitMenu_class() : UIMenuButtonItem(15, F("Exit")) {};
+     void change() {uiman.setScreenMode(K197sc_normal);};
+} exitMenu;
+
+//UIMenuButtonItem exitMenu(15, reinterpret_cast<const __FlashStringHelper *>(exitMenu_txt));
+
+
 const char  mainSeparator0_txt[] PROGMEM = "< Options >";
 const char  extraModes_txt[] PROGMEM = "Extra Modes";
 const char  btDatalog_txt[] PROGMEM = "Data logging >>>";
 const char  bluetoothMenu_txt[] PROGMEM = "Bluetooth";
 const char  contrastCtrl_txt[] PROGMEM = "Contrast";
-const char  closeMenu_txt[] PROGMEM = "Exit";
 const char  saveSettings_txt[] PROGMEM = "Save settings";
 const char  reloadSettings_txt[] PROGMEM = "reload settings";
 const char  openLog_txt[] PROGMEM = "Show log";
 
 UIMenuSeparator mainSeparator0(15, reinterpret_cast<const __FlashStringHelper *>(mainSeparator0_txt));
 MenuInputBool additionalModes(15, reinterpret_cast<const __FlashStringHelper *>(extraModes_txt));
-UIMenuButtonItem btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt));
+UIMenuActionOpen btDatalog(15, reinterpret_cast<const __FlashStringHelper *>(btDatalog_txt), &UIlogMenu);
 UIMenuButtonItem bluetoothMenu(15, reinterpret_cast<const __FlashStringHelper *>(bluetoothMenu_txt));
 MenuInputByte contrastCtrl(15, reinterpret_cast<const __FlashStringHelper *>(contrastCtrl_txt));
-UIMenuButtonItem closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
 UIMenuButtonItem saveSettings(15, reinterpret_cast<const __FlashStringHelper *>(saveSettings_txt));
 UIMenuButtonItem reloadSettings(15, reinterpret_cast<const __FlashStringHelper *>(reloadSettings_txt));
 UIMenuButtonItem openLog(15, reinterpret_cast<const __FlashStringHelper *>(openLog_txt));
 
-UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &closeMenu, &saveSettings, &reloadSettings, &openLog};
+UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &btDatalog, &bluetoothMenu, &contrastCtrl, &exitMenu, &saveSettings, &reloadSettings, &openLog};
 
 //TODO: documentation
 //log ms, freq, unit as separate fields, log internal T
@@ -455,7 +461,7 @@ MenuInputBool logStat(15, reinterpret_cast<const __FlashStringHelper *>(logStat_
 UIMenuSeparator logSeparator1(15, reinterpret_cast<const __FlashStringHelper *>(logSeparator1_txt));
 MenuInputByte logStatSamples(15, reinterpret_cast<const __FlashStringHelper *>(logStatSamples_txt));
 
-UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu};
+UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
 
 
 /*!
@@ -469,11 +475,16 @@ UImenuItem *logMenuItems[] = {&logSeparator0, &logSkip, &logSplitUnit, &logTimes
     @return true if the event has been completely handled, false otherwise
 */
 bool UImanager::handleUIEventMainMenu(K197UIeventsource eventSource, K197UIeventType eventType) {
-    if (UImainMenu.handleUIEvent(eventSource, eventType) ) return true;
-    const UImenuItem *selectedItem = UImainMenu.getSelectedItem();
+    if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType) ) return true;
+    const UImenuItem *selectedItem = UImenu::getCurrentMenu()->getSelectedItem();
     if ( (selectedItem==&contrastCtrl) && (eventType==UIeventRelease) ) { // Possible change of value
         if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
             u8g2.setContrast(contrastCtrl.getValue());
+        }
+    }
+    if ( (selectedItem==&logStatSamples) && (eventType==UIeventRelease) ) { // Possible change of value
+        if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
+            k197dev.setNsamples(logStatSamples.getValue());
         }
     }
     if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
@@ -482,7 +493,7 @@ bool UImanager::handleUIEventMainMenu(K197UIeventsource eventSource, K197UIevent
     }
     if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
     // If we are here we have a menu selection event
-    if (selectedItem == &closeMenu) {
+    if (selectedItem == &exitMenu) {
         setScreenMode(K197sc_normal);
         return true;
     }
@@ -518,7 +529,7 @@ void UImanager::setupMenus() {
   logSplitUnit.setValue(false);
   logTimestamp.setValue(true);
   logTamb.setValue(true);
-  logStatSamples.setValue(k197->getNsamples());
+  logStatSamples.setValue(k197dev.getNsamples());
   UIlogMenu.items = logMenuItems;
   UIlogMenu.num_items = sizeof(logMenuItems)/sizeof(UImenuItem *);  
   UIlogMenu.selectFirstItem();
@@ -540,7 +551,7 @@ bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventT
     const UImenuItem *selectedItem = UIlogMenu.getSelectedItem();
     if ( (selectedItem==&logStatSamples) && (eventType==UIeventRelease) ) { // Possible change of value
         if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { // change of value
-            k197->setNsamples(logStatSamples.getValue());
+            k197dev.setNsamples(logStatSamples.getValue());
         }
     }
     if (eventSource==K197key_REL && eventType==UIeventLongPress ) {
@@ -549,7 +560,7 @@ bool UImanager::handleUIEventLogMenu(K197UIeventsource eventSource, K197UIeventT
     }
     if ( (eventSource !=K197key_RCL) || (eventType!=UIeventClick) ) return false;
     // If we are here we have a menu selection event
-    if (selectedItem == &closeMenu) {
+    if (selectedItem == &exitMenu) {
         setScreenMode(K197sc_normal);
         return true;
     }
@@ -589,18 +600,18 @@ void UImanager::logData() {
         Serial.print(millis()); logU2U(); 
         Serial.print(F(" ms; "));
     }
-    Serial.print(k197->getMessage()); logU2U(); 
-    const __FlashStringHelper *unit = k197->getUnit(true);
+    Serial.print(k197dev.getMessage()); logU2U(); 
+    const __FlashStringHelper *unit = k197dev.getUnit(true);
     Serial.print(unit);
-    if (k197->isAC()) Serial.print(F(" AC"));
-    if (k197->isTKModeActive() && logTamb.getValue() ) {
-        Serial.print(F("; ")); Serial.print(k197->getTColdJunction()); logU2U(); Serial.print(unit); 
+    if (k197dev.isAC()) Serial.print(F(" AC"));
+    if (k197dev.isTKModeActive() && logTamb.getValue() ) {
+        Serial.print(F("; ")); Serial.print(k197dev.getTColdJunction()); logU2U(); Serial.print(unit); 
     }
     if (logStat.getValue()) {
         char buf[K197_MSG_SIZE];
-        Serial.print(F("; ")); Serial.print(formatNumber(buf, k197->getMin())); logU2U(); Serial.print(unit); 
-        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197->getAverage())); logU2U(); Serial.print(unit); 
-        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197->getMax())); logU2U(); Serial.print(unit); 
+        Serial.print(F("; ")); Serial.print(formatNumber(buf, k197dev.getMin())); logU2U(); Serial.print(unit); 
+        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197dev.getAverage())); logU2U(); Serial.print(unit); 
+        Serial.print(F("; ")); Serial.print(formatNumber(buf,k197dev.getMax())); logU2U(); Serial.print(unit); 
     }
     Serial.println(); 
 }

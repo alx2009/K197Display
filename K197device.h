@@ -396,4 +396,6 @@ public:
  
 };
 
+extern K197device k197dev;
+
 #endif // K197_DEVICE_H

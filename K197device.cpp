@@ -30,6 +30,8 @@
 #include "debugUtil.h"
 #include "pinout.h"
 
+K197device k197dev;
+
 // Lookup table to convert from segments to char
 // Note: before using the table, shift the 5 most significant bit one position
 // to the right (removes DP bit)

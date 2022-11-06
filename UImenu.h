@@ -131,6 +131,7 @@ class MenuInputByte : public UIMenuButtonItem {
 
 class UIMenuActionClose : public UIMenuButtonItem {
    public:
+      UIMenuActionClose(u8g2_uint_t height, const __FlashStringHelper *text) : UIMenuButtonItem(height, text) {};
       virtual void change() {UImenu::getCurrentMenu()->closeMenu();};
 };
 
