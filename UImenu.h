@@ -83,7 +83,7 @@ class UImenu {
       static UImenu *currentMenu=NULL;
 
    public:
-      UImenu(u8g2_uint_t width, bool isRoot=false) {this->width=width; if(isRoot) currentMenu=this};
+      UImenu(u8g2_uint_t width, bool isRoot=false) {this->width=width; if(isRoot) currentMenu=this;};
       void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);     
       bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
       const UImenuItem *getSelectedItem() {return items[selectedItem];};
