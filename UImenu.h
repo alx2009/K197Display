@@ -80,7 +80,7 @@ class UImenu {
       void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
 
       UImenu *parent=NULL;
-      static UImenu *currentMenu=NULL;
+      static UImenu *currentMenu; ///< Keeps track of the current menu
 
    public:
       UImenu(u8g2_uint_t width, bool isRoot=false) {this->width=width; if(isRoot) currentMenu=this;};
@@ -128,6 +128,7 @@ class MenuInputByte : public UIMenuButtonItem {
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 };
 
+/*
 extern UImenu
     UImainMenu; ///< this is the predefined oubject that is used with print(),
                 ///< etc. (similar to how Serial is used for debug output)
@@ -135,5 +136,5 @@ extern UImenu
 extern UImenu
     UIlogMenu; ///< this is the predefined oubject that is used with print(),
                 ///< etc. (similar to how Serial is used for debug output)
-
+*/
 #endif //UIMENU_H__

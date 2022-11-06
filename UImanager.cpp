@@ -45,9 +45,14 @@
 #include <Wire.h>
 #endif
 
+#include "UImenu.h"
+UImenu UImainMenu(130, true);
+UImenu UIlogMenu(130);
+
 #include "UImanager.h"
 #include "debugUtil.h"
 #include "pinout.h"
+
 
 /*!
     @brief  Constructor, see
