@@ -35,6 +35,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, b
     u8g2->drawFrame(x, y, w, getHeight(selected));
   }
 }
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 bool UImenuItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
@@ -42,6 +43,15 @@ bool UImenuItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType ev
 }
 #pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void UIMenuSeparator::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
+  u8g2->setFontMode(0);
+  u8g2->setDrawColor(1);
+  u8g2->setCursor(x+MENU_TEXT_OFFSET_X, y+MENU_TEXT_OFFSET_Y);
+  u8g2->print( reinterpret_cast<const __FlashStringHelper *>(text) );
+}
+#pragma GCC diagnostic pop
 
 void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
   UImenuItem::draw(u8g2, x, y, w, selected);
@@ -101,15 +111,34 @@ void UImenu::makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
   }
 }
 
+void UImenu::selectFirstItem() {
+  for (int i=0; i<num_items; i++) {
+      if(items[i]->selectable()) {
+          selectedItem=i;
+          return;
+      }
+  }
+}
+
 bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   if (items[selectedItem]->handleUIEvent(eventSource, eventType)) return true;
   if (eventSource==K197key_DB && eventType==UIeventClick) { // down
-     if (selectedItem  >= (num_items-1)) return true;
-     selectedItem++;
+     if (selectedItem>=(num_items-1)) return false;        
+     for(byte i=selectedItem+1; i<num_items; i++) {
+         if (items[i]->selectable()) {
+             selectedItem=i;
+             return true;
+         }
+     }
   }
   if (eventSource==K197key_REL && eventType==UIeventClick) { // up
-     if (selectedItem <= 0) return true;
-     selectedItem--;
+     if (selectedItem==0) return false;        
+     for(byte i=selectedItem; i>0; i--) {
+         if (items[i-1]->selectable()) {
+             selectedItem=i-1;
+             return true;
+         }
+     }
   }
   return false;
 }

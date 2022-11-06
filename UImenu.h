@@ -43,6 +43,17 @@ class UImenuItem {
       UImenuItem(u8g2_uint_t height) {this->height = height;};
       virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
       virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+      virtual bool selectable() {return true;};
+};
+
+class UIMenuSeparator : public UImenuItem {
+   protected:
+      const __FlashStringHelper *text;
+      
+   public:
+      UIMenuSeparator(u8g2_uint_t height, const __FlashStringHelper *text) : UImenuItem(height) {this->text = text;};
+      virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected);
+      virtual bool selectable() {return false;};
 };
 
 class UIMenuButtonItem : public UImenuItem {
@@ -68,11 +79,17 @@ class UImenu {
       bool selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
       void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
 
+      UImenu *parent=NULL;
+      static UImenu *currentMenu=NULL;
+
    public:
-      UImenu(u8g2_uint_t width) {this->width=width;};
+      UImenu(u8g2_uint_t width, bool isRoot=false) {this->width=width; if(isRoot) currentMenu=this};
       void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);     
       bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
       const UImenuItem *getSelectedItem() {return items[selectedItem];};
+      void selectFirstItem();
+      void openMenu(UImenu *child) {child->parent=this; currentMenu=child;};
+      void closeMenu() {if(parent==NULL) return; currentMenu=parent; parent=NULL; };
 };
 
 class MenuInputBool : public UIMenuButtonItem {
