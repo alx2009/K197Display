@@ -144,6 +144,13 @@ class UIMenuActionOpen : public UIMenuButtonItem {
       virtual void change() {UImenu::getCurrentMenu()->openMenu(child);};
 };
 
-
+#define DEFINE_MENU_ACTION(instance_name, height, text, action_code) \
+class class##instance_name : public UIMenuButtonItem {               \
+  public:                                                            \
+     class##instance_name() : UIMenuButtonItem(height, F(text)) {};  \
+     virtual void change() {                                         \
+      action_code                                                    \
+     };                                                              \
+} instance_name                                                      \
 
 #endif //UIMENU_H__

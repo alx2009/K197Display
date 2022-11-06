@@ -412,11 +412,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 const char  closeMenu_txt[] PROGMEM = "< Back";
 UIMenuActionClose closeMenu(15, reinterpret_cast<const __FlashStringHelper *>(closeMenu_txt));
 
-class exitMenu_class : public UIMenuButtonItem {
-  public:
-     exitMenu_class() : UIMenuButtonItem(15, F("Exit")) {};
-     void change() {uiman.setScreenMode(K197sc_normal);};
-} exitMenu;
+DEFINE_MENU_ACTION(exitMenu, 15, "Exit", uiman.setScreenMode(K197sc_normal););
 
 //UIMenuButtonItem exitMenu(15, reinterpret_cast<const __FlashStringHelper *>(exitMenu_txt));
 
