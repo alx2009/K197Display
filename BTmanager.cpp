@@ -31,7 +31,8 @@ BTmanager BTman;
 /*!
       @brief initial setup of Bluetooth module
 
-      @details this method should be called within setup(). It will (attempt) to detect the presence of the BT module and configure it if present
+      @details this method should be called within setup(), and in any case after the constructor but before any other method. 
+      It will (attempt) to detect the presence of the BT module and configure it if present
 
       Note: Reliable detection requires the BT_POWER pin to be defined and connected to detect wether or not the module has power
 */
@@ -62,7 +63,16 @@ void BTmanager::setup() {
 }
 
 /*!
-      @brief check bluetooth if a connection is present
+      @brief check if a bluetooth connection is present
+
+      @details The BT_STATE pin is checked. this is connected to the "STATE" pin of the BT module, which is pulled low when the modulke is connected.
+      Using enum BTmanagerResult as return type enables the caller to take actions that only need to be taken at the start/end.
+
+      This function should be called in the main loop() after check Presence(), so that other functions can rely on isConnected() and validConnection();
+      
+      Note that if the autostart is used the start of a new session causes a reset of the AVR.
+
+      @return the result of the check
 
 */
 BTmanagerResult BTmanager::checkConnection() {
@@ -82,7 +92,15 @@ BTmanagerResult BTmanager::checkConnection() {
 /*!
       @brief check bluetooth module presence and reconfigure accordingly
 
-      Note: has no effect unless BT_POWER pin is defined and connected to detect wether or not the Bt module has power
+      @details The BT_POWER pin is checked (if defined at compile time, see also pinout.h). This pin is connected to the BT module power with a voltage divider (Bt module is powered at 5V, versus 3.3V for the AVR).
+      
+      Using enum BTmanagerResult as return type enables the caller to take actions that only need to be taken when the module is powered on or off.
+
+      This function should be called in the main loop(), so that other functions can rely on isPresent();
+
+      This method has no effect unless BT_POWER pin is defined and connected to detect wether or not the Bt module has power
+
+      @return the result of the check
 */
 BTmanagerResult BTmanager::checkPresence() {
 #ifdef  BT_POWER

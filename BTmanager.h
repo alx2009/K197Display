@@ -34,12 +34,25 @@ class BTmanager {
          false; ///< true if connection detected via BT_STATE pin
 
   public:
-     BTmanager() {};
+     BTmanager() {}; ///< Default constructor
      void setup();
      BTmanagerResult checkPresence();
      BTmanagerResult checkConnection();
+     /*!
+      @brief query if the Bluetooth module is present (powered on)
+      @return true if the module was detected last time checkPresence() was called
+     */
      bool isPresent() {return bt_module_present;};
+     /*!
+      @brief query if the Bluetooth module is connected
+      @return true if the connection was detected last time checkConnection() was called
+     */
      bool isConnected() {return bt_module_connected;};
+     /*!
+      @brief query if the Bluetooth module is present and connected
+      @details in normal operation validconnection() and is connected should return the same result, but due to timing of the check in rare occasions they may differ. 
+      @return true if both isPresent() and isConnected() return true
+     */
      bool validconnection() {return bt_module_present && bt_module_connected;};
 };
 

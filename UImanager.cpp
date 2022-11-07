@@ -341,10 +341,10 @@ void UImanager::updateDisplayNormal() {
 /*!
       @brief set the screen mode
 
-      As of now two modes are defined: normal mode and debug mode. In debug mode
-   the measurements are displays on the right of the screen, while the left part
-   is reserved for debug messages. This is intended for debugging the code that
-   interacts with the serial port itself, so that Serial cannot be used.
+      As of now three modes are defined: normal mode, menu mode and debug mode. In debug and menu mode
+   the measurements are displays on the right of the screen (split screen), while the left part
+   is reserved for debug messages and menu items respectively. As the name suggest debug mode is intended for debugging the code that
+   interacts with the serial port/bluetooth module itself, so that Serial cannot be used.
 
       @param mode can be displayNormal or displayDebug for normal and debug mode
    respectively
@@ -390,11 +390,10 @@ void UImanager::updateBtStatus() {
 //  Menu definition/handling
 // ***************************************************************************************
 
-//TODO: documentation
-DEF_MENU_CLOSE(closeMenu,     15, "< Back");
-DEF_MENU_ACTION(exitMenu,  15, "Exit", uiman.setScreenMode(K197sc_normal););
+DEF_MENU_CLOSE(closeMenu,     15, "< Back");                                    
+DEF_MENU_ACTION(exitMenu,  15, "Exit", uiman.setScreenMode(K197sc_normal););    
 
-DEF_MENU_SEPARATOR(mainSeparator0,15, "< Options >");
+DEF_MENU_SEPARATOR(mainSeparator0,15, "< Options >");                           
 DEF_MENU_BOOL(additionalModes,  15, "Extra Modes");
 DEF_MENU_BOOL(reassignStoRcl,   15, "Reassign STO/RCL");
 DEF_MENU_OPEN(btDatalog,           15, "Data logging >>>", &UIlogMenu);
@@ -406,7 +405,7 @@ DEF_MENU_ACTION(openLog,        15, "Show log", uiman.setScreenMode(K197sc_debug
 
 UImenuItem *mainMenuItems[] = {&mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog, 
                                &bluetoothMenu, &contrastCtrl, &exitMenu, 
-                               &saveSettings, &reloadSettings, &openLog};
+                               &saveSettings, &reloadSettings, &openLog}; ///< Root menu items
 
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >");
 DEF_MENU_BOOL(logEnable,       15, "Enabled");
@@ -420,12 +419,15 @@ DEF_MENU_BYTE_ACT(logStatSamples,  15, "Num. Samples", k197dev.setNsamples(getVa
 
 //DEF_MENU_BOOL_ACT(enableLog, 15, "Log to BT", );
 
-UImenuItem *logMenuItems[] = {&logSeparator0, &logEnable, &logSkip, &logSplitUnit, &logTimestamp, &logTamb, &logStat, &logSeparator1, &logStatSamples, &closeMenu, &exitMenu};
+UImenuItem *logMenuItems[] = {&logSeparator0, &logEnable, &logSkip, &logSplitUnit, 
+       &logTimestamp, &logTamb, &logStat, &logSeparator1, 
+       &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
 /*!
     @brief  handle UI event
 
     @details handle UI events (pushbutton presses) that should be handled locally, according to display mode and K197 current status 
+    In menu mode most events are passed to UImenu 
 
     @param eventSource identifies the source of the event (REL, DB, etc.)
     @param eventType identifies the source of the event (REL, DB, etc.)
@@ -451,6 +453,8 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eve
 /*!
       @brief set the display contrast
 
+      @details in addition to setting the contrast value, this method takes care of keeping the contrast menu item in synch
+
       @param value contrast value (0 to 255)
 */
 void UImanager::setContrast(uint8_t value) { 
@@ -458,28 +462,41 @@ void UImanager::setContrast(uint8_t value) {
   contrastCtrl.setValue(value);  
 }
 
-    /*!
+/*!
       @brief  set data logging to Serial
       @param yesno true to enabl, false to disable
-  */
-  void UImanager::setLogging(bool yesno) {
+*/
+void UImanager::setLogging(bool yesno) {
         if (!yesno) logskip_counter=0;
         logEnable.setValue(yesno);
-  }
+}
 
-  /*!
+/*!
       @brief  query data logging to Serial
       @return returns true if logging is active
-  */
-  bool UImanager::isLogging() {
+*/
+bool UImanager::isLogging() {
         return logEnable.getValue();
-  }
+}
 
+/*!
+      @brief  query if the extra modes are enabled
+      @details extra mode are modes that are implemented in this application rather than the original k197 device
+      @return returns true if logging is active
+*/
 bool UImanager::isExtraModeEnabled() { return additionalModes.getValue(); };
 
-//TODO: remove together with all the code using it (now implemented via sub-menus)
+/*!
+      @brief  query if the STO and RCL buttons should be re-assigned to other functions
+      @details note that this method only keeps track of the setting in the UI.
+      @return returns true if logging is active
+*/
 bool UImanager::reassignStoRcl() { return ::reassignStoRcl.getValue(); } 
 
+/*!
+      @brief  setup the menu
+      @details this method setup all the menus. It must be called before the menu can be displayed.
+*/
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
   ::reassignStoRcl.setValue(true);
@@ -497,11 +514,20 @@ void UImanager::setupMenus() {
   UIlogMenu.selectFirstItem();
 }
 
+/*!
+      @brief  Utility function, print a ";" if the option logSplit is active, otherwise a space
+      @details the options controls how the unit is handled when data is imported into a spreadsheet
+*/
 inline void logU2U() {
    if (logSplitUnit.getValue()) Serial.print(F(" ;"));
    else Serial.print(CH_SPACE);
 }
 
+/*!
+      @brief  format a number
+      @details format a float so that it has the right lenght and the maximum numner of decimal digitas allowed in the available display space
+      @return a nul terminated char array with the formatted number 
+*/
 const char *formatNumber(char buf[K197_MSG_SIZE], float f) {
     if (f>999999.0) f=999999.0;
     else if (f<-999999.0)f=-999999.0;
@@ -517,10 +543,10 @@ const char *formatNumber(char buf[K197_MSG_SIZE], float f) {
 
 /*!
     @brief  data logging to Serial
-    @details does the actual data logging when called
+    @details does the actual data logging when called. It has no effect if datalogging is disabled or in no connection has been detected
 */
 void UImanager::logData() {
-    if (!logEnable.getValue()) return;
+    if ( (!logEnable.getValue()) || (!BTman.validconnection()) ) return;
     if (logskip_counter<logSkip.getValue()) {
         logskip_counter++;
         return;

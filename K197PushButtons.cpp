@@ -14,10 +14,6 @@
   This file implements the k197ButtonCluster class, see k197ButtonCluster.h for
   the class definition
 
-  Currently button presses from the UI bush buttons are always mirrored towards
-  the motherboard. However the call back is also called so that
-  additional/complementary action can be taken by this sketch
-
 */
 /**************************************************************************/
 
@@ -56,11 +52,9 @@ unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< millis() when last released
 
 // The following four functions are the interrupt handlers for each push button.
-// They are normal functions because we are using attachInterrupt (not the most
-// efficient way with dxCore, but it is the default and it works for now) The
-// interrupt handler will simulate the push of the button on the 197/197A main
-// board this is completely independent from the handling of the button events in
-// the rest of the sketch
+// They are normal functions because we are using attachInterrupt (dxCore have more efficient alternatives, but attachInterrupt is kind of the default and it works for now).
+// The interrupt handler will simulate the push of the button on the 197/197A main
+// board. This is completely independent from the handling of the button events in the rest of the sketch
 
 /*!
       @brief interrupt handler for STO push button
@@ -131,14 +125,7 @@ void UI_DB_changing() {
 }
 
 /*!
-      @brief default constructor for class k197ButtonCluster
-*/
-k197ButtonCluster::k197ButtonCluster() {}
-
-/*!
-    @brief  setup the push butto cluster. Must be called first, before any other
-   member function
-
+    @brief  setup the push button cluster. Must be called first, before any other member function
     Note that for simplicity the pins used are hardwired in setup()
 */
 void k197ButtonCluster::setup() {
@@ -153,6 +140,10 @@ void k197ButtonCluster::setup() {
   if (transparentMode) attachInterrupts();
 }
 
+/*!
+    @brief  protected member function used to attach interrupts when enabling transparent mode
+    @details This function is used only within K197PushButton.cpp
+*/
 void k197ButtonCluster::attachInterrupts() {
   DebugOut.println(F("Attach Interrupts"));
   attachInterrupt(
@@ -173,6 +164,10 @@ void k197ButtonCluster::attachInterrupts() {
   UI_DB_changing();
 }
 
+/*!
+    @brief  protected member function used to deattach interrupts when disabling transparent mode
+    @details This function is used only within K197PushButton.cpp
+*/
 void k197ButtonCluster::detachInterrupts() {
   DebugOut.println(F("Detach Interrupts"));
   detachInterrupt(digitalPinToInterrupt(UI_DB));
@@ -192,6 +187,12 @@ void k197ButtonCluster::detachInterrupts() {
   }
 }
 
+/*!
+    @brief enable or disable transparent mode
+    @details when transparent mode is enabled, push button presses and releases are passed to the K197 in real time via interrupt handler. 
+    when disabled, the push button events must be explicitly passed to the K197 from the callback function. In such a way events can be filtered as required
+    @param newMode true enables transparent mode, false disables it
+*/
 void k197ButtonCluster::setTransparentMode(bool newMode) {
   if (newMode==transparentMode) return;  //Nothing to do
   transparentMode=newMode;
@@ -226,7 +227,7 @@ bool k197ButtonCluster::setCallback(uint8_t pin,
 /*!
     @brief  utility function to invoke a call back
 
-    This function is used only within K197PushButton.cpp
+    @details This function is used only within K197PushButton.cpp
 
     @param i the array index assigned to the push button
     @param buttonEvent the button event passed to the call back
@@ -237,7 +238,7 @@ inline void invoke_callback(int i, K197UIeventType buttonEvent) {
 }
 
 /*!
-    @brief  utility function to check for button events for a specific button
+    @brief  check for button events for a specific button
 
     This function is used only within K197PushButton.cpp
 

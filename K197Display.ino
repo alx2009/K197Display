@@ -13,34 +13,28 @@
 
   This is the main file for the sketch. In addition to setup() and loop(), the
 following functions are implemented in this file:
-     - Management of the serial user interface (for troubleshooting)
-     - Callbacks for push button events (only printouts for troubleshooting
-purpose)
-     - Instantiation and setup  of the key objects K197dev, uiman and
-pushbuttons is also done here
+     - Management of the serial user interface 
+     - Callback for push button events (some handled directly, some passed to UImanager)
+     - Setup invokes the setup methods of all key objects such as K197dev, uiman and pushbuttons
 
   All the magic happens in the main loop. For each loop iteration:
   - handle commands from Serial if any has been received
   - check if 197dev has got new data (this should happen 3 times a second)
-  - if new data available ask uiman to update the display (and print to
-Serial if the relevant flag is set)
-  - if new data is available, toggle the built in led
-  - check if K197dev detected SPI collisions and if the number of data received
-is the expected one, and print the information to Serial
-  - Finally, check for pushbutton events (this will not be detected directly in
-loop, but it will trigger the callback)
+  - if new data available ask uiman to update the display (and print to Serial if the relevant flag is set)
+  - check if K197dev detected SPI collisions and if the number of data received is the expected one, and print the information to DebugOut
+  - Finally, check for pushbutton events (this will trigger the callback)
 
-Note: the way we detect SPI client related problems in loop is not fool-proof,
-but statistically we should print out something if there are recurring issues
+    At startup button presses from the UI push buttons are mirrored towards the motherboard (transparent mode). 
+    At the end of the arduino setup() transparent mode is turned off, so that we can assign new functions to the buttons 
+
+    Note: the way we detect SPI client related problems in loop is not fool-proof, but statistically we should print out something if there are recurring issues
 
 */
 /**************************************************************************/
 //TODO wish list:
-// Scroll menus with longPress/repeat
-// Keep min/max value across ranges
-// Display Max/Min
+// Display Average/Max/Min
 // Autohold
-
+// Save/retrieve setting to EEPROM
 //Bugs: Enable scrolling menu backward even if the item is not selectable
 
 #include "K197device.h"
@@ -133,11 +127,8 @@ void cmdLog() {
 /*!
       @brief handle all Serial commands
 
-      Reads from Serial and execute any command. Should be invoked when there is
-   input availble from Serial. Note: It will block for the default Serial
-   timeout if a command is not complete, affecting the display. Terminals
-   sending complete lines are therefore preferred (e.g. the Serial Monitor in
-   the Arduibno GUI)
+      @details Reads from Serial and execute any command. Should be invoked when there is input availble from Serial. Note: It will block for the default Serial timeout if a command is not complete, affecting the display. 
+      Terminals sending complete lines are therefore preferred (e.g. the Serial Monitor in the Arduibno GUI)
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
   static char buf[INPUT_BUFFER_SIZE];
@@ -193,7 +184,14 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 
 k197ButtonCluster pushbuttons; ///< this object is used to interact with the
                                ///< push-button cluster
-
+/*!
+      @brief map from pin number to the enum constant K197UIeventsource 
+      
+      @details this mapping is needed because for efficiency the k197ButtonClusteridentify a button via pin number, 
+      but the other classes that handle events use the enum K197UIeventsource defined in UIevents.h 
+      
+      @return the enum constant for the source correspoonding to the pin number pased as input
+*/
 K197UIeventsource pin2EventSource(uint8_t buttonPin) {
   if (buttonPin==UI_STO) return K197key_STO;
   else if (buttonPin==UI_RCL) return K197key_RCL;

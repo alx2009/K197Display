@@ -79,8 +79,9 @@ float getMsgValue(char *s, int len) {
 }
 
 /*!
-      @brief process a new reading that has just been received via SPI
+      @brief process a new reading 
 
+      @details process a new reading that has just been received via SPI.
       A new reading is not processed automatically to make sure no value can be
    overriden while in use (especially when interrupts are used). Instead,
    SPIdevice::hasNewData() should be called periodically, when it returns true
@@ -101,8 +102,9 @@ bool K197device::getNewReading() {
 }
 
 /*!
-      @brief process a new reading that has just been received via SPI and
-   return a copy of the SPI data buffer
+      @brief process a new reading 
+      
+   @details process a new reading that has just been received via SPI and    return a copy of the SPI data buffer
 
       Similar to getNewReading() except it also returns a copy of the SPI data
    bufer. The only reason to use this function is to help in troubleshooting,
@@ -110,8 +112,10 @@ bool K197device::getNewReading() {
    enough to call getNewReading() and access the decoded information via the
    other member functions
 
-      If a number != 9 is returned, indicates that the data was NOT correctly
-   transmitted
+   In addition to decoding the data, this function implements additional modes that have been enabled 
+   (for example conversion from mV to C for K type thermocouple temperature) and calculates statistics
+
+      If a number != 9 is returned, indicates that the data was NOT correctly transmitted
 
       @param data byte array that will receive the copy of the data.  MUST have
    room for at least 9 elements!
@@ -240,6 +244,7 @@ void K197device::setOverrange() {
 
 /*!
     @brief  return the unit text (V, mV, etc.)
+    @param include_dB if true, returns "dB" as a unit when in dB mode 
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
@@ -292,6 +297,7 @@ void K197device::debugPrint() {
 
   /*!
       @brief  update the cache
+      @details average, max and min are calculated here
    */
   void K197device::updateCache() {
        if (   cache.tkMode!=tkMode || 

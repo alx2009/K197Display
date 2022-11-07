@@ -37,7 +37,7 @@
 /**************************************************************************/
 class k197ButtonCluster {
   public:
-    k197ButtonCluster();
+    k197ButtonCluster() {}; ///<default constructor
     typedef void (*buttonCallBack)(
         uint8_t buttonPinIn,
         K197UIeventType buttonEvent); ///< define the type of the callback function
@@ -67,6 +67,11 @@ public:
 
   static void DebugOut_printEventName(K197UIeventType event);
 
+  /*!
+      @brief  check if transparent mode is enabled (see setTransparentMode() for more information)
+      @return true if transparent mode is enabled
+     "Err", "0L", etc.)
+  */
   bool isTransparentMode() {return transparentMode;};
   void setTransparentMode(bool newMode);
 };

@@ -80,10 +80,6 @@ void SPIdevice::setup() {
                          // it won't be used as MISO by the SPI in slave mode
   pinMode(SPI1_SCK, INPUT);
   pinMode(SPI1_SS, INPUT);
-  // pinMode(MB_RCL, OUTPUT);
-  // pinMode(MB_STO, OUTPUT);
-  // pinMode(MB_REL, OUTPUT);
-  // pinMode(MB_DB, OUTPUT);
 
   // turn on SPI in client mode (peripheral is client, Keithley motherboard is
   // the host controlling the client)

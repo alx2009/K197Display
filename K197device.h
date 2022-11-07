@@ -210,16 +210,16 @@ public:
    */
   struct {
     public:
-       byte nsamples=3;
-       bool tkMode=false;
-       float msg_value=0.0;
-       byte annunciators0=0x00;
-       byte annunciators7=0x00;
-       byte annunciators8=0x00;
+       byte nsamples=3;          ///< Number of samples to use for rolling average
+       bool tkMode=false;        ///< caches tkMode from previous measurement
+       float msg_value=0.0;      ///< caches msg_value from previous measurement
+       byte annunciators0=0x00;  ///< caches annunciators0 from previous measurement
+       byte annunciators7=0x00;  ///< caches annunciators7 from previous measurement
+       byte annunciators8=0x00;  ///< caches annunciators8 from previous measurement
 
-       float average=0.0;
-       float min=0.0;
-       float max=0.0;
+       float average=0.0;  ///< keep track of the average      
+       float min=0.0;      ///< keep track of the minimum 
+       float max=0.0;      ///< keep track of the maximum 
   } cache;
 
   void updateCache();
@@ -359,19 +359,20 @@ public:
   */
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
 
-  /*!
-      @brief  set Thermocuple mode
-      @param mode true if enabled, false if disabled
-  */
-
   // Extra modes/annnunciators not available on original K197
   
+  /*!
+      @brief  set Thermocuple mode
+      @details when set, if the k197 is in DC mode and mV range, the mV reading
+      is converted to a temperature value assuming a k thermocouple is connected
+      @param mode true if enabled, false if disabled
+  */
   void setTKMode(bool mode) {
         tkMode = mode;
   }
 
   /*!
-      @brief  get Thermocuple mode 
+      @brief  get Thermocuple mode (see also setTKMode())
       @return returns true when K Thermocouple mode is enabled
   */
   bool getTKMode() {
@@ -396,6 +397,6 @@ public:
  
 };
 
-extern K197device k197dev;
+extern K197device k197dev; ///< predefined device to use with this class
 
 #endif // K197_DEVICE_H
