@@ -46,15 +46,18 @@ unsigned long lastDebounceTime[] = {
 unsigned long startPressed[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< millis() when last pressed
 
-unsigned long lastHold[] = {0UL, 0UL, 0UL, 0UL}; ///< millis() when last hold event generated
+unsigned long lastHold[] = {0UL, 0UL, 0UL,
+                            0UL}; ///< millis() when last hold event generated
 
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< millis() when last released
 
 // The following four functions are the interrupt handlers for each push button.
-// They are normal functions because we are using attachInterrupt (dxCore have more efficient alternatives, but attachInterrupt is kind of the default and it works for now).
-// The interrupt handler will simulate the push of the button on the 197/197A main
-// board. This is completely independent from the handling of the button events in the rest of the sketch
+// They are normal functions because we are using attachInterrupt (dxCore have
+// more efficient alternatives, but attachInterrupt is kind of the default and
+// it works for now). The interrupt handler will simulate the push of the button
+// on the 197/197A main board. This is completely independent from the handling
+// of the button events in the rest of the sketch
 
 /*!
       @brief interrupt handler for STO push button
@@ -125,8 +128,9 @@ void UI_DB_changing() {
 }
 
 /*!
-    @brief  setup the push button cluster. Must be called first, before any other member function
-    Note that for simplicity the pins used are hardwired in setup()
+    @brief  setup the push button cluster. Must be called first, before any
+   other member function Note that for simplicity the pins used are hardwired in
+   setup()
 */
 void k197ButtonCluster::setup() {
   pinConfigure(UI_STO, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
@@ -137,11 +141,13 @@ void k197ButtonCluster::setup() {
                         PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
-  if (transparentMode) attachInterrupts();
+  if (transparentMode)
+    attachInterrupts();
 }
 
 /*!
-    @brief  protected member function used to attach interrupts when enabling transparent mode
+    @brief  protected member function used to attach interrupts when enabling
+   transparent mode
     @details This function is used only within K197PushButton.cpp
 */
 void k197ButtonCluster::attachInterrupts() {
@@ -165,7 +171,8 @@ void k197ButtonCluster::attachInterrupts() {
 }
 
 /*!
-    @brief  protected member function used to deattach interrupts when disabling transparent mode
+    @brief  protected member function used to deattach interrupts when disabling
+   transparent mode
     @details This function is used only within K197PushButton.cpp
 */
 void k197ButtonCluster::detachInterrupts() {
@@ -178,26 +185,33 @@ void k197ButtonCluster::detachInterrupts() {
   setup();
 
   for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
-      unsigned long now = millis();
-      int btnow = digitalRead(buttonPinIn[i]);
-      //DebugOut.print(F("Btn. ")); DebugOut.print(i); DebugOut.print(F(", Pin ")); DebugOut.print(buttonPinIn[i]); DebugOut.print(F("=")); DebugOut.println(btnow);
-      lastButtonState[i] = btnow;
-      buttonState[i] = btnow;
-      lastDebounceTime[i] = now;
+    unsigned long now = millis();
+    int btnow = digitalRead(buttonPinIn[i]);
+    // DebugOut.print(F("Btn. ")); DebugOut.print(i); DebugOut.print(F(", Pin
+    // ")); DebugOut.print(buttonPinIn[i]); DebugOut.print(F("="));
+    // DebugOut.println(btnow);
+    lastButtonState[i] = btnow;
+    buttonState[i] = btnow;
+    lastDebounceTime[i] = now;
   }
 }
 
 /*!
     @brief enable or disable transparent mode
-    @details when transparent mode is enabled, push button presses and releases are passed to the K197 in real time via interrupt handler. 
-    when disabled, the push button events must be explicitly passed to the K197 from the callback function. In such a way events can be filtered as required
+    @details when transparent mode is enabled, push button presses and releases
+   are passed to the K197 in real time via interrupt handler. when disabled, the
+   push button events must be explicitly passed to the K197 from the callback
+   function. In such a way events can be filtered as required
     @param newMode true enables transparent mode, false disables it
 */
 void k197ButtonCluster::setTransparentMode(bool newMode) {
-  if (newMode==transparentMode) return;  //Nothing to do
-  transparentMode=newMode;
-  if (newMode) attachInterrupts();
-  else detachInterrupts();
+  if (newMode == transparentMode)
+    return; // Nothing to do
+  transparentMode = newMode;
+  if (newMode)
+    attachInterrupts();
+  else
+    detachInterrupts();
 }
 
 /*!
@@ -212,8 +226,7 @@ void k197ButtonCluster::setTransparentMode(bool newMode) {
    idnicating that the callback has been set or removed succesfully. False
    otherwise.
 */
-bool k197ButtonCluster::setCallback(uint8_t pin,
-                                       buttonCallBack pinCallBack) {
+bool k197ButtonCluster::setCallback(uint8_t pin, buttonCallBack pinCallBack) {
   for (unsigned int i = 0; i < sizeof(buttonPinIn) / sizeof(buttonPinIn[0]);
        i++) {
     if (buttonPinIn[i] == pin) { // we found the slot...
@@ -260,38 +273,38 @@ void k197ButtonCluster::check(
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 
-    //if the button is pressed, we handle LongPress & Hold
+    // if the button is pressed, we handle LongPress & Hold
     if (buttonState[i] == BUTTON_PRESSED_STATE) {
-        if ( now - startPressed[i] > longPressTime ) {
-            if (startPressed[i] == lastHold[i]) { // 1st hold event is a LongPress
-                 invoke_callback(i, UIeventLongPress);
-                 lastHold[i] = now;
-            } else if (now - lastHold[i]> holdTime ) { // hold event
-                 invoke_callback(i, UIeventHold);         
-                 lastHold[i] = now;
-            }
+      if (now - startPressed[i] > longPressTime) {
+        if (startPressed[i] == lastHold[i]) { // 1st hold event is a LongPress
+          invoke_callback(i, UIeventLongPress);
+          lastHold[i] = now;
+        } else if (now - lastHold[i] > holdTime) { // hold event
+          invoke_callback(i, UIeventHold);
+          lastHold[i] = now;
         }
+      }
     }
 
     // if the button state has changed:
     if (btnow != buttonState[i]) {
-        buttonState[i] = btnow;
-        // The following actions are taken at Button release
-        if (btnow == BUTTON_IDLE_STATE) { // button was just released
-            invoke_callback(i, UIeventRelease);
-            if ((now - startPressed[i]) > longPressTime) {
-              invoke_callback(i, UIeventLongClick);
-            } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
-              invoke_callback(i, UIeventDoubleClick);
-            } else {
-              invoke_callback(i, UIeventClick);
-            }
-            lastReleased[i] = now;
-        } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
-            invoke_callback(i, UIeventPress);
-            startPressed[i] = now;
-            lastHold[i] = now;
+      buttonState[i] = btnow;
+      // The following actions are taken at Button release
+      if (btnow == BUTTON_IDLE_STATE) { // button was just released
+        invoke_callback(i, UIeventRelease);
+        if ((now - startPressed[i]) > longPressTime) {
+          invoke_callback(i, UIeventLongClick);
+        } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
+          invoke_callback(i, UIeventDoubleClick);
+        } else {
+          invoke_callback(i, UIeventClick);
         }
+        lastReleased[i] = now;
+      } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
+        invoke_callback(i, UIeventPress);
+        startPressed[i] = now;
+        lastHold[i] = now;
+      }
     }
   }
   lastButtonState[i] = btnow;

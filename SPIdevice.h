@@ -20,7 +20,9 @@
 #ifndef SPI_DEVICE_H
 #define SPI_DEVICE_H
 #include <Arduino.h>
-extern const char CH_SPACE;
+extern const char
+    CH_SPACE; ///< External constant used whenever we need a ' ' character.
+              ///< Having it as global constant saves a few bytes of RAM
 
 #define PACKET 18      ///< our SPI packet is 18 bytes max
 #define PACKET_DATA 17 ///< size of the packet when it contains normal data

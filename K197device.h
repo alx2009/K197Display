@@ -74,8 +74,8 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
-  bool tkMode=false; ///< show T instead of V (K type thermocouple)     
-  
+  bool tkMode = false; ///< show T instead of V (K type thermocouple)
+
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
                                    ///< term. char array)
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
@@ -85,7 +85,7 @@ private:
 
   bool msg_is_num = false;     ///< true if message is numeric
   bool msg_is_ovrange = false; ///< true if overange detected
-  float msg_value=0.0;         ///< numeric value of message
+  float msg_value = 0.0;       ///< numeric value of message
 
   byte annunciators0 = 0x00; ///< Stores MINUS BAT RCL AC dB STO REL AUTO
   byte annunciators7 = 0x00; ///< Stores mA, k, V, u (micro), M, m (mV)
@@ -111,10 +111,10 @@ private:
     return false;
   };
 
-  float tcold=0.0; ///< temperature used for cold junction compensation
+  float tcold = 0.0; ///< temperature used for cold junction compensation
 
   void setOverrange();
-  void tkConvertV2C();  
+  void tkConvertV2C();
 
 public:
   /*!
@@ -167,14 +167,8 @@ public:
   */
   bool isDecPointOn(byte char_n) { return bitRead(raw_dp, char_n); };
 
-  /*!
-      @brief  return the currently displayed unit
-
- 
-      @param  include_dB if true considers dB as a unit   
-      @return a flash string with the unit 
-  */
-  const __FlashStringHelper *getUnit(bool include_dB=false); // Note: includes UTF-8 characters
+  const __FlashStringHelper *
+  getUnit(bool include_dB = false); // Note: includes UTF-8 characters
 
   /*!
       @brief  check if overange is detected
@@ -209,35 +203,40 @@ public:
       @brief  structure used to store previus vales, average, max, min, etc.
    */
   struct {
-    public:
-       byte nsamples=3;          ///< Number of samples to use for rolling average
-       bool tkMode=false;        ///< caches tkMode from previous measurement
-       float msg_value=0.0;      ///< caches msg_value from previous measurement
-       byte annunciators0=0x00;  ///< caches annunciators0 from previous measurement
-       byte annunciators7=0x00;  ///< caches annunciators7 from previous measurement
-       byte annunciators8=0x00;  ///< caches annunciators8 from previous measurement
+  public:
+    byte nsamples = 3;     ///< Number of samples to use for rolling average
+    bool tkMode = false;   ///< caches tkMode from previous measurement
+    float msg_value = 0.0; ///< caches msg_value from previous measurement
+    byte annunciators0 =
+        0x00; ///< caches annunciators0 from previous measurement
+    byte annunciators7 =
+        0x00; ///< caches annunciators7 from previous measurement
+    byte annunciators8 =
+        0x00; ///< caches annunciators8 from previous measurement
 
-       float average=0.0;  ///< keep track of the average      
-       float min=0.0;      ///< keep track of the minimum 
-       float max=0.0;      ///< keep track of the maximum 
+    float average = 0.0; ///< keep track of the average
+    float min = 0.0;     ///< keep track of the minimum
+    float max = 0.0;     ///< keep track of the maximum
   } cache;
 
   void updateCache();
 
   /*!
       @brief  set the number of samples for rolling average calculation
-      
-      @details Note that because this is a rolling average, the effect of a change is not immediate, it requires on the order of nsamples before it takes effect
-      
+
+      @details Note that because this is a rolling average, the effect of a
+     change is not immediate, it requires on the order of nsamples before it
+     takes effect
+
       @param nsamples number of samples
   */
-  void setNsamples(byte nsamples) { cache.nsamples=nsamples; };
+  void setNsamples(byte nsamples) { cache.nsamples = nsamples; };
   /*!
       @brief get the number of samples for rolling average calculation
       @return number of samples
   */
   float getNsamples() { return cache.nsamples; };
- 
+
   /*!
       @brief  returns the average value (see also setNsamples())
       @return average value
@@ -255,7 +254,7 @@ public:
       @return maximum value
   */
   float getMax() { return cache.max; };
-  
+
 public:
   // annunciators0
   /*!
@@ -360,41 +359,35 @@ public:
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
 
   // Extra modes/annnunciators not available on original K197
-  
+
   /*!
       @brief  set Thermocuple mode
       @details when set, if the k197 is in DC mode and mV range, the mV reading
       is converted to a temperature value assuming a k thermocouple is connected
       @param mode true if enabled, false if disabled
   */
-  void setTKMode(bool mode) {
-        tkMode = mode;
-  }
+  void setTKMode(bool mode) { tkMode = mode; }
 
   /*!
       @brief  get Thermocuple mode (see also setTKMode())
       @return returns true when K Thermocouple mode is enabled
   */
-  bool getTKMode() {
-        return tkMode;
-  }
+  bool getTKMode() { return tkMode; }
 
   /*!
       @brief  check if the Thermocuple mode is active now
       @return returns true when K Thermocouple mode is enabled and active,
   */
-  bool isTKModeActive() {
-        return isV() && ismV() && tkMode && isDC();
-  }
+  bool isTKModeActive() { return isV() && ismV() && tkMode && isDC(); }
 
   /*!
-      @brief  returns the temperature used for cold junction compensation 
+      @brief  returns the temperature used for cold junction compensation
       @return temperature in celsius
   */
   float getTColdJunction() {
-        return abs(tcold)<999.99 ? tcold : 999.99; // Keep it in the display range just to be on the safe side
+    return abs(tcold) < 999.99 ? tcold : 999.99; // Keep it in the display range
+                                                 // just to be on the safe side
   }
- 
 };
 
 extern K197device k197dev; ///< predefined device to use with this class

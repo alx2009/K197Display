@@ -36,31 +36,34 @@
 */
 /**************************************************************************/
 class k197ButtonCluster {
-  public:
-    k197ButtonCluster() {}; ///<default constructor
-    typedef void (*buttonCallBack)(
-        uint8_t buttonPinIn,
-        K197UIeventType buttonEvent); ///< define the type of the callback function
-    void setup();
+public:
+  k197ButtonCluster(){}; ///< default constructor
+  typedef void (*buttonCallBack)(
+      uint8_t buttonPinIn,
+      K197UIeventType
+          buttonEvent); ///< define the type of the callback function
+  void setup();
 
-  protected:
-    void check(uint8_t i);
-    static const unsigned long debounceDelay =
-        1; ///< the debounce time; decrease if the button is not responsive
-            ///< enough, increase in case yoyu experience unintended double
-            ///< presses
-    static const unsigned long longPressTime =
-        500L; ///< long press event will be generated when pressed more than
-              ///< longPressTime ms
-    static const unsigned long holdTime = 200L; ///< After a LongPress Hold events will be generated every holdTime while the butto is still pressed
-    static const unsigned long doubleClicktime =
-        500L; ///< double click event when pressed within doubleClicktime ms from
-              ///< a previous release
-    bool transparentMode = true;
-    void attachInterrupts();
-    void detachInterrupts();
+protected:
+  void check(uint8_t i);
+  static const unsigned long debounceDelay =
+      1; ///< the debounce time; decrease if the button is not responsive
+         ///< enough, increase in case yoyu experience unintended double
+         ///< presses
+  static const unsigned long longPressTime =
+      500L; ///< long press event will be generated when pressed more than
+            ///< longPressTime ms
+  static const unsigned long holdTime =
+      200L; ///< After a LongPress Hold events will be generated every holdTime
+            ///< while the butto is still pressed
+  static const unsigned long doubleClicktime =
+      500L; ///< double click event when pressed within doubleClicktime ms from
+            ///< a previous release
+  bool transparentMode = true; ///< true when in transparent mode
+  void attachInterrupts();
+  void detachInterrupts();
 
-public: 
+public:
   bool setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
 
   void check(void);
@@ -68,11 +71,12 @@ public:
   static void DebugOut_printEventName(K197UIeventType event);
 
   /*!
-      @brief  check if transparent mode is enabled (see setTransparentMode() for more information)
+      @brief  check if transparent mode is enabled (see setTransparentMode() for
+     more information)
       @return true if transparent mode is enabled
      "Err", "0L", etc.)
   */
-  bool isTransparentMode() {return transparentMode;};
+  bool isTransparentMode() { return transparentMode; };
   void setTransparentMode(bool newMode);
 };
 

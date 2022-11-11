@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-  @file     UIevents.cpp
+  @file     UIevents.h
 
   Arduino K197Display sketch
 
@@ -13,8 +13,8 @@
 
   This file defines the UIevents enums
 
-  The enums are needed to describe the UI events used by push buttons, UImanager, etc.
-  display module
+  The enums are needed to describe the UI events used by push buttons,
+  UImanager, etc. display module
 
 */
 /**************************************************************************/
@@ -28,12 +28,13 @@
 /*!
     @brief  Simple enum to identify UI events (e.g. pushbutton events)
 
-    @details there are two main sequence of events: 
+    @details there are two main sequence of events:
     - Press-Release-Click
     - Press-Release-LongPress-Release-Longclick (if hold for a longer time)
 
     A second click event close to the first will become a double click
-    Hold is generated after LongPress and before Release (if pressed for a sufficiently long time)
+    Hold is generated after LongPress and before Release (if pressed for a
+   sufficiently long time)
 */
 /**************************************************************************/
 
@@ -44,7 +45,7 @@ enum K197UIeventType {
   UIeventPress = 0x11,       ///< detected imediately when pressed
   UIeventLongPress = 0x12,   ///< detected while still pressed
   UIeventHold = 0x13,        ///< detected while still pressed
-  UIeventRelease = 0x14 ///< detected imediately when released
+  UIeventRelease = 0x14      ///< detected imediately when released
 };
 
 /**************************************************************************/
@@ -53,10 +54,11 @@ enum K197UIeventType {
 */
 /**************************************************************************/
 enum K197UIeventsource {
-   K197key_REL   = 0x01,  ///< REL key (Alt. functions: up) 
-   K197key_DB   = 0x02,   ///< DB key  (Alt. functions: down,   mode)
-   K197key_STO   = 0x03,  ///< STO key (Alt. functions: clear, cancel, decrease, left)
-   K197key_RCL   = 0x04,  ///< RCL key (Alt. functions: set, Ok, increase, right)
+  K197key_REL = 0x01, ///< REL key (Alt. functions: up)
+  K197key_DB = 0x02,  ///< DB key  (Alt. functions: down,   mode)
+  K197key_STO =
+      0x03, ///< STO key (Alt. functions: clear, cancel, decrease, left)
+  K197key_RCL = 0x04, ///< RCL key (Alt. functions: set, Ok, increase, right)
 };
 
-#endif //UIEVENTS_H__
+#endif // UIEVENTS_H__

@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-  @file     UImanager.cpp
+  @file     UImanager.h
 
   Arduino K197Display sketch
 
@@ -34,9 +34,9 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 */
 /**************************************************************************/
 enum K197screenMode {
-   K197sc_normal   = 0x01,  ///< equivalent to original K197 
-   K197sc_mainMenu = 0x02,  ///< display main menu
-   K197sc_debug    = 0x03,  ///< display log window
+  K197sc_normal = 0x01,   ///< equivalent to original K197
+  K197sc_mainMenu = 0x02, ///< display main menu
+  K197sc_debug = 0x03,    ///< display log window
 };
 
 /**************************************************************************/
@@ -55,17 +55,19 @@ class UImanager {
 private:
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
-  K197screenMode screen_mode = K197sc_normal; // Keep track of how to display stuff...
+  K197screenMode screen_mode =
+      K197sc_normal; ///< Keep track of how to display stuff...
 
   void updateDisplayNormal();
   void updateDisplaySplit();
 
   void setupMenus();
 
-  byte logskip_counter=0; ///< counter used whenj data logging, counts how many measurements are skipped 
+  byte logskip_counter = 0; ///< counter used whenj data logging, counts how
+                            ///< many measurements are skipped
 
 public:
-  UImanager() {}; ///< default constructor for the class
+  UImanager(){}; ///< default constructor for the class
   void setup();
   void setScreenMode(K197screenMode mode);
 
@@ -84,8 +86,8 @@ public:
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
   bool isExtraModeEnabled();
-  bool reassignStoRcl(); 
-  
+  bool reassignStoRcl();
+
   void setLogging(bool yesno);
   bool isLogging();
 

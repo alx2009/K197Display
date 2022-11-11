@@ -79,7 +79,7 @@ float getMsgValue(char *s, int len) {
 }
 
 /*!
-      @brief process a new reading 
+      @brief process a new reading
 
       @details process a new reading that has just been received via SPI.
       A new reading is not processed automatically to make sure no value can be
@@ -102,9 +102,10 @@ bool K197device::getNewReading() {
 }
 
 /*!
-      @brief process a new reading 
-      
-   @details process a new reading that has just been received via SPI and    return a copy of the SPI data buffer
+      @brief process a new reading
+
+   @details process a new reading that has just been received via SPI and return
+   a copy of the SPI data buffer
 
       Similar to getNewReading() except it also returns a copy of the SPI data
    bufer. The only reason to use this function is to help in troubleshooting,
@@ -112,10 +113,12 @@ bool K197device::getNewReading() {
    enough to call getNewReading() and access the decoded information via the
    other member functions
 
-   In addition to decoding the data, this function implements additional modes that have been enabled 
-   (for example conversion from mV to C for K type thermocouple temperature) and calculates statistics
+   In addition to decoding the data, this function implements additional modes
+   that have been enabled (for example conversion from mV to C for K type
+   thermocouple temperature) and calculates statistics
 
-      If a number != 9 is returned, indicates that the data was NOT correctly transmitted
+      If a number != 9 is returned, indicates that the data was NOT correctly
+   transmitted
 
       @param data byte array that will receive the copy of the data.  MUST have
    room for at least 9 elements!
@@ -192,7 +195,7 @@ byte K197device::getNewReading(byte *data) {
     msg_value = 0.0;
   }
   if (isTKModeActive() && msg_is_num) {
-      tkConvertV2C();  
+    tkConvertV2C();
   }
   updateCache();
   return n;
@@ -200,56 +203,61 @@ byte K197device::getNewReading(byte *data) {
 
 /*!
     @brief  convert a Voltage reading to a Temperature reading in Celsius
-    @details Assumes the current value is V or mV coming from a K type thermocouple. Cold junction compensation uses the AVR internal temperature sensor and no linear compensation. The result of the conversion replaces the current measurement result
+    @details Assumes the current value is V or mV coming from a K type
+   thermocouple. Cold junction compensation uses the AVR internal temperature
+   sensor and no linear compensation. The result of the conversion replaces the
+   current measurement result
 */
 void K197device::tkConvertV2C() {
-    if (isOvrange() || (!isTKModeActive()) ) return;
-    tcold = dxUtil.getTCelsius();
-    float t = msg_value*24.2271538 + tcold; // msg_value = mV
-    if (t>2200.0) { // Way more than needed...
-         setOverrange();
-         raw_dp = 0x00;
-         return;
+  if (isOvrange() || (!isTKModeActive()))
+    return;
+  tcold = dxUtil.getTCelsius();
+  float t = msg_value * 24.2271538 + tcold; // msg_value = mV
+  if (t > 2200.0) {                         // Way more than needed...
+    setOverrange();
+    raw_dp = 0x00;
+    return;
+  }
+  msg_value = t;
+  dtostrf(t, K197_MSG_SIZE - 1, 2, message);
+  int j = 0;
+  for (int i = 0; i < K197_MSG_SIZE; i++) {
+    if (message[i] != '.') {
+      raw_msg[j] = message[i];
+      j++;
     }
-    msg_value=t;
-    dtostrf(t, K197_MSG_SIZE-1, 2, message);
-    int j=0;
-    for (int i=0; i<K197_MSG_SIZE; i++) {
-        if(message[i]!='.') {
-            raw_msg[j] =  message[i];
-            j++;       
-        }
-        if (j>=K197_RAW_MSG_SIZE)
-           break;
-    }
-    raw_msg[K197_RAW_MSG_SIZE-1]=0;
-    raw_dp = 0x20;
+    if (j >= K197_RAW_MSG_SIZE)
+      break;
+  }
+  raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
+  raw_dp = 0x20;
 }
 
 /*!
     @brief  set the displayed message to Overrange
 */
 void K197device::setOverrange() {
-    msg_is_ovrange = true;
-    message[0] = raw_msg[0] = CH_SPACE;
-    message[1] = raw_msg[1] = CH_SPACE;
-    message[2] = raw_msg[2] = CH_SPACE;
-    message[3] = raw_msg[3] = '0';
-    message[4] = raw_msg[4] = 'L';
-    message[5] = raw_msg[5] = CH_SPACE;
-    message[6] = raw_msg[6] = CH_SPACE;
-    message[7] = CH_SPACE;
-    message[8] = raw_msg[7] = 0;
+  msg_is_ovrange = true;
+  message[0] = raw_msg[0] = CH_SPACE;
+  message[1] = raw_msg[1] = CH_SPACE;
+  message[2] = raw_msg[2] = CH_SPACE;
+  message[3] = raw_msg[3] = '0';
+  message[4] = raw_msg[4] = 'L';
+  message[5] = raw_msg[5] = CH_SPACE;
+  message[6] = raw_msg[6] = CH_SPACE;
+  message[7] = CH_SPACE;
+  message[8] = raw_msg[7] = 0;
 }
 
 /*!
     @brief  return the unit text (V, mV, etc.)
-    @param include_dB if true, returns "dB" as a unit when in dB mode 
+    @param include_dB if true, returns "dB" as a unit when in dB mode
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
-const __FlashStringHelper *K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
-  if (isV()) {            // Voltage units
+const __FlashStringHelper *
+K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
+  if (isV()) {                         // Voltage units
     if (tkMode && ismV() && isDC())
       return F("°C");
     else if (ismV())
@@ -263,20 +271,19 @@ const __FlashStringHelper *K197device::getUnit(bool include_dB) { // Note: inclu
       return F("kΩ");
     else
       return F(" Ω");
-  } else if (isA()) {     // Current units
+  } else if (isA()) { // Current units
     if (ismicro())
       return F("µA");
     else if (ismA())
       return F("mA");
     else
       return F(" A");
-  } else {                // No unit found
+  } else { // No unit found
     if (include_dB && isdB())
       return F("dB");
-    else 
+    else
       return F("  ");
   }
-
 }
 
 /*!
@@ -295,27 +302,30 @@ void K197device::debugPrint() {
   DebugOut.println();
 }
 
-  /*!
-      @brief  update the cache
-      @details average, max and min are calculated here
-   */
-  void K197device::updateCache() {
-       if (   cache.tkMode!=tkMode || 
-              cache.annunciators0!=annunciators0 ||
-              cache.annunciators7!=annunciators7 ||
-              cache.annunciators8!=annunciators8    ) {  
-           // Something changed, reset stats 
-           cache.average=msg_value;
-           cache.min=msg_value;
-           cache.max=msg_value;    
-       } else {
-           cache.average+=(msg_value-cache.average)/float(cache.nsamples); // This not perfect but good enough in most practical cases.
-           if (msg_value < cache.min) cache.min = msg_value;
-           if (msg_value > cache.max) cache.max = msg_value;
-       }
-       cache.msg_value=msg_value;
-       cache.tkMode=tkMode;
-       cache.annunciators0=annunciators0;
-       cache.annunciators7=annunciators7;
-       cache.annunciators8=annunciators8;
+/*!
+    @brief  update the cache
+    @details average, max and min are calculated here
+ */
+void K197device::updateCache() {
+  if (cache.tkMode != tkMode || cache.annunciators0 != annunciators0 ||
+      cache.annunciators7 != annunciators7 ||
+      cache.annunciators8 != annunciators8) {
+    // Something changed, reset stats
+    cache.average = msg_value;
+    cache.min = msg_value;
+    cache.max = msg_value;
+  } else {
+    cache.average += (msg_value - cache.average) /
+                     float(cache.nsamples); // This not perfect but good enough
+                                            // in most practical cases.
+    if (msg_value < cache.min)
+      cache.min = msg_value;
+    if (msg_value > cache.max)
+      cache.max = msg_value;
   }
+  cache.msg_value = msg_value;
+  cache.tkMode = tkMode;
+  cache.annunciators0 = annunciators0;
+  cache.annunciators7 = annunciators7;
+  cache.annunciators8 = annunciators8;
+}

@@ -11,7 +11,8 @@
   This file is part of the Arduino K197Display sketch, please see
   https://github.com/alx2009/K197Display for more information
 
-  In this file we consolidate all I/O pin definitions for this application. In addition, we include generally useful constants
+  In this file we consolidate all I/O pin definitions for this application. In
+  addition, we include generally useful constants
 
   Pin definitions are in the form PIN_Pxn where x is PORT x and n is pin n in
   said port. This is the preferred form for dxCore (rather than the pin number
@@ -36,10 +37,11 @@
 // PORT A
 #define SERIAL_TX PIN_PA0 ///< pin corresponding to Serial TX
 #define SERIAL_RX PIN_PA1 ///< pin corresponding to Serial RX
-// If the OLED is configured for 3Wire SPI then PA2 is used to detect BT module, otherwise it is used as D/C pin for OLED
-#define BT_POWER PIN_PA2   ///< high when BT module has power
+// If the OLED is configured for 3Wire SPI then PA2 is used to detect BT module,
+// otherwise it is used as D/C pin for OLED
+#define BT_POWER PIN_PA2 ///< high when BT module has power
 //#define OLED_DC PIN_PA2   ///< OLED Data/command pin [4Wire SPI]
-#define OLED_SS PIN_PA3   ///< OLED Slave Select pin
+#define OLED_SS PIN_PA3 ///< OLED Slave Select pin
 #define OLED_MOSI                                                              \
   PIN_PA4 ///< SPI0 MOSI, normally used via SPI but we need to use pinMode to
           ///< work around a bug in the micro...
@@ -105,5 +107,7 @@
 #define OLED_SPI_SWAP_OPTION SPI0_SWAP_DEFAULT ///< SPI swap to use for OLED
 
 // Generally useful constants
-extern const char CH_SPACE;
-#endif // PINOUT_H__
+extern const char
+    CH_SPACE; ///< External constant used whenever we need a ' ' character.
+              ///< Having it as global constant saves a few bytes of RAM
+#endif        // PINOUT_H__
