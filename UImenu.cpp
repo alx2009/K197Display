@@ -25,8 +25,14 @@
 
 UImenu *UImenu::currentMenu=NULL; 
 
-//TODO: documentation
-
+  /*!
+     @brief draw a frame when the menu item is selected
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+  */
 void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
   if (selected) {
     u8g2->setDrawColor(1);
@@ -37,13 +43,28 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, b
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+  /*!
+     @brief handle UI events 
+     @details this is the default function for the base class, it does nothing
+     @param eventSource the source of the event (see K197UIeventsource)
+     @param eventType the type of event (see K197UIeventType)
+     @return true if the event has been entirely handled by this object
+  */
 bool UImenuItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   return false;
 }
-#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic pop
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+  /*!
+     @brief draw a line of text (used as a menu separator)
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+  */
 void UIMenuSeparator::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
   u8g2->setFontMode(0);
   u8g2->setDrawColor(1);
@@ -52,6 +73,14 @@ void UIMenuSeparator::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t
 }
 #pragma GCC diagnostic pop
 
+  /*!
+     @brief draw a line of text (used as a menu item)
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+  */
 void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
   UImenuItem::draw(u8g2, x, y, w, selected);
   u8g2->setFontMode(0);
@@ -60,6 +89,13 @@ void UIMenuButtonItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_
   u8g2->print( reinterpret_cast<const __FlashStringHelper *>(text) );
 }
 
+  /*!
+     @brief handle UI events 
+     @details triggers the change() method on RCL key click 
+     @param eventSource the source of the event (see K197UIeventsource)
+     @param eventType the type of event (see K197UIeventType)
+     @return true if the event has been entirely handled by this object
+  */
 bool UIMenuButtonItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   if (selectable()) {
     if ( (eventSource==K197key_RCL) && (eventType==UIeventClick) ) {
@@ -70,6 +106,14 @@ bool UIMenuButtonItem::handleUIEvent(K197UIeventsource eventSource, K197UIeventT
   return false;
 }
 
+/*!
+     @brief draw the menu
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+*/
 void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->setFont(u8g2_font_6x12_mr);
     u8g2->setCursor(x, y);
@@ -91,6 +135,12 @@ void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->setFontDirection(0);
 }
 
+/*!
+     @brief check if the selected item is visible
+     @param y0 the y coordinate of the top of the menu
+     @param y1 the y coordinate of the menu bottom
+
+*/
 bool UImenu::selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
     if (selectedItem < firstVisibleItem) return false;
     if (selectedItem==firstVisibleItem) return true;
@@ -102,6 +152,12 @@ bool UImenu::selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
     return false;
 }
 
+/*!
+     @brief scroll the menu until the current menu item is visible
+     @param y0 the y coordinate of the top of the menu
+     @param y1 the y coordinate of the menu bottom
+
+*/
 void UImenu::makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
   if (selectedItem < firstVisibleItem) {
     firstVisibleItem = selectedItem;
@@ -113,6 +169,9 @@ void UImenu::makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1) {
   }
 }
 
+/*!
+     @brief select the first selectable item in a menu
+*/
 void UImenu::selectFirstItem() {
   for (int i=0; i<num_items; i++) {
       if(items[i]->selectable()) {
@@ -122,6 +181,13 @@ void UImenu::selectFirstItem() {
   }
 }
 
+/*!
+     @brief handle UI events 
+     @details scroll the menu up or down when key REL or DB is pressed  
+     @param eventSource the source of the event (see K197UIeventsource)
+     @param eventType the type of event (see K197UIeventType)
+     @return true if the event has been entirely handled by this object
+*/
 bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
   if (items[selectedItem]->handleUIEvent(eventSource, eventType)) return true;
   if (eventSource==K197key_DB && (eventType==UIeventPress || eventType==UIeventLongPress || eventType==UIeventHold) ) { // down
@@ -146,6 +212,15 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventT
   return false;
 }
 
+/*!
+     @brief draw the menu
+     @details invoke UIMenuButtonItem::draw, then add a checkbox on the right of the allocated space 
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+*/
 void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
      UIMenuButtonItem::draw(u8g2, x, y, w, selected);
      u8g2->setDrawColor(1);
@@ -159,6 +234,13 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w
      }
 }
 
+  /*!
+     @brief handle UI events 
+     @details toggles the value when RCL or KEY is clicked, then invoke the change method 
+     @param eventSource the source of the event (see K197UIeventsource)
+     @param eventType the type of event (see K197UIeventType)
+     @return true if the event has been entirely handled by this object
+  */
 bool MenuInputBool::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if ( (eventSource==K197key_RCL || eventSource==K197key_STO) && eventType==UIeventClick) {
        setValue(!getValue()); 
@@ -168,6 +250,16 @@ bool MenuInputBool::handleUIEvent(K197UIeventsource eventSource, K197UIeventType
     return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
 }
 
+/*!
+     @brief draw the menu
+     @details invoke UIMenuButtonItem::draw, then add the value on the right.
+     If selected, draw a progress bar set to the value 
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param x the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+*/
 void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w, bool selected) {
      UIMenuButtonItem::draw(u8g2, x, y, w, selected);
      u8g2->setDrawColor(1);
@@ -189,6 +281,13 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w
      }
 }
 
+/*!
+     @brief utility function used to simplify MenuInputByte::handleUIEvent() code
+     @param value the current value of the MenuInputByte
+     @param eventSource (used to determine the sign of the value change)
+     @param increment the increment
+     @return the new value 
+*/
 byte calcIncrement(const byte val, const K197UIeventsource eventSource, const byte increment) {
    byte newval; 
    if(eventSource==K197key_RCL) { // Increment
@@ -201,6 +300,13 @@ byte calcIncrement(const byte val, const K197UIeventsource eventSource, const by
    return newval;
 }
 
+  /*!
+     @brief handle UI events 
+     @details increase/decrease the value when STO/RCL pressed (repeatedly when hold), then invoke change at release 
+     @param eventSource the source of the event (see K197UIeventsource)
+     @param eventType the type of event (see K197UIeventType)
+     @return true if the event has been entirely handled by this object
+  */
 bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     if ( (eventSource==K197key_RCL || eventSource==K197key_STO) ) { 
        switch (eventType) {

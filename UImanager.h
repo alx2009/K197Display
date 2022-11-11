@@ -41,7 +41,7 @@ enum K197screenMode {
 
 /**************************************************************************/
 /*!
-    @brief  Simple class to handle the display
+    @brief  the class responsible for managing the display
 
     This class is responsible to handle the user interface displayed to the user
    on the OLED
@@ -62,7 +62,7 @@ private:
 
   void setupMenus();
 
-  byte logskip_counter=0;
+  byte logskip_counter=0; ///< counter used whenj data logging, counts how many measurements are skipped 
 
 public:
   UImanager() {}; ///< default constructor for the class
@@ -70,10 +70,10 @@ public:
   void setScreenMode(K197screenMode mode);
 
   /*!
-    @brief  get the screen mode
-   @return screen mode, it must be one of the displayXXX constants defined in
-   class UImanager
-*/
+     @brief  get the screen mode
+     @return screen mode, it must be one of the displayXXX constants defined in
+     class UImanager
+  */
   K197screenMode getScreenMode() { return screen_mode; };
 
   void updateDisplay();
@@ -83,7 +83,6 @@ public:
 
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
-  //TODO: document
   bool isExtraModeEnabled();
   bool reassignStoRcl(); 
   
