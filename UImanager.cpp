@@ -248,10 +248,10 @@ void UImanager::updateNormalScreen() {
       u8g2_font_inr30_mr); // width =25  points (7 characters=175 points)
   const unsigned int xraw = 49;
   const unsigned int yraw = 15;
-  unsigned int dpsz_x = 3;  // decimal point size in x direction
-  unsigned int dpsz_y = 3;  // decimal point size in y direction
-  unsigned int dphsz_x = 2; // decimal point "half size" in x direction
-  unsigned int dphsz_y = 2; // decimal point "half size" in y direction
+  const unsigned int dpsz_x = 3;  // decimal point size in x direction
+  const unsigned int dpsz_y = 3;  // decimal point size in y direction
+  const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
+  const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
   u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
   for (byte i = 1; i <= 7; i++) {
@@ -364,13 +364,14 @@ void UImanager::updateNormalScreen() {
 */
 void UImanager::updateMinMaxScreen() {
   u8g2.setFont(
-      u8g2_font_inr30_mr); // width =25  points (7 characters=175 points)
-  const unsigned int xraw = 49;
+      u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
+  //const unsigned int xraw = 49;
+  const unsigned int xraw = 130;
   const unsigned int yraw = 15;
-  unsigned int dpsz_x = 3;  // decimal point size in x direction
-  unsigned int dpsz_y = 3;  // decimal point size in y direction
-  unsigned int dphsz_x = 2; // decimal point "half size" in x direction
-  unsigned int dphsz_y = 2; // decimal point "half size" in y direction
+  const unsigned int dpsz_x = 3;  // decimal point size in x direction
+  const unsigned int dpsz_y = 3;  // decimal point size in y direction
+  const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
+  const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
   u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
   for (byte i = 1; i <= 7; i++) {
@@ -389,8 +390,8 @@ void UImanager::updateMinMaxScreen() {
 
   // set the AC/DC indicator
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  const unsigned int xac = xraw + 3;
-  const unsigned int yac = 40;
+  const unsigned int xac = 229;
+  const unsigned int yac = 35;
   u8g2.setCursor(xac, yac);
   if (k197dev.isAC())
     u8g2.print(F("AC"));
@@ -398,26 +399,16 @@ void UImanager::updateMinMaxScreen() {
     u8g2.print(F("  "));
 
   // set the other announciators
-  u8g2.setFont(u8g2_font_8x13_mr);
+  u8g2.setFont(u8g2_font_6x12_mr);
+  unsigned int y = 5; //u8g2.getMaxCharHeight();
   unsigned int x = 0;
-  unsigned int y = 5;
-  u8g2.setFont(u8g2_font_8x13_mr);
-  y += u8g2.getMaxCharHeight();
-  x = 0;
   u8g2.setCursor(x, y);
   if (k197dev.isREL())
     u8g2.print(F("REL"));
   else
     u8g2.print(F("   "));
-  x = u8g2.tx;
-  x += (u8g2.getMaxCharWidth() / 2);
-  u8g2.setCursor(x, y);
-  if (k197dev.isdB())
-    u8g2.print(F("dB"));
-  else
-    u8g2.print(F("  "));
 
-  x = 140;
+  x = 170;
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
