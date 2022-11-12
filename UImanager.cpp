@@ -613,7 +613,7 @@ bool UImanager::reassignStoRcl() { return ::reassignStoRcl.getValue(); }
 */
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
-  ::reassignStoRcl.setValue(false);
+  ::reassignStoRcl.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems) / sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
