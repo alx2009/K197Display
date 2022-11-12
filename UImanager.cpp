@@ -34,6 +34,7 @@
     u8g2_font_8x13_mr ==> AUTO, REL, dB, STO, RCL, Cal, RMT, most annunciators in split screen
     u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen: message, AC
     u8g2_font_inr30_mr ==> main message
+    u8g2_font_inr16_mr ==> main message in minmax mode
 
     mr ==> monospace restricted
     m ==> monospace
@@ -108,7 +109,7 @@ void setup_draw(void) {
   u8g2.setFontDirection(0);
 
 /*
-  u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setFont(u8g2_font_inr16_mr);
   DebugOut.print(F("Disp. H="));
   DebugOut.print(u8g2.getDisplayHeight());
   DebugOut.print(F(", font h="));
