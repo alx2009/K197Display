@@ -27,6 +27,18 @@
 */
 /**************************************************************************/
 
+/*=================Font Usage=======================
+  Fonts used in the application:
+    u8g2_font_5x7_mr  ==> terminal window, local T, Bluetooth status
+    u8g2_font_6x12_mr ==> BAT, all menus
+    u8g2_font_8x13_mr ==> AUTO, REL, dB, STO, RCL, Cal, RMT, most annunciators in split screen
+    u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen: message, AC
+    u8g2_font_inr30_mr ==> main message
+
+    mr ==> monospace restricted
+    m ==> monospace
+ */
+
 #include <Arduino.h>
 #include <U8g2lib.h>
 
@@ -87,16 +99,15 @@ U8G2LOG u8g2log;                                  ///< the log window
     Called from setup, it should not be called from elsewhere
 */
 void setup_draw(void) {
-  // u8g2.setFont(u8g2_font_inr38_mf);  // width = 31 points (7 characters=217
-  // points)
   u8g2.setFont(
-      u8g2_font_inr30_mf); // width =25  points (7 characters=175 points)
+      u8g2_font_inr30_mr); // width =25  points (7 characters=175 points)
   u8g2.setFontMode(0);
   u8g2.setDrawColor(1);
   u8g2.setFontPosTop();
   u8g2.setFontRefHeightExtendedText();
   u8g2.setFontDirection(0);
 
+/*
   u8g2.setFont(u8g2_font_6x12_mr);
   DebugOut.print(F("Disp. H="));
   DebugOut.print(u8g2.getDisplayHeight());
@@ -106,6 +117,7 @@ void setup_draw(void) {
   DebugOut.print(u8g2.getDescent());
   DebugOut.print(F("/"));
   DebugOut.println(u8g2.getMaxCharHeight());
+*/
   dxUtil.checkFreeStack();
 }
 
@@ -190,13 +202,13 @@ void UImanager::updateSplitScreen() {
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
-  u8g2.setFont(u8g2_font_9x18_mr);
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getMessage());
   u8g2.print(CH_SPACE);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getUnit(true));
   y += u8g2.getMaxCharHeight();
-  u8g2.setFont(u8g2_font_9x18_mr);
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
   if (k197dev.isAC())
     u8g2.print(F(" AC   "));
   else
@@ -232,7 +244,7 @@ void UImanager::updateSplitScreen() {
 */
 void UImanager::updateNormalScreen() {
   u8g2.setFont(
-      u8g2_font_inr30_mf); // width =25  points (7 characters=175 points)
+      u8g2_font_inr30_mr); // width =25  points (7 characters=175 points)
   const unsigned int xraw = 49;
   const unsigned int yraw = 15;
   unsigned int dpsz_x = 3;  // decimal point size in x direction
@@ -249,7 +261,6 @@ void UImanager::updateNormalScreen() {
   }
 
   // set the unit
-  // u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   const unsigned int xunit = 229;
   const unsigned int yunit = 20;
@@ -257,8 +268,7 @@ void UImanager::updateNormalScreen() {
   u8g2.print(k197dev.getUnit());
 
   // set the AC/DC indicator
-  // u8g2.setFont(u8g2_font_10x20_mf);
-  u8g2.setFont(u8g2_font_9x18_mr);
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
   const unsigned int xac = xraw + 3;
   const unsigned int yac = 40;
   u8g2.setCursor(xac, yac);
@@ -268,7 +278,6 @@ void UImanager::updateNormalScreen() {
     u8g2.print(F("  "));
 
   // set the other announciators
-  // u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setFont(u8g2_font_8x13_mr);
   unsigned int x = 0;
   unsigned int y = 5;
@@ -354,7 +363,7 @@ void UImanager::updateNormalScreen() {
 */
 void UImanager::updateMinMaxScreen() {
   u8g2.setFont(
-      u8g2_font_inr30_mf); // width =25  points (7 characters=175 points)
+      u8g2_font_inr30_mr); // width =25  points (7 characters=175 points)
   const unsigned int xraw = 49;
   const unsigned int yraw = 15;
   unsigned int dpsz_x = 3;  // decimal point size in x direction
@@ -371,7 +380,6 @@ void UImanager::updateMinMaxScreen() {
   }
 
   // set the unit
-  // u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   const unsigned int xunit = 229;
   const unsigned int yunit = 20;
@@ -379,8 +387,7 @@ void UImanager::updateMinMaxScreen() {
   u8g2.print(k197dev.getUnit(true));
 
   // set the AC/DC indicator
-  // u8g2.setFont(u8g2_font_10x20_mf);
-  u8g2.setFont(u8g2_font_9x18_mr);
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
   const unsigned int xac = xraw + 3;
   const unsigned int yac = 40;
   u8g2.setCursor(xac, yac);
@@ -390,7 +397,6 @@ void UImanager::updateMinMaxScreen() {
     u8g2.print(F("  "));
 
   // set the other announciators
-  // u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setFont(u8g2_font_8x13_mr);
   unsigned int x = 0;
   unsigned int y = 5;
