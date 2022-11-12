@@ -307,7 +307,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
     break;
   case UI_REL:
     // DebugOut.print(F("REL"));
-    if (handleClicks && (buttonEvent == UIeventClick)) {
+    if (handleClicks && (buttonEvent == UIeventClick || buttonEvent == UIeventDoubleClick) ) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       delay(K197_MB_CLICK_TIME); // TODO: implement differently in order to
                                  // remove delay()
