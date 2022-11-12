@@ -46,7 +46,7 @@ The current SW is implementing the same functions available in the 197/197A (wit
 - Some commands can be entered via Serial connection (press ? for a list)
 - Holding the "REL" button for 0.5 s will show a Options menu to enable an additional measurement mode and other options, as well as data logging to bluetooth serial.
 - The additional measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
-- in temperature mode the temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor).
+- in temperature mode the temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
 - at the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
 
 Keyboard: 
