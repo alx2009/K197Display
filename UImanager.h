@@ -106,6 +106,9 @@ public:
   bool isLogging();
 
   void logData();
+
+  static const char *formatNumber(char buf[K197_MSG_SIZE], float f);
+
 };
 
 extern UImanager uiman;

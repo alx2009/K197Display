@@ -365,9 +365,7 @@ void UImanager::updateNormalScreen() {
 void UImanager::updateMinMaxScreen() {
   u8g2.setFont(
       u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
-  //const unsigned int xraw = 49;
-  const unsigned int xraw = 130;
-  const unsigned int yraw = 15;
+  const unsigned int xraw = 130; const unsigned int yraw = 15;
   const unsigned int dpsz_x = 3;  // decimal point size in x direction
   const unsigned int dpsz_y = 3;  // decimal point size in y direction
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
@@ -390,6 +388,7 @@ void UImanager::updateMinMaxScreen() {
 
   // set the AC/DC indicator
   u8g2.setFont(u8g2_font_9x15_m_symbols);
+  int char_height_9x15 = u8g2.getMaxCharHeight(); // needed later on
   const unsigned int xac = 229;
   const unsigned int yac = 35;
   u8g2.setCursor(xac, yac);
@@ -400,16 +399,26 @@ void UImanager::updateMinMaxScreen() {
 
   // set the other announciators
   u8g2.setFont(u8g2_font_6x12_mr);
-  unsigned int y = 5; //u8g2.getMaxCharHeight();
-  unsigned int x = 0;
+  unsigned int x = 0; unsigned int y = 5; 
   u8g2.setCursor(x, y);
   if (k197dev.isREL())
     u8g2.print(F("REL"));
   else
     u8g2.print(F("   "));
 
-  x = 170;
-  y = 2;
+  // Write Min/average/Max labels
+  u8g2.setFont(u8g2_font_5x7_mr);
+  x = u8g2.tx+10; y = 5; u8g2.setCursor(x, y); u8g2.print(F("Max "));
+  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(F("Avg "));
+  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(F("Min "));
+
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  char buf[K197_MSG_SIZE];
+  x = u8g2.tx; y = 3;    u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getMax()));
+  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getAverage()));
+  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getMin()));
+
+  x = 170; y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197dev.isTKModeActive()) { // Display local temperature
@@ -648,7 +657,7 @@ inline void logU2U() {
       @return a nul terminated char array with the formatted number (same as
    buf)
 */
-const char *formatNumber(char buf[K197_MSG_SIZE], float f) {
+const char *UImanager::formatNumber(char buf[K197_MSG_SIZE], float f) {
   if (f > 999999.0)
     f = 999999.0;
   else if (f < -999999.0)

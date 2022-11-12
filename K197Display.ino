@@ -39,7 +39,8 @@ recurring issues
 */
 /**************************************************************************/
 // TODO wish list:
-//  Display Average/Max/Min
+//  Keep display mode when entering/exiting options menu
+//  reset statistics
 //  Autohold
 //  Save/retrieve setting to EEPROM
 // Bugs: Enable scrolling menu backward even if the item is not selectable

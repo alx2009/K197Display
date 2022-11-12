@@ -301,6 +301,16 @@ void K197device::debugPrint() {
   if (msg_is_ovrange)
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
+} 
+
+/*!
+    @brief  utility function, used to compare two set of annunciator0, ignoring the minus sign in the comparison
+    @param b1 first annunciator0 set
+    @param b2 second annunciator0 set
+    @details average, max and min are calculated here
+ */
+static inline bool change0(byte b1, byte b2) {
+   return (b1&(~K197_MINUS_bm)) != (b2&(~K197_MINUS_bm));
 }
 
 /*!
@@ -308,7 +318,7 @@ void K197device::debugPrint() {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
-  if (cache.tkMode != tkMode || cache.annunciators0 != annunciators0 ||
+  if (cache.tkMode != tkMode || change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) {
     // Something changed, reset stats
