@@ -26,21 +26,39 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 - AVDD and VDD connected to a 3.3V power source (which is also supplied to the display)
 - VDDIO2 connected to +5V (same voltage as the 197/197A main board +5V digital power rail)
 - PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
-- PA2-PA6 used to interface the OLED
+- PA2 used to detect when the Bluetooth Module is powered on (if used)
+- PA3-PA6 used to interface the OLED (3 wire SPI mode)
 - PA7 is connected to a LED (optional, default LED_BUILTIN for dxCore) 
 - PC0-PC3 used to interface the 197/197A main board (4-wire SPI)
 - PD1-PD4 connected to the pushbutton cluster on the front panel
 - PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
 
-The SW has initial support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
+The SW has some support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA2 should be connected to the BT module 5V power via a SW divider (the pin max voltage is 3.3V), pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
+
+The definition of the pins in pinout.h can be changed to support the OLED in 3 wire SPI mode, but in such a case it will not be possible to detect when the Bluetooth module is powered on and off via PIN PA2.
 
 Functionality:
 -------------
-The current SW is implementing the same functions available in the 197/197A, with minor differences due to the different display technology used (plus any unintended differences - the Issues section is available for reporting them, as well as new feature requests). Additional functions:
-- At startup the module tries to detemine if Serial is connected. If it is, BT is displayed (assuming a Bluetooth module is connected)
-- Pin PA5 is monitored continuosly. When low, "<->" is displayed next to "BT" to indicate an active bluetooth connection
+The current SW is implementing the same functions available in the 197/197A (with minor differences due to the different display technology used), plus the following additional functions:
+- The module tries to detemine if the BT module is powered on. If it is, BT is displayed.
+- The BT module state is also monitored continuosly. When low, "<->" is displayed next to "BT" to indicate an active bluetooth connection
 - Some commands can be entered via Serial connection (press ? for a list)
-- Holding the "REL" button for 0.8 s or more and then releasing it will show the debug output on the left half of the OLED screen. Hold again to go back to the normal display.
+- Holding the "REL" button for 0.5 s will show a Options menu to enable an additional measurement mode and other options, as well as data logging to bluetooth serial.
+- The additional measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
+- in temperature mode the temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor).
+- at the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
+
+Keyboard: 
+---------
+compared to the original K197, the use of the the pushbuttons on the front panel changes as follows:
+- Holding the REL button will enter the Options menu
+- Normal STO and RCL function can be disabled from the options menu (in future releases they will be used for additional functions)
+
+When the Options menu is shown, the buttons are used to navigate the menu as follows:
+REL = up (hold to exit the menu)
+dB  = down
+STO = left
+RCL = right/select/ok
 
 Porting:
 -------
