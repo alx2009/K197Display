@@ -247,6 +247,7 @@ void K197device::setOverrange() {
   message[6] = raw_msg[6] = CH_SPACE;
   message[7] = CH_SPACE;
   message[8] = raw_msg[7] = 0;
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -328,4 +329,5 @@ void K197device::updateCache() {
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
+  dxUtil.checkFreeStack();
 }

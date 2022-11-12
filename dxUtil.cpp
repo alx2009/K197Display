@@ -19,6 +19,8 @@
 #include "debugUtil.h"
 #include <Arduino.h>
 
+#include <FreeStack.h>
+
 // static const float vstep = 10.24 / 4096.0; // conversion from ADC reading to
 // Volts (assuming 1.024V reference and 12 bit resolution)
 static const float vstep =
@@ -202,4 +204,44 @@ void dxUtilClass::checkTemperature(bool newline) {
   DebugOut.print(F(" C"));
   if (newline)
     DebugOut.println();
+}
+
+/*!
+    @brief  check the stack size
+    @return current amount of free stack space in bytes
+*/
+int dxUtilClass::checkFreeStack() {
+  int freeStackNow = FreeStack();
+  if (freeStackNow < minStack)
+    minStack = freeStackNow;
+  return freeStackNow;
+}
+
+/*!
+    @brief  report the lowest observed free stack space
+    @details the returned value is updated any time checkFreeStack() or
+    reportStack() is called
+    @return minimum observed free stack space in bytes
+*/
+int dxUtilClass::minFreeStack() {
+  if (minStack == INT_MAX)
+    checkFreeStack();
+  return minStack;
+}
+
+/*!
+    @brief  print the lowest observed free stack space to DebugOut
+    @param reportAlways is set to false print only if there is a change
+    compared to last time checkFreeStack() or reportStack() was called
+*/
+void dxUtilClass::reportStack(bool reportAlways) {
+  int freeStackNow = FreeStack();
+  if (freeStackNow < minStack) {
+    minStack = freeStackNow;
+    reportAlways = true;
+  }
+  if (reportAlways) {
+    DebugOut.print(F("Stack="));
+    DebugOut.println(minStack);
+  }
 }

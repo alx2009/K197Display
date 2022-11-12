@@ -68,6 +68,7 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
       @brief print the prompt to Serial
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
+  dxUtil.reportStack();
   Serial.println();
   Serial.print(F("> "));
 }
@@ -111,6 +112,7 @@ void printError(
 */
 void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
                      // does not even support input)
+  dxUtil.checkFreeStack();
   static char buf[INPUT_BUFFER_SIZE];
   size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
@@ -141,6 +143,7 @@ void cmdLog() { uiman.setLogging(!uiman.isLogging()); }
    the Arduibno GUI)
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
+  dxUtil.checkFreeStack();
   static char buf[INPUT_BUFFER_SIZE];
   size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
@@ -205,6 +208,7 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
    pased as input
 */
 K197UIeventsource pin2EventSource(uint8_t buttonPin) {
+  dxUtil.checkFreeStack();
   if (buttonPin == UI_STO)
     return K197key_STO;
   else if (buttonPin == UI_RCL)
@@ -229,6 +233,7 @@ K197UIeventsource pin2EventSource(uint8_t buttonPin) {
    k197ButtonCluster
 */
 void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+  dxUtil.checkFreeStack();
   K197UIeventsource evsource = pin2EventSource(buttonPinIn);
   // DebugOut.print(F("*Btn "));
   if (uiman.handleUIEvent(evsource, buttonEvent)) {
@@ -270,6 +275,7 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
    k197ButtonCluster
 */
 void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+  dxUtil.checkFreeStack();
   // DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
   bool reassignStoRcl = uiman.reassignStoRcl();
@@ -339,6 +345,7 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
    k197ButtonCluster
 */
 void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+  dxUtil.checkFreeStack();
   if (uiman.getScreenMode() == K197sc_normal)
     normalScreenCallBack(buttonPinIn, buttonEvent);
   else
@@ -397,6 +404,8 @@ void setup() {
   pushbuttons.setTransparentMode(false);
   delay(100);
 
+  dxUtil.checkFreeStack();
+
   // Setup watchdog
   _PROTECTED_WRITE(
       WDT.CTRLA,
@@ -432,6 +441,7 @@ void loop() {
     if (n == 9) {
       uiman.updateDisplay();
       uiman.logData();
+      dxUtil.checkFreeStack();
       __asm__ __volatile__("wdr" ::);
     }
     BTman.checkPresence();

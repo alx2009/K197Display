@@ -52,6 +52,7 @@ UImenu UIlogMenu(130);        ///< the submenu to set logging options
 #include "BTmanager.h"
 #include "UImanager.h"
 #include "debugUtil.h"
+#include "dxUtil.h"
 #include "pinout.h"
 
 UImanager uiman; ///< defines the UImanager instance to use in the application
@@ -105,6 +106,7 @@ void setup_draw(void) {
   DebugOut.print(u8g2.getDescent());
   DebugOut.print(F("/"));
   DebugOut.println(u8g2.getMaxCharHeight());
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -156,6 +158,7 @@ void UImanager::updateDisplay() {
     updateDisplayNormal();
   else
     updateDisplaySplit();
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -220,6 +223,7 @@ void UImanager::updateDisplaySplit() {
     UImenu::getCurrentMenu()->draw(&u8g2, 0, 10);
   }
   u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -341,6 +345,7 @@ void UImanager::updateDisplayNormal() {
   }
 
   u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -360,6 +365,7 @@ void UImanager::setScreenMode(K197screenMode mode) {
   screen_mode = mode;
   u8g2.clearBuffer();
   u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -391,6 +397,7 @@ void UImanager::updateBtStatus() {
     u8g2.print(F("   "));
   }
   u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
 }
 
 // ***************************************************************************************
@@ -417,6 +424,7 @@ DEF_MENU_BUTTON(saveSettings, 15,
 DEF_MENU_BUTTON(reloadSettings, 15,
                 "Reload settings"); ///< TBD: submenu not yet implemented
 DEF_MENU_ACTION(openLog, 15, "Show log",
+                dxUtil.reportStack();
                 uiman.setScreenMode(K197sc_debug);); ///< TBD: show debug log
 
 UImenuItem *mainMenuItems[] = {
@@ -468,6 +476,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     }
   }
   return false;
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -481,6 +490,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
 void UImanager::setContrast(uint8_t value) {
   u8g2.setContrast(value);
   contrastCtrl.setValue(value);
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -491,6 +501,7 @@ void UImanager::setLogging(bool yesno) {
   if (!yesno)
     logskip_counter = 0;
   logEnable.setValue(yesno);
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -522,7 +533,7 @@ bool UImanager::reassignStoRcl() { return ::reassignStoRcl.getValue(); }
 */
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
-  ::reassignStoRcl.setValue(true);
+  ::reassignStoRcl.setValue(false);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems) / sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
@@ -625,4 +636,5 @@ void UImanager::logData() {
     Serial.print(unit);
   }
   Serial.println();
+  dxUtil.checkFreeStack();
 }

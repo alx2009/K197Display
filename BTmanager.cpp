@@ -83,6 +83,7 @@ void BTmanager::setup() {
 
 */
 BTmanagerResult BTmanager::checkConnection() {
+  dxUtil.checkFreeStack();
   bool bt_module_connected_now;
   if (BT_STATE_VPORT.IN & BT_STATE_bm) { // BT_STATE == HIGH
     bt_module_connected_now = false;     // no connection

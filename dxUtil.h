@@ -22,6 +22,7 @@
 #ifndef DXUTIL_H__
 #define DXUTIL_H__
 #include <Arduino.h>
+#include <limits.h> // needed for INT_MAX
 
 /**************************************************************************/
 /*!
@@ -99,6 +100,11 @@ public:
       @return returns true if the reset was due to power on, false otherwise
   */
   bool resetReasonPowerOn() { return (reset_flags & RSTCTRL_PORF_bm) != 0x00; };
+
+  int minStack = INT_MAX; ///< keep track of the minimum free stack
+  int checkFreeStack();
+  int minFreeStack();
+  void reportStack(bool reportAlways = true);
 };
 
 extern dxUtilClass dxUtil; ///< Predefined dxUtilClass object to use

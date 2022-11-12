@@ -19,6 +19,7 @@
 #include "UImenu.h"
 
 #include "debugUtil.h"
+#include "dxUtil.h"
 
 #define MENU_TEXT_OFFSET_X                                                     \
   5 ///< the x offset where the text should be written (relative to the upper
@@ -44,6 +45,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
     u8g2->setFontMode(0);
     u8g2->drawFrame(x, y, w, getHeight(selected));
   }
+  dxUtil.checkFreeStack();
 }
 
 #pragma GCC diagnostic push
@@ -58,6 +60,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
 bool UImenuItem::handleUIEvent(K197UIeventsource eventSource,
                                K197UIeventType eventType) {
   return false;
+  dxUtil.checkFreeStack();
 }
 
 #pragma GCC diagnostic pop
