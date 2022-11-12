@@ -264,7 +264,7 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
 }
 
 /*!
-      @brief Callback for push button events in normal screen mode
+      @brief Callback for push button events in full screen mode
 
       @details this call back should be invoked in split screen mode.
       Most events will be forward to the voltmenters, except those that change
@@ -274,7 +274,7 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
   // DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
@@ -283,7 +283,11 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   case UI_STO:
     // DebugOut.print(F("STO"));
     if (reassignStoRcl) {
-      // TODO: implement new button use cases for average/max/min/hold/autohold
+        if (buttonEvent==UIeventLongPress) {
+            K197screenMode screen_mode = uiman.getScreenMode();
+            if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
+            else uiman.setScreenMode(K197sc_normal);
+        }
     } else if (handleClicks && (buttonEvent == UIeventPress)) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (handleClicks && (buttonEvent == UIeventRelease)) {
@@ -346,8 +350,8 @@ void normalScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
 */
 void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
-  if (uiman.getScreenMode() == K197sc_normal)
-    normalScreenCallBack(buttonPinIn, buttonEvent);
+  if (uiman.isFullScreen())
+    fullScreenCallBack(buttonPinIn, buttonEvent);
   else
     splitScreenCallBack(buttonPinIn, buttonEvent);
 }

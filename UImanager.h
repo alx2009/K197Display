@@ -34,9 +34,11 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 */
 /**************************************************************************/
 enum K197screenMode {
-  K197sc_normal = 0x01,   ///< equivalent to original K197
-  K197sc_mainMenu = 0x02, ///< display main menu
-  K197sc_debug = 0x03,    ///< display log window
+  K197sc_normal = 0x11,          ///< equivalent to original K197
+  K197sc_minmax = 0x12,          ///< equivalent to original K197
+  K197sc_mainMenu = 0x03,        ///< display main menu
+  K197sc_debug = 0x04,           ///< display log window
+  K197sc_FullScreenMask = 0x10   ///< full/split screen detection
 };
 
 /**************************************************************************/
@@ -58,8 +60,9 @@ private:
   K197screenMode screen_mode =
       K197sc_normal; ///< Keep track of how to display stuff...
 
-  void updateDisplayNormal();
-  void updateDisplaySplit();
+  void updateNormalScreen();
+  void updateMinMaxScreen();
+  void updateSplitScreen();
 
   void setupMenus();
 
@@ -77,6 +80,17 @@ public:
      class UImanager
   */
   K197screenMode getScreenMode() { return screen_mode; };
+
+  /*!
+     @brief  check if display is in full screen mode
+     @return true if in full screen mode
+  */
+ bool isFullScreen() {return screen_mode & K197sc_FullScreenMask;}
+  /*!
+     @brief  check if display is in split screen mode
+     @return true if in split screen mode
+  */
+  bool isSplitScreen() {return !isFullScreen();}
 
   void updateDisplay();
   void updateBtStatus();
