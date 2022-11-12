@@ -40,7 +40,7 @@ recurring issues
 /**************************************************************************/
 // TODO wish list:
 //  Keep display mode when entering/exiting options menu
-//  reset statistics
+//  improve responsiveness of double click
 //  Autohold
 //  Save/retrieve setting to EEPROM
 // Bugs: Enable scrolling menu backward even if the item is not selectable
@@ -312,6 +312,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       delay(K197_MB_CLICK_TIME); // TODO: implement differently in order to
                                  // remove delay()
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
+      if (buttonEvent == UIeventDoubleClick) k197dev.resetStatistics();
     } else if (buttonEvent == UIeventLongPress) {
       uiman.setScreenMode(K197sc_mainMenu);
     }

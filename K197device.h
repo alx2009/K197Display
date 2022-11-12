@@ -220,6 +220,7 @@ public:
   } cache;
 
   void updateCache();
+  void resetStatistics();
 
   /*!
       @brief  set the number of samples for rolling average calculation

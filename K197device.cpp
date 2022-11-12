@@ -320,11 +320,8 @@ static inline bool change0(byte b1, byte b2) {
 void K197device::updateCache() {
   if (cache.tkMode != tkMode || change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
-      cache.annunciators8 != annunciators8) {
-    // Something changed, reset stats
-    cache.average = msg_value;
-    cache.min = msg_value;
-    cache.max = msg_value;
+      cache.annunciators8 != annunciators8) { // Something changed, reset stats
+        resetStatistics();
   } else {
     cache.average += (msg_value - cache.average) /
                      float(cache.nsamples); // This not perfect but good enough
@@ -340,4 +337,14 @@ void K197device::updateCache() {
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
   dxUtil.checkFreeStack();
+}
+
+/*!
+    @brief  reset all statistics (min, average, max)
+    @details average, max and min are calculated here
+ */
+void K197device::resetStatistics() {
+    cache.average = msg_value;
+    cache.min = msg_value;
+    cache.max = msg_value;  
 }
