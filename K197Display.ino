@@ -39,7 +39,7 @@ recurring issues
 */
 /**************************************************************************/
 // TODO wish list:
-//  streamline event handling
+//  Move statistics options to own submenu
 //  improve responsiveness of double click
 //  Autohold
 //  Save/retrieve setting to EEPROM
