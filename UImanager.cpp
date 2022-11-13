@@ -571,13 +571,41 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       showFullScreen();
       return true;
     }
-  } else if (reassignStoRcl.getValue()) { // Full scren mode + reassign 
-    if (eventType==UIeventLongPress) {
-      K197screenMode screen_mode = uiman.getScreenMode();
-      if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
-      else uiman.setScreenMode(K197sc_normal);
-      return true;
-    }
+  } else switch (eventSource) { // Full scren mode
+    case K197key_STO:
+        if (reassignStoRcl.getValue()) {
+            if ( eventType==UIeventLongPress ) {
+                K197screenMode screen_mode = uiman.getScreenMode();
+                if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
+                else uiman.setScreenMode(K197sc_normal);
+            }
+            return true;
+        }
+        break;
+    case K197key_RCL:
+        if (reassignStoRcl.getValue()) {
+            return true;
+        }
+        break;
+    case K197key_REL:
+        if (eventType == UIeventDoubleClick) {
+            k197dev.resetStatistics();
+            return true;
+        }
+        break;
+    case K197key_DB:
+        if (additionalModes.getValue()) {
+            if ( (eventType == UIeventPress) && k197dev.isV() 
+                        && k197dev.ismV() && k197dev.isDC()) {
+                if (!k197dev.getTKMode()) { // TK mode is not yet enabled
+                    k197dev.setTKMode(true);  // Activate TK mode
+                    return true; // Skip normal handling in the main sketch
+                }                
+              } else {
+                    k197dev.setTKMode(false);
+              }
+        }
+        break;
   }
   return false;
   dxUtil.checkFreeStack();

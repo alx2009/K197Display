@@ -240,26 +240,17 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     }
     break;
   case K197key_REL:
+    // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
     // DebugOut.print(F("REL"));
     if (eventType == UIeventClick) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-      delay(K197_MB_CLICK_TIME); // TODO: implement differently in order to
-                                 // remove delay()
+      delay(K197_MB_CLICK_TIME);
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
-    } else if (eventType == UIeventDoubleClick) k197dev.resetStatistics();
+    }
     break;
   case K197key_DB:
     // DebugOut.print(F("DB"));
     if (eventType == UIeventPress) {
-      if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV() &&
-          k197dev.isDC()) {
-        if (!k197dev.getTKMode()) { // TK mode is not yet enabled
-          k197dev.setTKMode(true);  // Activate TK mode
-          break;                    // break so we do not activate the Db mode
-        } else {
-          k197dev.setTKMode(false); // No break so we also activate dB mode
-        }
-      }
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
       pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
