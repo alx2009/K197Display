@@ -39,11 +39,11 @@ recurring issues
 */
 /**************************************************************************/
 // TODO wish list:
-//  Keep display mode when entering/exiting options menu
 //  improve responsiveness of double click
 //  Autohold
 //  Save/retrieve setting to EEPROM
-// Bugs: Enable scrolling menu backward even if the item is not selectable
+//  Graph mode
+// Bug: Enable scrolling menu backward even if the item is not selectable
 
 #include "K197device.h"
 
@@ -96,7 +96,6 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 
 /*!
       @brief error message for invalid command to Serial
-
       @param buf null terminated char array with the invalid command
 */
 void printError(
@@ -108,7 +107,6 @@ void printError(
 
 /*!
       @brief handle the "contrast" command
-
       Reads the contrast value from serial and change contrast accordingly
 */
 void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
@@ -136,7 +134,6 @@ void cmdLog() { uiman.setLogging(!uiman.isLogging()); }
 
 /*!
       @brief handle all Serial commands
-
       @details Reads from Serial and execute any command. Should be invoked when
    there is input availble from Serial. Note: It will block for the default
    Serial timeout if a command is not complete, affecting the display. Terminals
@@ -313,9 +310,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
                                  // remove delay()
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
       if (buttonEvent == UIeventDoubleClick) k197dev.resetStatistics();
-    } else if (buttonEvent == UIeventLongPress) {
-      uiman.setScreenMode(K197sc_mainMenu);
-    }
+    } 
     break;
   case UI_DB:
     // DebugOut.print(F("DB"));
@@ -352,6 +347,13 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
 */
 void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
+  if ( buttonPinIn == UI_REL && buttonEvent==UIeventLongPress) { // This event is handled the same in all screen modes
+      if (uiman.isFullScreen())
+           uiman.showOptionsMenu();
+      else
+           uiman.showFullScreen();
+      return;
+  }
   if (uiman.isFullScreen())
     fullScreenCallBack(buttonPinIn, buttonEvent);
   else
