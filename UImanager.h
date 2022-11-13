@@ -73,19 +73,19 @@ private:
 
   byte logskip_counter = 0; ///< counter used whenj data logging, counts how
                             ///< many measurements are skipped
-
-public:
-  UImanager(){}; ///< default constructor for the class
-  void setup();
   void clearScreen();
   void setScreenMode(K197screenMode mode);
-
   /*!
      @brief  get the screen mode
      @return screen mode, it must be one of the displayXXX constants defined in
      class UImanager
   */
   K197screenMode getScreenMode() { return (K197screenMode) (screen_mode & K197sc_ScreenModeMask); };
+
+
+public:
+  UImanager(){}; ///< default constructor for the class
+  void setup();
 
   /*!
      @brief  check if display is in full screen mode
