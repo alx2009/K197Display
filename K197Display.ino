@@ -205,7 +205,7 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
    k197ButtonClusteridentify a button via pin number, but the other classes that
    handle events use the enum K197UIeventsource defined in UIevents.h
 
-      @return the enum constant for the source correspoonding to the pin number
+      @return the enum constant for the source corresponding to the pin number
    pased as input
 */
 K197UIeventsource pin2EventSource(uint8_t buttonPin) {
