@@ -571,7 +571,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       showFullScreen();
       return true;
     }
-  } else if (::reassignStoRcl.getValue()) { // Full scren mode + reassign 
+  } else if (reassignStoRcl.getValue()) { // Full scren mode + reassign 
     if (eventType==UIeventLongPress) {
       K197screenMode screen_mode = uiman.getScreenMode();
       if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
@@ -623,21 +623,13 @@ bool UImanager::isLogging() { return logEnable.getValue(); }
 bool UImanager::isExtraModeEnabled() { return additionalModes.getValue(); };
 
 /*!
-      @brief  query if the STO and RCL buttons should be re-assigned to other
-   functions
-      @details note that this method only keeps track of the setting in the UI.
-      @return returns true if logging is active
-*/
-bool UImanager::reassignStoRcl() { return ::reassignStoRcl.getValue(); }
-
-/*!
       @brief  setup the menu
       @details this method setup all the menus. It must be called before the
    menu can be displayed.
 */
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
-  ::reassignStoRcl.setValue(true);
+  reassignStoRcl.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems) / sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
