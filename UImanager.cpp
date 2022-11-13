@@ -167,11 +167,9 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
-  switch (screen_mode) {
-      case K197sc_normal: updateNormalScreen(); break;
-      case K197sc_minmax: updateMinMaxScreen(); break;
-      default:            updateSplitScreen();  break;
-  }
+  if (isSplitScreen()) updateSplitScreen();
+  else if (getScreenMode() == K197sc_normal) updateNormalScreen();
+  else updateMinMaxScreen();
   dxUtil.checkFreeStack();
 }
 
@@ -230,10 +228,10 @@ void UImanager::updateSplitScreen() {
   else
     u8g2.print(F("      "));
 
-  if (screen_mode == K197sc_debug) {
+  if ( isSplitScreen() && !isMenuVisible() ) { // Show the debug log
     u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
     u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
-  } else {
+  } else { // For all other modes we show the settings menu when in split mode
     UImenu::getCurrentMenu()->draw(&u8g2, 0, 10);
   }
   u8g2.sendBuffer();
@@ -449,9 +447,19 @@ void UImanager::updateMinMaxScreen() {
    respectively
 */
 void UImanager::setScreenMode(K197screenMode mode) {
-  screen_mode = mode;
+  screen_mode = (K197screenMode) (screen_mode & K197sc_AttributesBitMask) ; // clear current screen mode
+  screen_mode = (K197screenMode) (screen_mode | (mode & K197sc_ScreenModeMask)) ; // set the mode bits to enter the new mode
+  clearScreen();
+}
+
+/*!
+  @brief clear the display
+  @details This is done automatically when the screen mode changes, there should be no need to call this function elsewhere
+*/
+void UImanager::clearScreen() {
+  //DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
-  u8g2.sendBuffer();
+  u8g2.sendBuffer();  
   dxUtil.checkFreeStack();
 }
 
@@ -462,7 +470,7 @@ void UImanager::setScreenMode(K197screenMode mode) {
       @param connected true if a BT connection is detected, false otherwise
 */
 void UImanager::updateBtStatus() {
-  if (screen_mode != K197sc_normal)
+  if (isSplitScreen() || (getScreenMode() != K197sc_normal) )
     return;
   unsigned int x = 95;
   unsigned int y = 2;
@@ -495,8 +503,7 @@ DEF_MENU_CLOSE(closeMenu, 15,
                "< Back"); ///< Menu close action (used in multiple menus)
 DEF_MENU_ACTION(
     exitMenu, 15, "Exit",
-    uiman.setScreenMode(
-        K197sc_normal);); ///< Menu close action (used in multiple menus)
+    uiman.showFullScreen();); ///< Menu close action (used in multiple menus)
 
 DEF_MENU_SEPARATOR(mainSeparator0, 15, "< Options >"); ///< Menu separator
 DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");     ///< Menu input
@@ -512,7 +519,7 @@ DEF_MENU_BUTTON(reloadSettings, 15,
                 "Reload settings"); ///< TBD: submenu not yet implemented
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
-                uiman.setScreenMode(K197sc_debug);); ///< TBD: show debug log
+                uiman.showDebugLog();); ///< show debug log
 
 UImenuItem *mainMenuItems[] = {
     &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog,
@@ -549,16 +556,12 @@ UImenuItem *logMenuItems[] = {
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource,
                               K197UIeventType eventType) {
-  if (screen_mode == K197sc_mainMenu) {
+  if (isMenuVisible()) {
     if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType))
       return true;
-    if (eventSource == K197key_REL && eventType == UIeventLongPress) {
-      setScreenMode(K197sc_normal);
-      return true;
-    }
-  } else if (screen_mode == K197sc_debug) {
-    if (eventType == UIeventClick || eventType == UIeventLongClick) {
-      setScreenMode(K197sc_normal);
+  } else if (isSplitScreen()) { // Split screen with no menu visible
+    if (eventType == UIeventClick || eventType == UIeventLongPress) {
+      showFullScreen();
       return true;
     }
   }

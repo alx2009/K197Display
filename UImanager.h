@@ -31,14 +31,19 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 /**************************************************************************/
 /*!
     @brief  Simple enum to identify the screen mode being displayed
+    @details the lower 4 bits control the screen mode, the higher 4 bit controls other attributes:
+    - bit 5 is used to distinguish between full screen and split screen 
+    - bit 6 activates the menu
+    Note that not all combinations may be implemented, but in this way we can keep track of the mode when switching between full screen and split screen
 */
 /**************************************************************************/
 enum K197screenMode {
-  K197sc_normal = 0x11,          ///< equivalent to original K197
-  K197sc_minmax = 0x12,          ///< equivalent to original K197
-  K197sc_mainMenu = 0x03,        ///< display main menu
-  K197sc_debug = 0x04,           ///< display log window
-  K197sc_FullScreenMask = 0x10   ///< full/split screen detection
+  K197sc_normal = 0x01,   ///< equivalent to original K197
+  K197sc_minmax = 0x02,   ///< add statistics but less annunciators 
+  K197sc_FullScreenBitMask = 0x10, ///< full screen when set
+  K197sc_MenuBitMask = 0x20,       ///< show menu when set
+  K197sc_ScreenModeMask = 0x0f,    ///< Mask for mode bits
+  K197sc_AttributesBitMask = 0xf0  ///< Mask for attribute bits
 };
 
 /**************************************************************************/
@@ -57,8 +62,8 @@ class UImanager {
 private:
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
-  K197screenMode screen_mode =
-      K197sc_normal; ///< Keep track of how to display stuff...
+  K197screenMode screen_mode = (K197screenMode) (K197sc_normal
+      | K197sc_FullScreenBitMask); ///< Keep track of how to display stuff...
 
   void updateNormalScreen();
   void updateMinMaxScreen();
@@ -72,6 +77,7 @@ private:
 public:
   UImanager(){}; ///< default constructor for the class
   void setup();
+  void clearScreen();
   void setScreenMode(K197screenMode mode);
 
   /*!
@@ -79,18 +85,53 @@ public:
      @return screen mode, it must be one of the displayXXX constants defined in
      class UImanager
   */
-  K197screenMode getScreenMode() { return screen_mode; };
+  K197screenMode getScreenMode() { return (K197screenMode) (screen_mode & K197sc_ScreenModeMask); };
 
   /*!
      @brief  check if display is in full screen mode
      @return true if in full screen mode
   */
- bool isFullScreen() {return screen_mode & K197sc_FullScreenMask;}
+ bool isFullScreen() {return screen_mode & K197sc_FullScreenBitMask;}
   /*!
      @brief  check if display is in split screen mode
      @return true if in split screen mode
   */
   bool isSplitScreen() {return !isFullScreen();}
+  /*!
+     @brief  chek if the options menu is visible
+     @return true if the menu is visible
+  */
+  bool isMenuVisible() {return screen_mode & K197sc_MenuBitMask;};
+  /*!
+     @brief  set full screen mode
+     @details also clears the other attributes as we do not keep track of them
+     @return true if the menu is visible
+  */
+  void showFullScreen() { 
+    screen_mode = (K197screenMode) (screen_mode & K197sc_ScreenModeMask); 
+    screen_mode = (K197screenMode) (screen_mode | K197sc_FullScreenBitMask); 
+    clearScreen();
+  };
+  /*!
+     @brief  show the option menu
+     @details also clears the other attributes as we do not keep track of them
+     @return true if the menu is visible
+  */
+  void showOptionsMenu() { 
+    screen_mode = (K197screenMode) (screen_mode & K197sc_ScreenModeMask);
+    screen_mode = (K197screenMode) (screen_mode | K197sc_MenuBitMask);
+    clearScreen();
+  };
+  /*!
+     @brief  show the option menu
+     @details also clears the other attributes as we do not keep track of them
+     @return true if the menu is visible
+  */
+  void showDebugLog() {
+    // The debug log is shown in split mode if the menu is not active
+    screen_mode = (K197screenMode) (screen_mode & K197sc_ScreenModeMask);
+    clearScreen();
+  }; 
 
   void updateDisplay();
   void updateBtStatus();
