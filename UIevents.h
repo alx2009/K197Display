@@ -21,6 +21,8 @@
 #ifndef UIEVENTS_H__
 #define UIEVENTS_H__
 
+#include "pinout.h"
+
 #define BUTTON_PRESSED_STATE LOW ///< logical level when pressed
 #define BUTTON_IDLE_STATE HIGH   ///< logical level when not pressed
 
@@ -51,14 +53,16 @@ enum K197UIeventType {
 /**************************************************************************/
 /*!
     @brief  Simple enum to identify UI event source
+    @details the values of the enum are the same as the corresponding pins,
+    so that we can cast a pin number to the enum
 */
 /**************************************************************************/
 enum K197UIeventsource {
-  K197key_REL = 0x01, ///< REL key (Alt. functions: up)
-  K197key_DB = 0x02,  ///< DB key  (Alt. functions: down,   mode)
+  K197key_REL = UI_REL, ///< REL key (Alt. functions: up)
+  K197key_DB = UI_DB,  ///< DB key  (Alt. functions: down,   mode)
   K197key_STO =
-      0x03, ///< STO key (Alt. functions: clear, cancel, decrease, left)
-  K197key_RCL = 0x04, ///< RCL key (Alt. functions: set, Ok, increase, right)
+      UI_STO, ///< STO key (Alt. functions: clear, cancel, decrease, left)
+  K197key_RCL = UI_RCL, ///< RCL key (Alt. functions: set, Ok, increase, right)
 };
 
 #endif // UIEVENTS_H__

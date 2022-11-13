@@ -39,6 +39,7 @@ recurring issues
 */
 /**************************************************************************/
 // TODO wish list:
+//  streamline event handling
 //  improve responsiveness of double click
 //  Autohold
 //  Save/retrieve setting to EEPROM
@@ -195,27 +196,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 
 k197ButtonCluster pushbuttons; ///< this object is used to interact with the
                                ///< push-button cluster
-/*!
-      @brief map from pin number to the enum constant K197UIeventsource
-
-      @details this mapping is needed because for efficiency the
-   k197ButtonClusteridentify a button via pin number, but the other classes that
-   handle events use the enum K197UIeventsource defined in UIevents.h
-
-      @return the enum constant for the source corresponding to the pin number
-   pased as input
-*/
-K197UIeventsource pin2EventSource(uint8_t buttonPin) {
-  dxUtil.checkFreeStack();
-  if (buttonPin == UI_STO)
-    return K197key_STO;
-  else if (buttonPin == UI_RCL)
-    return K197key_RCL;
-  else if (buttonPin == UI_REL)
-    return K197key_REL;
-  else
-    return K197key_DB;
-}
 
 #define K197_MB_CLICK_TIME                                                     \
   75 ///< how much a click should last when sent to the K197
@@ -230,32 +210,31 @@ K197UIeventsource pin2EventSource(uint8_t buttonPin) {
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+void splitScreenCallBack(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
-  K197UIeventsource evsource = pin2EventSource(buttonPinIn);
   // DebugOut.print(F("*Btn "));
-  if (uiman.handleUIEvent(evsource, buttonEvent)) {
-    // DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn);
+  if (uiman.handleUIEvent(eventSource, buttonEvent)) {
+    // DebugOut.print(F(", PIN=")); DebugOut.print((uint8_t) eventSource);
     // DebugOut.print(F(" "));
     // k197ButtonCluster::DebugOut_printEventName(buttonEvent);
     // DebugOut.println(F("Btn handled by UI"));
     return;
   }
-  switch (buttonPinIn) {
-  case UI_STO:
+  switch (eventSource) {
+  case K197key_STO:
     // DebugOut.print(F("STO"));
     break;
-  case UI_RCL:
+  case K197key_RCL:
     // DebugOut.print(F("RCL"));
     break;
-  case UI_REL:
+  case K197key_REL:
     // DebugOut.print(F("REL"));
     break;
-  case UI_DB:
+  case K197key_DB:
     // DebugOut.print(F("DB"));
     break;
   }
-  // DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn);
+  // DebugOut.print(F(", PIN=")); DebugOut.print( (uint8_t) buttonPinIn);
   // DebugOut.print(F(" "));
   // k197ButtonCluster::DebugOut_printEventName(buttonEvent);
   // DebugOut.println();
@@ -272,13 +251,13 @@ void splitScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+void fullScreenCallBack(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
   // DebugOut.print(F("Btn "));
   bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
   bool reassignStoRcl = uiman.reassignStoRcl();
-  switch (buttonPinIn) {
-  case UI_STO:
+  switch (eventSource) {
+  case K197key_STO:
     // DebugOut.print(F("STO"));
     if (reassignStoRcl) {
         if (buttonEvent==UIeventLongPress) {
@@ -292,7 +271,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       pinConfigure(MB_STO, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
-  case UI_RCL:
+  case K197key_RCL:
     // DebugOut.print(F("RCL"));
     if (reassignStoRcl) {
       // TODO: implement new button use cases for average/max/min/hold/autohold
@@ -302,7 +281,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       pinConfigure(MB_RCL, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
-  case UI_REL:
+  case K197key_REL:
     // DebugOut.print(F("REL"));
     if (handleClicks && (buttonEvent == UIeventClick || buttonEvent == UIeventDoubleClick) ) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
@@ -312,7 +291,7 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       if (buttonEvent == UIeventDoubleClick) k197dev.resetStatistics();
     } 
     break;
-  case UI_DB:
+  case K197key_DB:
     // DebugOut.print(F("DB"));
     if (handleClicks && (buttonEvent == UIeventPress)) {
       if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV() &&
@@ -345,9 +324,9 @@ void fullScreenCallBack(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       @param buttonEvent one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
+void myButtonCallback(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
   dxUtil.checkFreeStack();
-  if ( buttonPinIn == UI_REL && buttonEvent==UIeventLongPress) { // This event is handled the same in all screen modes
+  if ( eventSource == K197key_REL && buttonEvent==UIeventLongPress) { // This event is handled the same in all screen modes
       if (uiman.isFullScreen())
            uiman.showOptionsMenu();
       else
@@ -355,9 +334,9 @@ void myButtonCallback(uint8_t buttonPinIn, K197UIeventType buttonEvent) {
       return;
   }
   if (uiman.isFullScreen())
-    fullScreenCallBack(buttonPinIn, buttonEvent);
+    fullScreenCallBack(eventSource, buttonEvent);
   else
-    splitScreenCallBack(buttonPinIn, buttonEvent);
+    splitScreenCallBack(eventSource, buttonEvent);
 }
 
 /*!
@@ -372,10 +351,10 @@ void setup() {
   PORTD.PORTCTRL = PORT_SRL_bm;
   PORTF.PORTCTRL = PORT_SRL_bm;
   pushbuttons.setup();
-  pushbuttons.setCallback(UI_STO, myButtonCallback);
-  pushbuttons.setCallback(UI_RCL, myButtonCallback);
-  pushbuttons.setCallback(UI_REL, myButtonCallback);
-  pushbuttons.setCallback(UI_DB, myButtonCallback);
+  pushbuttons.setCallback(K197key_STO, myButtonCallback);
+  pushbuttons.setCallback(K197key_RCL, myButtonCallback);
+  pushbuttons.setCallback(K197key_REL, myButtonCallback);
+  pushbuttons.setCallback(K197key_DB, myButtonCallback);
   DebugOut.begin();
 
   dxUtil.begin();

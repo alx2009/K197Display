@@ -226,7 +226,8 @@ void k197ButtonCluster::setTransparentMode(bool newMode) {
    idnicating that the callback has been set or removed succesfully. False
    otherwise.
 */
-bool k197ButtonCluster::setCallback(uint8_t pin, buttonCallBack pinCallBack) {
+bool k197ButtonCluster::setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack) {
+  uint8_t pin = (uint8_t) eventSource;
   for (unsigned int i = 0; i < sizeof(buttonPinIn) / sizeof(buttonPinIn[0]);
        i++) {
     if (buttonPinIn[i] == pin) { // we found the slot...
@@ -247,7 +248,7 @@ bool k197ButtonCluster::setCallback(uint8_t pin, buttonCallBack pinCallBack) {
 */
 inline void invoke_callback(int i, K197UIeventType buttonEvent) {
   if (callBack[i] != NULL)
-    callBack[i](buttonPinIn[i], buttonEvent);
+    callBack[i]( (K197UIeventsource) buttonPinIn[i], buttonEvent);
 }
 
 /*!

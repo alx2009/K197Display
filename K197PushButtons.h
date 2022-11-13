@@ -39,7 +39,7 @@ class k197ButtonCluster {
 public:
   k197ButtonCluster(){}; ///< default constructor
   typedef void (*buttonCallBack)(
-      uint8_t buttonPinIn,
+      K197UIeventsource eventSource,
       K197UIeventType
           buttonEvent); ///< define the type of the callback function
   void setup();
@@ -64,7 +64,7 @@ protected:
   void detachInterrupts();
 
 public:
-  bool setCallback(uint8_t in_pin, buttonCallBack pinCallBack);
+  bool setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack);
 
   void check(void);
 
