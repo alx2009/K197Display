@@ -140,8 +140,6 @@ public:
 
   bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
-  bool isExtraModeEnabled();
-
   void setLogging(bool yesno);
   bool isLogging();
 

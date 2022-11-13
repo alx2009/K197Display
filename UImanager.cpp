@@ -643,14 +643,6 @@ void UImanager::setLogging(bool yesno) {
 bool UImanager::isLogging() { return logEnable.getValue(); }
 
 /*!
-      @brief  query if the extra modes are enabled
-      @details extra mode are modes that are implemented in this application
-   rather than the original k197 device
-      @return returns true if logging is active
-*/
-bool UImanager::isExtraModeEnabled() { return additionalModes.getValue(); };
-
-/*!
       @brief  setup the menu
       @details this method setup all the menus. It must be called before the
    menu can be displayed.
