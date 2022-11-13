@@ -595,15 +595,16 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
         break;
     case K197key_DB:
         if (additionalModes.getValue()) {
-            if ( (eventType == UIeventPress) && k197dev.isV() 
-                        && k197dev.ismV() && k197dev.isDC()) {
-                if (!k197dev.getTKMode()) { // TK mode is not yet enabled
-                    k197dev.setTKMode(true);  // Activate TK mode
-                    return true; // Skip normal handling in the main sketch
-                }                
-              } else {
+            if (eventType == UIeventPress) {
+                if ( k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
+                    if (!k197dev.getTKMode()) { // TK mode is not yet enabled
+                        k197dev.setTKMode(true);  // Activate TK mode
+                        return true; // Skip normal handling in the main sketch
+                    }                
+                } else {
                     k197dev.setTKMode(false);
-              }
+                }
+            }
         }
         break;
   }
