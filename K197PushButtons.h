@@ -41,7 +41,7 @@ public:
   typedef void (*buttonCallBack)(
       K197UIeventsource eventSource,
       K197UIeventType
-          buttonEvent); ///< define the type of the callback function
+          eventType); ///< define the type of the callback function
   void setup();
 
 protected:

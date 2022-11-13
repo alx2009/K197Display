@@ -244,11 +244,11 @@ bool k197ButtonCluster::setCallback(K197UIeventsource eventSource, buttonCallBac
     @details This function is used only within K197PushButton.cpp
 
     @param i the array index assigned to the push button
-    @param buttonEvent the button event passed to the call back
+    @param eventType the button event passed to the call back
 */
-inline void invoke_callback(int i, K197UIeventType buttonEvent) {
+inline void invoke_callback(int i, K197UIeventType eventType) {
   if (callBack[i] != NULL)
-    callBack[i]( (K197UIeventsource) buttonPinIn[i], buttonEvent);
+    callBack[i]( (K197UIeventsource) buttonPinIn[i], eventType);
 }
 
 /*!
@@ -296,6 +296,7 @@ void k197ButtonCluster::check(
         if ((now - startPressed[i]) > longPressTime) {
           invoke_callback(i, UIeventLongClick);
         } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
+          invoke_callback(i, UIeventClick);
           invoke_callback(i, UIeventDoubleClick);
         } else {
           invoke_callback(i, UIeventClick);

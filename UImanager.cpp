@@ -556,12 +556,26 @@ UImenuItem *logMenuItems[] = {
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource,
                               K197UIeventType eventType) {
+  if ( eventSource == K197key_REL && eventType==UIeventLongPress) { // This event is handled the same in all screen modes
+      if (isFullScreen())
+           showOptionsMenu();
+      else
+           showFullScreen();
+      return true;
+  }
   if (isMenuVisible()) {
     if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType))
       return true;
   } else if (isSplitScreen()) { // Split screen with no menu visible
     if (eventType == UIeventClick || eventType == UIeventLongPress) {
       showFullScreen();
+      return true;
+    }
+  } else if (::reassignStoRcl.getValue()) { // Full scren mode + reassign 
+    if (eventType==UIeventLongPress) {
+      K197screenMode screen_mode = uiman.getScreenMode();
+      if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
+      else uiman.setScreenMode(K197sc_normal);
       return true;
     }
   }

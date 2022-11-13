@@ -34,7 +34,7 @@
     - Press-Release-Click
     - Press-Release-LongPress-Release-Longclick (if hold for a longer time)
 
-    A second click event close to the first will become a double click
+    A second click event close to the first will generate a double click event right after the second click event
     Hold is generated after LongPress and before Release (if pressed for a
    sufficiently long time)
 */

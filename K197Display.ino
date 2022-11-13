@@ -201,99 +201,56 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
   75 ///< how much a click should last when sent to the K197
 
 /*!
-      @brief Callback for push button events in split screen mode
+      @brief Callback for push button events
 
-      @details this call back should be invoked while in split screen mode, when
-   the events must be processed by the UI instead of being sent to the voltmeter
+      @details this function should be set as call back for all push buttons
 
       @param buttonPinIn pin identifying the UI button
-      @param buttonEvent one of the eventXXX constants define in class
+      @param eventType one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void splitScreenCallBack(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
+void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) {
   dxUtil.checkFreeStack();
-  // DebugOut.print(F("*Btn "));
-  if (uiman.handleUIEvent(eventSource, buttonEvent)) {
+  if (uiman.handleUIEvent(eventSource, eventType)) { // UI related event, no need to do more
     // DebugOut.print(F(", PIN=")); DebugOut.print((uint8_t) eventSource);
     // DebugOut.print(F(" "));
-    // k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+    // k197ButtonCluster::DebugOut_printEventName(eventType);
     // DebugOut.println(F("Btn handled by UI"));
     return;
   }
-  switch (eventSource) {
-  case K197key_STO:
-    // DebugOut.print(F("STO"));
-    break;
-  case K197key_RCL:
-    // DebugOut.print(F("RCL"));
-    break;
-  case K197key_REL:
-    // DebugOut.print(F("REL"));
-    break;
-  case K197key_DB:
-    // DebugOut.print(F("DB"));
-    break;
-  }
-  // DebugOut.print(F(", PIN=")); DebugOut.print( (uint8_t) buttonPinIn);
-  // DebugOut.print(F(" "));
-  // k197ButtonCluster::DebugOut_printEventName(buttonEvent);
-  // DebugOut.println();
-}
-
-/*!
-      @brief Callback for push button events in full screen mode
-
-      @details this call back should be invoked in split screen mode.
-      Most events will be forward to the voltmenters, except those that change
-   the screen mode or add new features
-
-      @param buttonPinIn pin identifying the UI button
-      @param buttonEvent one of the eventXXX constants define in class
-   k197ButtonCluster
-*/
-void fullScreenCallBack(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
-  dxUtil.checkFreeStack();
+  if (uiman.isSplitScreen()) return; // Nothing to do in split screen mode
+  
   // DebugOut.print(F("Btn "));
-  bool handleClicks = pushbuttons.isTransparentMode() ? false : true;
-  bool reassignStoRcl = uiman.reassignStoRcl();
+  if(pushbuttons.isTransparentMode()) return; // No need to do anything here
   switch (eventSource) {
   case K197key_STO:
     // DebugOut.print(F("STO"));
-    if (reassignStoRcl) {
-        if (buttonEvent==UIeventLongPress) {
-            K197screenMode screen_mode = uiman.getScreenMode();
-            if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
-            else uiman.setScreenMode(K197sc_normal);
-        }
-    } else if (handleClicks && (buttonEvent == UIeventPress)) {
+    if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-    } else if (handleClicks && (buttonEvent == UIeventRelease)) {
+    } else if (eventType == UIeventRelease) {
       pinConfigure(MB_STO, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   case K197key_RCL:
     // DebugOut.print(F("RCL"));
-    if (reassignStoRcl) {
-      // TODO: implement new button use cases for average/max/min/hold/autohold
-    } else if (handleClicks && (buttonEvent == UIeventPress)) {
+    if (eventType == UIeventPress) {
       pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-    } else if (handleClicks && (buttonEvent == UIeventRelease)) {
+    } else if (eventType == UIeventRelease) {
       pinConfigure(MB_RCL, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   case K197key_REL:
     // DebugOut.print(F("REL"));
-    if (handleClicks && (buttonEvent == UIeventClick || buttonEvent == UIeventDoubleClick) ) {
+    if (eventType == UIeventClick) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       delay(K197_MB_CLICK_TIME); // TODO: implement differently in order to
                                  // remove delay()
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
-      if (buttonEvent == UIeventDoubleClick) k197dev.resetStatistics();
-    } 
+    } else if (eventType == UIeventDoubleClick) k197dev.resetStatistics();
     break;
   case K197key_DB:
     // DebugOut.print(F("DB"));
-    if (handleClicks && (buttonEvent == UIeventPress)) {
+    if (eventType == UIeventPress) {
       if (uiman.isExtraModeEnabled() && k197dev.isV() && k197dev.ismV() &&
           k197dev.isDC()) {
         if (!k197dev.getTKMode()) { // TK mode is not yet enabled
@@ -304,39 +261,16 @@ void fullScreenCallBack(K197UIeventsource eventSource, K197UIeventType buttonEve
         }
       }
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-    } else if (handleClicks && (buttonEvent == UIeventRelease)) {
+    } else if (eventType == UIeventRelease) {
       pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   }
   // DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn);
   // DebugOut.print(F(" "));
-  // k197ButtonCluster::DebugOut_printEventName(buttonEvent);
+  // k197ButtonCluster::DebugOut_printEventName(eventType);
   // DebugOut.println();
-}
 
-/*!
-      @brief Callback for push button events
-
-      @details this function should be set as call back for all push buttons
-
-      @param buttonPinIn pin identifying the UI button
-      @param buttonEvent one of the eventXXX constants define in class
-   k197ButtonCluster
-*/
-void myButtonCallback(K197UIeventsource eventSource, K197UIeventType buttonEvent) {
-  dxUtil.checkFreeStack();
-  if ( eventSource == K197key_REL && buttonEvent==UIeventLongPress) { // This event is handled the same in all screen modes
-      if (uiman.isFullScreen())
-           uiman.showOptionsMenu();
-      else
-           uiman.showFullScreen();
-      return;
-  }
-  if (uiman.isFullScreen())
-    fullScreenCallBack(eventSource, buttonEvent);
-  else
-    splitScreenCallBack(eventSource, buttonEvent);
 }
 
 /*!
