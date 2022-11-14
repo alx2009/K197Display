@@ -186,7 +186,7 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
   } else if ((strcasecmp_P(buf, PSTR("log")) == 0)) {
     cmdLog();
   } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
-    cmdContrast();
+    cmdContrast();   
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
@@ -198,7 +198,9 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
                                ///< push-button cluster
 
 #define K197_MB_CLICK_TIME                                                     \
-  75 ///< how much a click should last when sent to the K197
+  750 ///< how much a click should last when sent to the K197 (us)
+#define K197_MB_CLICK_TIME2                                                     \
+  350 ///< how much we should wait after a click is sent to the K197 (us)
 
 /*!
       @brief Callback for push button events
@@ -243,9 +245,11 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
     // DebugOut.print(F("REL"));
     if (eventType == UIeventClick) {
+      //DebugOut.print('.');
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-      delay(K197_MB_CLICK_TIME);
+      delayMicroseconds(K197_MB_CLICK_TIME);
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
+      delayMicroseconds(K197_MB_CLICK_TIME2);
     }
     break;
   case K197key_DB:

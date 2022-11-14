@@ -590,6 +590,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     case K197key_REL:
         if (eventType == UIeventDoubleClick) {
             k197dev.resetStatistics();
+            //DebugOut.print('x');
             return true;
         }
         break;

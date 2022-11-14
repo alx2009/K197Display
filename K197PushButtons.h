@@ -47,7 +47,7 @@ public:
 protected:
   void check(uint8_t i);
   static const unsigned long debounceDelay =
-      1000L; ///< the debounce time us; decrease if the button is not responsive
+      500L; ///< the debounce time us; decrease if the button is not responsive
          ///< enough, increase in case you experience unintended double
          ///< presses
   static const unsigned long longPressTime =
