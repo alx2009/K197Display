@@ -47,17 +47,17 @@ public:
 protected:
   void check(uint8_t i);
   static const unsigned long debounceDelay =
-      1; ///< the debounce time; decrease if the button is not responsive
-         ///< enough, increase in case yoyu experience unintended double
+      1000L; ///< the debounce time us; decrease if the button is not responsive
+         ///< enough, increase in case you experience unintended double
          ///< presses
   static const unsigned long longPressTime =
-      500L; ///< long press event will be generated when pressed more than
-            ///< longPressTime ms
+      500000L; ///< long press event will be generated when pressed more than
+            ///< longPressTime us
   static const unsigned long holdTime =
-      200L; ///< After a LongPress Hold events will be generated every holdTime
-            ///< while the butto is still pressed
+      200000L; ///< After a LongPress Hold events will be generated every holdTime 
+               ///< in us while the button is still pressed
   static const unsigned long doubleClicktime =
-      500L; ///< double click event when pressed within doubleClicktime ms from
+      500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
   bool transparentMode = true; ///< true when in transparent mode
   void attachInterrupts();

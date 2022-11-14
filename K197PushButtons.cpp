@@ -25,9 +25,9 @@
 #include "pinout.h"
 
 // In the following we instantiate a bunch of arrays to keep track of the status
-// of each push button Maybe a bit confusing as it is a copy/paste from previous
-// projects But essentially we need timers to keep track of various time
+// of each push button. Essentially we need timers to keep track of various time
 // intervals (debouncing, pressed, released, log press, etc.)
+// All timers are in us (microseconds)
 
 uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL,
                          UI_DB}; ///< index to pin mapping for UI push buttons
@@ -42,22 +42,21 @@ uint8_t lastButtonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
     BUTTON_IDLE_STATE}; ///< the previous reading from the button pin
 unsigned long lastDebounceTime[] = {
-    0UL, 0UL, 0UL, 0UL}; ///< millis() the last time the button pin was toggled
+    0UL, 0UL, 0UL, 0UL}; ///< micros() the last time the button pin was toggled
 unsigned long startPressed[] = {0UL, 0UL, 0UL,
-                                0UL}; ///< millis() when last pressed
+                                0UL}; ///< micros() when last pressed
 
 unsigned long lastHold[] = {0UL, 0UL, 0UL,
-                            0UL}; ///< millis() when last hold event generated
+                            0UL}; ///< micros() when last hold event generated
 
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
-                                0UL}; ///< millis() when last released
+                                0UL}; ///< micros() when last released
 
 // The following four functions are the interrupt handlers for each push button.
 // They are normal functions because we are using attachInterrupt (dxCore have
 // more efficient alternatives, but attachInterrupt is kind of the default and
 // it works for now). The interrupt handler will simulate the push of the button
-// on the 197/197A main board. This is completely independent from the handling
-// of the button events in the rest of the sketch
+// on the 197/197A main board in transparent mode. This is completely independent from the handling of the button events in the rest of the sketch
 
 /*!
       @brief interrupt handler for STO push button
@@ -185,7 +184,7 @@ void k197ButtonCluster::detachInterrupts() {
   setup();
 
   for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
-    unsigned long now = millis();
+    unsigned long now = micros();
     int btnow = digitalRead(buttonPinIn[i]);
     // DebugOut.print(F("Btn. ")); DebugOut.print(i); DebugOut.print(F(", Pin
     // ")); DebugOut.print(buttonPinIn[i]); DebugOut.print(F("="));
@@ -261,7 +260,7 @@ inline void invoke_callback(int i, K197UIeventType eventType) {
 void k197ButtonCluster::check(
     uint8_t i) { // Check Index i (note: we assume the caller function checks
                  // that i is in range
-  unsigned long now = millis();
+  unsigned long now = micros();
   int btnow = digitalRead(buttonPinIn[i]);
   if (btnow != lastButtonState[i]) {
     // reset the debouncing timer
