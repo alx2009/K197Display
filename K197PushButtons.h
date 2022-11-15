@@ -60,8 +60,11 @@ protected:
       500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
   bool transparentMode = true; ///< true when in transparent mode
-  void attachInterrupts();
-  void detachInterrupts();
+  void attachPinInterrupts();
+  void detachPinInterrupts();
+
+  void attachTimerInterrupts();
+
 
 public:
   bool setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack);

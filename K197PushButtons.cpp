@@ -19,6 +19,9 @@
 
 #include "K197PushButtons.h"
 #include <Arduino.h>
+#include <Event.h>
+#define CCL_CLKSEL_gm 1
+#include <Logic.h>
 
 #include "debugUtil.h"
 
@@ -141,7 +144,9 @@ void k197ButtonCluster::setup() {
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
   if (transparentMode)
-    attachInterrupts();
+    attachPinInterrupts();
+
+  attachTimerInterrupts();
 }
 
 /*!
@@ -149,7 +154,7 @@ void k197ButtonCluster::setup() {
    transparent mode
     @details This function is used only within K197PushButton.cpp
 */
-void k197ButtonCluster::attachInterrupts() {
+void k197ButtonCluster::attachPinInterrupts() {
   DebugOut.println(F("Attach Interrupts"));
   attachInterrupt(
       digitalPinToInterrupt(UI_STO), UI_STO_changing,
@@ -174,7 +179,7 @@ void k197ButtonCluster::attachInterrupts() {
    transparent mode
     @details This function is used only within K197PushButton.cpp
 */
-void k197ButtonCluster::detachInterrupts() {
+void k197ButtonCluster::detachPinInterrupts() {
   DebugOut.println(F("Detach Interrupts"));
   detachInterrupt(digitalPinToInterrupt(UI_DB));
   detachInterrupt(digitalPinToInterrupt(UI_REL));
@@ -208,9 +213,9 @@ void k197ButtonCluster::setTransparentMode(bool newMode) {
     return; // Nothing to do
   transparentMode = newMode;
   if (newMode)
-    attachInterrupts();
+    attachPinInterrupts();
   else
-    detachInterrupts();
+    detachPinInterrupts();
 }
 
 /*!
@@ -360,4 +365,47 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
     DebugOut.print(event);
     break;
   }
+}
+
+void k197ButtonCluster::attachTimerInterrupts() {
+  // Route pins for pushbuttons to Logic block 0 & 1
+  UI_STO_Event.set_generator(UI_STO);
+  UI_RCL_Event.set_generator(UI_RCL);
+  UI_STO_Event.set_user(user::ccl0_event_a); 
+  UI_RCL_Event.set_user(user::ccl0_event_b); 
+
+  UI_REL_Event.set_generator(UI_REL);
+  UI_DB_Event.set_generator(UI_DB);
+  UI_REL_Event.set_user(user::ccl1_event_a); 
+  UI_DB_Event.set_user(user::ccl1_event_b); 
+
+  // Initialize logic block 0
+  Logic0.enable = true;         // Enable logic block 0
+  Logic0.input0 = in::event_a;  // Connect input 0 to ccl0_event_a (STO pin via UI_STO_Event)
+  Logic0.input1 = in::event_b;  // Connect input 0 to ccl0_event_b (STO pin via UI_STO_Event)
+  // input 2 default = unused TODO: use as clock + 
+  Logic0.clocksource=clocksource::osc1k; //1024Hz clock
+  Logic0.filter=filter::disable; // Debounce (must be stable for 4 clock cycles)
+  Logic0.truth=0x77;
+  Logic0.init();
+
+  // Initialize logic block 1
+  Logic1.enable = true;         // Enable logic block 0
+  Logic1.input0 = in::event_a;  // Connect input 0 to ccl0_event_a (STO pin via UI_STO_Event)
+  Logic1.input1 = in::event_b;  // Connect input 0 to ccl0_event_b (STO pin via UI_STO_Event)
+  // input 2 default = unused TODO: use as clock + 
+  Logic1.clocksource=clocksource::osc1k; //1024Hz clock
+  Logic1.filter=filter::disable; // Debounce (must be stable for 4 clock cycles)
+  Logic1.truth=0x77;
+  Logic1.init();
+
+  Event0.set_generator(gen::ccl1_out);
+  Event0.set_user(user::evouta_pin_pa7); 
+
+  UI_STO_Event.start();
+  UI_RCL_Event.start();
+  UI_REL_Event.start();
+  UI_DB_Event.start();
+  Logic::start();
+  Event0.start();
 }

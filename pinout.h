@@ -106,6 +106,12 @@
 // PIN SWAP Options
 #define OLED_SPI_SWAP_OPTION SPI0_SWAP_DEFAULT ///< SPI swap to use for OLED
 
+//Event channels
+#define UI_STO_Event Event2
+#define UI_RCL_Event Event3
+#define UI_REL_Event Event4
+#define UI_DB_Event  Event5
+
 // Generally useful constants
 extern const char
     CH_SPACE; ///< External constant used whenever we need a ' ' character.
