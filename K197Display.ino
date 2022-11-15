@@ -40,7 +40,7 @@ recurring issues
 /**************************************************************************/
 // TODO wish list:
 //  Move statistics options to own submenu
-//  improve responsiveness of double click
+//  consider moving to interrupts for button events (as of now it is possible to miss very quick button clicks)
 //  Autohold
 //  Save/retrieve setting to EEPROM
 //  Graph mode
