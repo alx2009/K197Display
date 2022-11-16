@@ -69,7 +69,8 @@ protected:
 public:
   bool setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack);
 
-  void check(void);
+  void check();
+  void checkNew();
 
   static void DebugOut_printEventName(K197UIeventType event);
 
