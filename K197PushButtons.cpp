@@ -325,9 +325,10 @@ void k197ButtonCluster::check(
    back for the relevant events
 */
 void k197ButtonCluster::check(void) {
+  /*
   for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
     check(i);
-  }
+  }*/
   checkNew();
 }
 
@@ -383,7 +384,7 @@ volatile static int8_t front=0;
 
 static inline int getSize() {
    int size=0;
-   for (int i=0; i<NUM_FIFO_RECORDS; i++) {
+   for (unsigned int i=0; i<NUM_FIFO_RECORDS; i++) {
        if (fifo[i]!=NO_DATA) size++;
    }
    return size;
@@ -395,7 +396,7 @@ static inline bool isEmpty() {
 
 static inline bool isFull() {
     // If we do not have free space than the queue must be full
-    fifo[(rear + 1) % NUM_FIFO_RECORDS] != NO_DATA; 
+    return fifo[(rear + 1) % NUM_FIFO_RECORDS] != NO_DATA; 
 }
 
 // Utility function to push an item at the rear of the fifo
@@ -444,7 +445,7 @@ void k197ButtonCluster::attachTimerInterrupts() {
   //Logic0.input1 = in::event_b;  // Connect input 0 to ccl0_event_a (STO pin via UI_STO_Event)
   Logic0.clocksource=clocksource::osc1k; //1024Hz clock
   Logic0.filter=filter::filter; // Debounce (must be stable for 4 clock cycles)
-  Logic0.truth=0x55; //0x77;
+  Logic0.truth=0x55; //0x55;
   Logic0.init();
 
   // Initialize logic block 1
@@ -490,17 +491,92 @@ void k197ButtonCluster::attachTimerInterrupts() {
   //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
 }
 
+inline uint8_t getButtonState(byte b) {
+  return b == 0 ? BUTTON_PRESSED_STATE : BUTTON_IDLE_STATE;
+}
+
 void k197ButtonCluster::checkNew() {
+   unsigned long now = micros(); 
+   for (int i=0; i<4; i++) {       
+       if (buttonState[i] == BUTTON_PRESSED_STATE) {
+           checkPressed(i, now);
+       }
+   }
+  
    cli();
    int8_t n=getSize();
    bool b = isFull();
    byte x = pull();
    sei();
    if (b) {
-       DebugOut.println(F("<========== FIFO is Full !!! ================>")); DebugOut.print(n);
+       DebugOut.println(F("FIFO Full")); DebugOut.print(n);
    }
-   if (x != NO_DATA) {
-       DebugOut.print(F("Items=")); DebugOut.print(n);
-       DebugOut.print(F(", fifo: 0x")); DebugOut.println(x, HEX);
+   if (x != NO_DATA) { // We have a new raw event
+       now = micros(); 
+       //DebugOut.print(F("Items=")); DebugOut.print(n);
+       //DebugOut.print(F(", fifo: 0x")); DebugOut.println(x, HEX);
+       checkNew(0, getButtonState(x & UI_STO_bm), now);
+       checkNew(1, getButtonState(x & UI_RCL_bm), now);
+       checkNew(2, getButtonState(x & UI_REL_bm), now);
+       checkNew(3, getButtonState(x & UI_DB_bm), now);
    }
+}
+
+/*!
+    @brief  check for button events for buttons that are already pressed
+
+    @details when a button is in pressed state, LongPress and Hold events are generated if the button is hold more than the longPressTime
+    This function is used only within K197PushButton.cpp. Note that:
+    - there is no check on i, so the caller must ensure it is in range
+    - the caller must ensure a button is in the pressed state before calling this function
+    Note that the button state will never change during this function call. 
+
+    @param i the array index assigned to the push button
+    @param now the current value of micros()    
+*/
+void k197ButtonCluster::checkPressed(uint8_t i, unsigned long now) {   
+    // if the button is already pressed, we handle LongPress & Hold 
+    if (now - startPressed[i] > longPressTime) {
+        if (startPressed[i] == lastHold[i]) { // 1st hold event is a LongPress
+            invoke_callback(i, UIeventLongPress);
+            lastHold[i] = now;
+        } else if (now - lastHold[i] > holdTime) { // hold event
+            invoke_callback(i, UIeventHold);
+            lastHold[i] = now;
+        }
+    }
+}
+/*!
+    @brief  check for button events for a specific button
+
+    @details This function is called when a new raw event is received from the HW via the FIFO
+    The function is only used only within K197PushButton.cpp. 
+    that is no check on i, so the caller must ensure it is in range
+
+    @param i the array index assigned to the push button
+    @param btnow the current state of the button as indicated in the raw event
+    @param now the current value of micros()    
+*/
+void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {   
+    if (btnow != buttonState[i]) { // state has changed
+        buttonState[i] = btnow;
+        // The following actions are taken at Button release
+        if (btnow == BUTTON_IDLE_STATE) { // button was just released
+          invoke_callback(i, UIeventRelease);
+            if ((now - startPressed[i]) > longPressTime) {
+                invoke_callback(i, UIeventLongClick);
+            } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
+                invoke_callback(i, UIeventClick);
+                invoke_callback(i, UIeventDoubleClick);
+            } else {
+                invoke_callback(i, UIeventClick);
+            }
+            lastReleased[i] = now;
+        } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
+            invoke_callback(i, UIeventPress);
+            startPressed[i] = now;
+            lastHold[i] = now;
+        }
+    }
+    lastButtonState[i] = btnow;
 }
