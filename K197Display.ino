@@ -197,10 +197,10 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 k197ButtonCluster pushbuttons; ///< this object is used to interact with the
                                ///< push-button cluster
 
-#define K197_MB_CLICK_TIME                                                     \
+#define K197_MB_CLICK_TIME_us                                                     \
   750 ///< how much a click should last when sent to the K197 (us)
-#define K197_MB_CLICK_TIME2                                                     \
-  350 ///< how much we should wait after a click is sent to the K197 (us)
+#define K197_MB_CLICK_TIME2_ms                                                     \
+  300 ///< how much we should wait after a click is sent to the K197 (ms)
 
 /*!
       @brief Callback for push button events
@@ -214,19 +214,19 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
 void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) {
   dxUtil.checkFreeStack();
   if (uiman.handleUIEvent(eventSource, eventType)) { // UI related event, no need to do more
-    DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
-    DebugOut.print(F(" "));
-    k197ButtonCluster::DebugOut_printEventName(eventType);
-    DebugOut.println(F("Btn handled by UI"));
+    //DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    //DebugOut.print(F(" "));
+    //k197ButtonCluster::DebugOut_printEventName(eventType);
+    //DebugOut.println(F("Btn handled by UI"));
     return;
   }
   if (uiman.isSplitScreen()) return; // Nothing to do in split screen mode
   
-  DebugOut.print(F("Btn "));
+  //DebugOut.print(F("Btn "));
   if(pushbuttons.isTransparentMode()) return; // No need to do anything here
   switch (eventSource) {
   case K197key_STO:
-    DebugOut.print(F("STO"));
+    //DebugOut.print(F("STO"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -243,13 +243,13 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     break;
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
-    DebugOut.print(F("REL"));
+    //DebugOut.print(F("REL"));
     if (eventType == UIeventClick) {
-      DebugOut.print('.');
+      //DebugOut.print('.');
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-      delayMicroseconds(K197_MB_CLICK_TIME);
+      delayMicroseconds(K197_MB_CLICK_TIME_us);
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
-      delayMicroseconds(K197_MB_CLICK_TIME2);
+      delay(K197_MB_CLICK_TIME2_ms);
     }
     break;
   case K197key_DB:
@@ -261,9 +261,9 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     }
     break;
   }
-  DebugOut.print(F(" "));
-  k197ButtonCluster::DebugOut_printEventName(eventType);
-  DebugOut.println();
+  //DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(eventType);
+  //DebugOut.println();
 
 }
 
