@@ -375,12 +375,13 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define NO_DATA 0xff
 volatile static byte fifo[] {0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff};
 #define NUM_FIFO_RECORDS ( sizeof(fifo) / sizeof(fifo[0]) )
-volatile int8_t front=0;
-volatile int8_t rear=-1;
-//volatile int8_t items=0;
+
+volatile static int8_t front=0;
+// We use rear in the interrupt handler, hence the use of GPIO3
+// Initialized inside k197ButtonCluster::attachTimerInterrupts()
+#define rear GPIOR3 
 
 static inline int getSize() {
-//    return items;
    int size=0;
    for (int i=0; i<NUM_FIFO_RECORDS; i++) {
        if (fifo[i]!=NO_DATA) size++;
@@ -389,12 +390,10 @@ static inline int getSize() {
 }
 
 static inline bool isEmpty() {
-  //return (getSize() == 0);
   return fifo[front] == NO_DATA; // self-explaining :-)
 }
 
 static inline bool isFull() {
-//  return (getSize() == NUM_FIFO_RECORDS); 
     // If we do not have free space than the queue must be full
     fifo[(rear + 1) % NUM_FIFO_RECORDS] != NO_DATA; 
 }
@@ -403,9 +402,8 @@ static inline bool isFull() {
 // No check of FIFO size because a) it should not happen: no user can be that fast b) we are going to lose clicks anyway c) the user or the WDT will recover (depending on the cause) 
 // TODO: add a way to detect and recover in pull()
 static inline void push(byte b) { 
-    rear = (rear + 1) % NUM_FIFO_RECORDS;
+    rear = (rear+1) % NUM_FIFO_RECORDS;
     fifo[rear] = b;
-    //(++items % NUM_FIFO_RECORDS);
 }
 
 // Utility function to pull the item at the front of the fifo
@@ -414,7 +412,6 @@ static inline byte pull() {
   byte x = fifo[front];
   fifo[front] = NO_DATA; // Now this slot is empty...
   front = (front + 1) % NUM_FIFO_RECORDS;
-  //items--;
   return x;  
 }
 
@@ -429,6 +426,8 @@ void CCL_interrupt_handler() {
 }
 
 void k197ButtonCluster::attachTimerInterrupts() {
+  rear=(uint8_t) -1; //Initialize register
+  
   // Route pins for pushbuttons to Logic block 0 & 1
   UI_STO_Event.set_generator(UI_STO);
   UI_STO_Event.set_user(user::ccl0_event_a); 
