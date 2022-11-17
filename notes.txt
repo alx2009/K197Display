@@ -1,8 +1,0 @@
- push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); 
-CCL_interrupt_handler():
-    7eba:	8e b1       	in	r24, 0x0e	; 14
-    7ebc:	96 b3       	in	r25, 0x16	; 22
-    7ebe:	80 7a       	andi	r24, 0xA0	; 160
-    7ec0:	93 70       	andi	r25, 0x03	; 3
-    7ec2:	89 2b       	or	r24, r25
-push():
