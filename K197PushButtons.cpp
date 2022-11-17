@@ -373,41 +373,48 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 /////////////////////////////////////////////////////////////////////////
 
 #define NO_DATA 0xff
-//volatile static byte fifo[] {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-volatile static byte fifo[] {0,0,0,0, 0,0};
+volatile static byte fifo[] {0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff};
 #define NUM_FIFO_RECORDS ( sizeof(fifo) / sizeof(fifo[0]) )
 volatile int8_t front=0;
 volatile int8_t rear=-1;
-volatile int8_t items=0;
-volatile byte lastValue=0;
+//volatile int8_t items=0;
 
 static inline int getSize() {
-    return items;
+//    return items;
+   int size=0;
+   for (int i=0; i<NUM_FIFO_RECORDS; i++) {
+       if (fifo[i]!=NO_DATA) size++;
+   }
+   return size;
 }
 
 static inline bool isEmpty() {
-  return (getSize() == 0);
+  //return (getSize() == 0);
+  return fifo[front] == NO_DATA; // self-explaining :-)
 }
 
 static inline bool isFull() {
-  return (getSize() == NUM_FIFO_RECORDS); 
+//  return (getSize() == NUM_FIFO_RECORDS); 
+    // If we do not have free space than the queue must be full
+    fifo[(rear + 1) % NUM_FIFO_RECORDS] != NO_DATA; 
 }
 
 // Utility function to push an item at the rear of the fifo
-// No check of FIFO size because a) it should not happen b) we are going to lose clicks anyway c) the user or the WDT will recover (depending on the cause) 
+// No check of FIFO size because a) it should not happen: no user can be that fast b) we are going to lose clicks anyway c) the user or the WDT will recover (depending on the cause) 
 // TODO: add a way to detect and recover in pull()
 static inline void push(byte b) { 
     rear = (rear + 1) % NUM_FIFO_RECORDS;
     fifo[rear] = b;
-    (++items % NUM_FIFO_RECORDS);
+    //(++items % NUM_FIFO_RECORDS);
 }
 
 // Utility function to pull the item at the front of the fifo
 static inline byte pull() {
   if (isEmpty()) return NO_DATA;
   byte x = fifo[front];
+  fifo[front] = NO_DATA; // Now this slot is empty...
   front = (front + 1) % NUM_FIFO_RECORDS;
-  items--;
+  //items--;
   return x;  
 }
 
@@ -417,8 +424,8 @@ static inline byte pull() {
 
 //Normal function, required with current release of dxCore
 void CCL_interrupt_handler() {
- //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice rather than missing an event
- push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); 
+  //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice rather than missing an event
+  push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); 
 }
 
 void k197ButtonCluster::attachTimerInterrupts() {
@@ -486,7 +493,7 @@ void k197ButtonCluster::attachTimerInterrupts() {
 
 void k197ButtonCluster::checkNew() {
    cli();
-   int8_t n=items;
+   int8_t n=getSize();
    bool b = isFull();
    byte x = pull();
    sei();
