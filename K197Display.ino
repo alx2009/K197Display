@@ -150,7 +150,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     printHelp();
     return;
   }
-
   if (strcasecmp_P(buf, PSTR("wdt")) == 0) {
     Serial.println(F("Testing watchdog reset"));
     Serial.flush();
@@ -220,8 +219,8 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
 
   // Handle the special case of REL and DB pressed simultaneously (enter cal mode)
   if ( (eventSource==K197key_REL || eventSource==K197key_DB) && pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
-      uiman.showFullScreen();
-      uiman.updateDisplay();
+      //uiman.showFullScreen();
+      //uiman.updateDisplay();
       if (eventType==UIeventPress) {
           pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
           pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);

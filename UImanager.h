@@ -71,7 +71,7 @@ private:
 
   void setupMenus();
 
-  byte logskip_counter = 0; ///< counter used whenj data logging, counts how
+  byte logskip_counter = 0; ///< counter used when data logging, counts how
                             ///< many measurements are skipped
   void clearScreen();
   void setScreenMode(K197screenMode mode);
@@ -118,6 +118,7 @@ public:
      @return true if the menu is visible
   */
   void showOptionsMenu() { 
+    if (k197dev.isCal()) return;
     screen_mode = (K197screenMode) (screen_mode & K197sc_ScreenModeMask);
     screen_mode = (K197screenMode) (screen_mode | K197sc_MenuBitMask);
     clearScreen();
@@ -128,6 +129,7 @@ public:
      @return true if the menu is visible
   */
   void showDebugLog() {
+    if (k197dev.isCal()) return;
     // The debug log is shown in split mode if the menu is not active
     screen_mode = (K197screenMode) (screen_mode & K197sc_ScreenModeMask);
     clearScreen();

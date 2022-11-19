@@ -187,12 +187,17 @@ byte K197device::getNewReading(byte *data) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
     msg_is_ovrange = false;
   } else {
-    if (strstr(message, "0L") != NULL) {
+    //if (strstr(message, "0L") != NULL) {/
+    if (strcasecmp_P(message, PSTR("0L")) == 0) {
       msg_is_ovrange = true;
     } else {
       msg_is_ovrange = false;
     }
     msg_value = 0.0;
+    if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
+        annunciators8 |= K197_Cal_bm;
+        DebugOut.println(F(" CAL found!"));
+    }
   }
   if (isTKModeActive() && msg_is_num) {
     tkConvertV2C();
@@ -297,6 +302,13 @@ void K197device::debugPrint() {
     DebugOut.print(F(", ("));
     DebugOut.print(msg_value, 6);
     DebugOut.print(')');
+  } else {
+    for (int i=0; i< K197_MSG_SIZE; i++) {
+        DebugOut.print(F(" 0x")); 
+        if (message[i]<0x10) DebugOut.print('0');
+        DebugOut.print(message[i], HEX);
+    }
+    DebugOut.println();
   }
   if (msg_is_ovrange)
     DebugOut.print(F(" + Ov.Range"));

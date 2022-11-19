@@ -342,12 +342,16 @@ public:
       @brief  test if CAL is on
       @return returns true if on, false otherwise
   */
-  inline bool isCal() { return (annunciators8 & K197_Cal_bm) != 0; };
+  inline bool isCal() { 
+    if ( (annunciators8 & K197_Cal_bm) != 0 )
+        return true;
+    return false;
+  }
   /*!
       @brief  test if CAL is off
       @return returns true if off, false otherwise
   */
-  inline bool isNotCal() { return (annunciators8 & K197_Cal_bm) == 0; };
+  inline bool isNotCal() { return !isCal(); };
   /*!
       @brief  test if "Ω" is on
       @return returns true if on, false otherwise
