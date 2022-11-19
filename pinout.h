@@ -115,7 +115,10 @@
 #define UI_REL_Event Event4
 #define UI_DB_Event  Event5
 
-// Othert TIMER definitions
+// Other TIMER definitions and checks
+#ifdef MILLIS_USE_TIMERA0
+  #error "This sketch takes over TCA0 - please use a different timer for millis"
+#endif
 #define TCA_OVF_vect TCA0_OVF_vect
 #define TCA_CMP0_vect TCA0_CMP0_vect
 inline void takeOverTCA() {takeOverTCA0();}
