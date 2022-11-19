@@ -42,9 +42,6 @@ k197ButtonCluster::buttonCallBack callBack = NULL; ///< Stores the call back for
 uint8_t buttonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
     BUTTON_IDLE_STATE}; ///< the current reading from the button pin
-uint8_t lastButtonState[] = {
-    BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
-    BUTTON_IDLE_STATE}; ///< the previous reading from the button pin
 unsigned long startPressed[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last pressed
 unsigned long lastHold[] = {0UL, 0UL, 0UL,
@@ -208,7 +205,6 @@ inline uint8_t getButtonState(byte b) {
 
 void initButton(uint8_t i, uint8_t btnow, unsigned long now) {
     buttonState[i] = btnow;
-    lastButtonState[i] = btnow;
     startPressed[i] = now;
     lastHold[i] = now;
     lastReleased[i] = now;
@@ -385,5 +381,4 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
             lastHold[i] = now;
         }
     }
-    lastButtonState[i] = btnow;
 }
