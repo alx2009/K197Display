@@ -98,6 +98,26 @@ inline void invoke_callback(int i, K197UIeventType eventType) {
 }
 
 /*!
+    @brief  check if a given pushbutton is pressed
+
+    @details This function checks the button status updated to the last event processed by check()
+    It does NOT reflect the current HW status. This is useful for example in the event call back
+    in order to check if two buttons have been pressed simultaneously. It will behave correctly even if there is a delay
+    in the processing of the event, and the button was already released.
+
+    @param eventSource the event source corresponding to the push button
+    @return bool true if the button was pressed at the time the last event was generated
+*/
+bool isPressed(K197UIeventsource eventSource) {
+    for (unsigned int i=0; i<(sizeof(buttonState)/sizeof(buttonState[0])); i++) {
+        if (buttonPinIn[i] == (uint8_t) eventSource) {
+            return buttonState[i] == BUTTON_PRESSED_STATE ? true : false;   
+        }
+    }
+    return false;
+}
+
+/*!
     @brief  print event name to DebugOut
 
     Printing the event name can be useful during troubleshooting
@@ -365,7 +385,7 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
         buttonState[i] = btnow;
         // The following actions are taken at Button release
         if (btnow == BUTTON_IDLE_STATE) { // button was just released
-          invoke_callback(i, UIeventRelease);
+            invoke_callback(i, UIeventRelease);
             if ((now - startPressed[i]) > longPressTime) {
                 invoke_callback(i, UIeventLongClick);
             } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {

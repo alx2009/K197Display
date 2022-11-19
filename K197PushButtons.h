@@ -58,13 +58,12 @@ protected:
   static const unsigned long doubleClicktime =
       500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
-
   void attachTimerInterrupts();
-
 
 public:
   void setCallback(buttonCallBack pinCallBack);
   void checkNew();
+  bool isPressed(K197UIeventsource eventSource);
 
   static void DebugOut_printEventName(K197UIeventType event);
 };
