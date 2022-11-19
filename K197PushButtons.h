@@ -58,7 +58,7 @@ protected:
   static const unsigned long doubleClicktime =
       500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
-  bool transparentMode = true; ///< true when in transparent mode
+  bool transparentMode = false; ///< true when in transparent mode
   void attachPinInterrupts();
   void detachPinInterrupts();
 
