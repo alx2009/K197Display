@@ -58,9 +58,6 @@ protected:
   static const unsigned long doubleClicktime =
       500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
-  bool transparentMode = false; ///< true when in transparent mode
-  void attachPinInterrupts();
-  void detachPinInterrupts();
 
   void attachTimerInterrupts();
 
@@ -70,15 +67,6 @@ public:
   void checkNew();
 
   static void DebugOut_printEventName(K197UIeventType event);
-
-  /*!
-      @brief  check if transparent mode is enabled (see setTransparentMode() for
-     more information)
-      @return true if transparent mode is enabled
-     "Err", "0L", etc.)
-  */
-  bool isTransparentMode() { return transparentMode; };
-  void setTransparentMode(bool newMode);
 };
 
 #endif //__ABUTTON_H

@@ -28,10 +28,6 @@ if the relevant flag is set)
 is the expected one, and print the information to DebugOut
   - Finally, check for pushbutton events (this will trigger the callback)
 
-    At startup button presses from the UI push buttons are mirrored towards the
-motherboard (transparent mode). At the end of the arduino setup() transparent
-mode is turned off, so that we can assign new functions to the buttons
-
     Note: the way we detect SPI client related problems in loop is not
 fool-proof, but statistically we should print out something if there are
 recurring issues
@@ -223,7 +219,6 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
   if (uiman.isSplitScreen()) return; // Nothing to do in split screen mode
   
   //DebugOut.print(F("Btn "));
-  if(pushbuttons.isTransparentMode()) return; // No need to do anything here
   switch (eventSource) {
   case K197key_STO:
     //DebugOut.print(F("STO"));
@@ -313,7 +308,6 @@ void setup() {
     DebugOut.println(F("BT is off"));
   }
 
-  pushbuttons.setTransparentMode(false);
   delay(100);
 
   dxUtil.checkFreeStack();

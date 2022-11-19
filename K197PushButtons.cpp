@@ -52,80 +52,6 @@ unsigned long lastHold[] = {0UL, 0UL, 0UL,
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last released
 
-// The following four functions are the interrupt handlers for each push button.
-// They are normal functions because we are using attachInterrupt (dxCore have
-// more efficient alternatives, but attachInterrupt is kind of the default and
-// it works for now). The interrupt handler will simulate the push of the button
-// on the 197/197A main board in transparent mode. This is completely independent from the handling of the button events in the rest of the sketch
-
-/*!
-      @brief interrupt handler for STO push button
-
-      The interrupt handler is used when the push button event is sent
-   transparently to the meter
-*/
-void UI_STO_changing() {
-  if (UI_STO_VPORT.IN & UI_STO_bm) { // Button is not pressed
-    MB_STO_VPORT.DIR &=
-        (~MB_STO_bm); // Clear DIR bit (set direction to input ==> floating)
-    MB_STO_VPORT.OUT &= (~MB_STO_bm); // Set output value to 0
-  } else {                            // device selected
-    MB_STO_VPORT.OUT |= MB_STO_bm;    // Set output value to 1
-    MB_STO_VPORT.DIR |= MB_STO_bm;    // Set DIR bit (set direction to output)
-  }
-}
-
-/*!
-      @brief interrupt handler for RCL push button
-
-      The interrupt handler is used when the push button event is sent
-   transparently to the meter
-*/
-void UI_RCL_changing() {
-  if (UI_RCL_VPORT.IN & UI_RCL_bm) { // Button is not pressed
-    MB_RCL_VPORT.DIR &=
-        (~MB_RCL_bm); // Clear DIR bit (set direction to input ==> floating)
-    MB_RCL_VPORT.OUT &= (~MB_RCL_bm); // Set output value to 0
-  } else {                            // device selected
-    MB_RCL_VPORT.OUT |= MB_RCL_bm;    // Set output value to 1
-    MB_RCL_VPORT.DIR |= MB_RCL_bm;    // Set DIR bit (set direction to output)
-  }
-}
-
-/*!
-      @brief interrupt handler for REL push button
-
-      The interrupt handler is used when the push button event is sent
-   transparently to the meter
-*/
-void UI_REL_changing() {
-  if (UI_REL_VPORT.IN & UI_REL_bm) { // Button is not pressed
-    MB_REL_VPORT.DIR &=
-        (~MB_REL_bm); // Clear DIR bit (set direction to input ==> floating)
-    MB_REL_VPORT.OUT &= (~MB_REL_bm); // Set output value to 0
-  } else {                            // device selected
-    MB_REL_VPORT.OUT |= MB_REL_bm;    // Set output value to 1
-    MB_REL_VPORT.DIR |= MB_REL_bm;    // Set DIR bit (set direction to output)
-  }
-}
-
-/*!
-      @brief interrupt handler for DB push button
-
-      The interrupt handler is used when the push button event is sent
-   transparently to the meter
-*/
-void UI_DB_changing() {
-  if (UI_DB_VPORT.IN & UI_DB_bm) { // Button is not pressed
-    MB_DB_VPORT.DIR &=
-        (~MB_DB_bm); // Clear DIR bit (set direction to input ==> floating)
-    MB_DB_VPORT.OUT &= (~MB_DB_bm); // Set output value to 0
-  } else {                          // device selected
-    MB_DB_VPORT.OUT |= MB_DB_bm;    // Set output value to 1
-    MB_DB_VPORT.DIR |= MB_DB_bm;    // Set DIR bit (set direction to output)
-  }
-}
-
 /*!
     @brief  setup the push button cluster. Must be called first, before any
    other member function Note that for simplicity the pins used are hardwired in
@@ -140,74 +66,8 @@ void k197ButtonCluster::setup() {
                         PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
-  if (transparentMode)
-    attachPinInterrupts();
 
   attachTimerInterrupts();
-}
-
-/*!
-    @brief  protected member function used to attach interrupts when enabling
-   transparent mode
-    @details This function is used only within K197PushButton.cpp
-*/
-void k197ButtonCluster::attachPinInterrupts() {
-  DebugOut.println(F("Attach Interrupts"));
-  attachInterrupt(
-      digitalPinToInterrupt(UI_STO), UI_STO_changing,
-      CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
-  attachInterrupt(
-      digitalPinToInterrupt(UI_RCL), UI_RCL_changing,
-      CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
-  attachInterrupt(
-      digitalPinToInterrupt(UI_REL), UI_REL_changing,
-      CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
-  attachInterrupt(
-      digitalPinToInterrupt(UI_DB), UI_DB_changing,
-      CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
-  UI_STO_changing();
-  UI_RCL_changing();
-  UI_REL_changing();
-  UI_DB_changing();
-}
-
-/*!
-    @brief  protected member function used to deattach interrupts when disabling
-   transparent mode
-    @details This function is used only within K197PushButton.cpp
-*/
-void k197ButtonCluster::detachPinInterrupts() {
-  DebugOut.println(F("Detach Interrupts"));
-  detachInterrupt(digitalPinToInterrupt(UI_DB));
-  detachInterrupt(digitalPinToInterrupt(UI_REL));
-  detachInterrupt(digitalPinToInterrupt(UI_RCL));
-  detachInterrupt(digitalPinToInterrupt(UI_STO));
-
-  setup();
-
-  for (unsigned int i = 0; i < (sizeof(lastButtonState) / sizeof(lastButtonState[0])); i++) {
-    int btnow = digitalRead(buttonPinIn[i]);
-    lastButtonState[i] = btnow;
-    buttonState[i] = btnow;
-  }
-}
-
-/*!
-    @brief enable or disable transparent mode
-    @details when transparent mode is enabled, push button presses and releases
-   are passed to the K197 in real time via interrupt handler. when disabled, the
-   push button events must be explicitly passed to the K197 from the callback
-   function. In such a way events can be filtered as required
-    @param newMode true enables transparent mode, false disables it
-*/
-void k197ButtonCluster::setTransparentMode(bool newMode) {
-  if (newMode == transparentMode)
-    return; // Nothing to do
-  transparentMode = newMode;
-  if (newMode)
-    attachPinInterrupts();
-  else
-    detachPinInterrupts();
 }
 
 /*!
@@ -342,6 +202,18 @@ void CCL_interrupt_handler() {
   push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); 
 }
 
+inline uint8_t getButtonState(byte b) {
+  return b == 0 ? BUTTON_PRESSED_STATE : BUTTON_IDLE_STATE;
+}
+
+void initButton(uint8_t i, uint8_t btnow, unsigned long now) {
+    buttonState[i] = btnow;
+    lastButtonState[i] = btnow;
+    startPressed[i] = now;
+    lastHold[i] = now;
+    lastReleased[i] = now;
+}
+
 void k197ButtonCluster::attachTimerInterrupts() {
   rear=(uint8_t) -1; //Initialize register
   
@@ -405,10 +277,21 @@ void k197ButtonCluster::attachTimerInterrupts() {
 
   //CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0 will be released...
   //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
-}
 
-inline uint8_t getButtonState(byte b) {
-  return b == 0 ? BUTTON_PRESSED_STATE : BUTTON_IDLE_STATE;
+  // Initialize buttons initial state 
+  unsigned long now = micros(); 
+  cli();
+  push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); 
+  byte x = pull();
+  sei();
+  initButton(0, getButtonState(x & UI_STO_bm), now);
+  initButton(1, getButtonState(x & UI_RCL_bm), now);
+  initButton(2, getButtonState(x & UI_REL_bm), now);
+  initButton(3, getButtonState(x & UI_DB_bm), now);
+  cli();
+  push( (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) | (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)) ); //Make sure we do not lose any state change  
+  sei();
+  
 }
 
 /*!
