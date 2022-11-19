@@ -344,6 +344,11 @@ public:
   */
   inline bool isCal() { return (annunciators8 & K197_Cal_bm) != 0; };
   /*!
+      @brief  test if CAL is off
+      @return returns true if off, false otherwise
+  */
+  inline bool isNotCal() { return (annunciators8 & K197_Cal_bm) == 0; };
+  /*!
       @brief  test if "Ω" is on
       @return returns true if on, false otherwise
   */

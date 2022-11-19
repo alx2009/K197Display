@@ -65,6 +65,20 @@ public:
   void checkNew();
   bool isPressed(K197UIeventsource eventSource);
 
+  
+  /*!
+      @brief  check if two buttons are pressed simultaneously
+      @param btn1 the event source value corresponding to the first button
+      @param btn2 the event source value corresponding to the second button
+      @return true if the two buttons are pressed simultaneously, false otherwise
+  */
+  bool isSimultaneousPress(K197UIeventsource btn1, K197UIeventsource btn2) {
+      if (isPressed(btn1) && isPressed(btn2)) {
+         return true;
+      }
+      return false;
+  }
+
   static void DebugOut_printEventName(K197UIeventType event);
 };
 

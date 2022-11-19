@@ -167,8 +167,8 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
-  if (isSplitScreen()) updateSplitScreen();
-  else if (getScreenMode() == K197sc_normal) updateNormalScreen();
+  if ( k197dev.isNotCal() && isSplitScreen()) updateSplitScreen();
+  else if ( k197dev.isCal() || (getScreenMode() == K197sc_normal) ) updateNormalScreen();
   else updateMinMaxScreen();
   dxUtil.checkFreeStack();
 }
@@ -470,8 +470,9 @@ void UImanager::clearScreen() {
       @param connected true if a BT connection is detected, false otherwise
 */
 void UImanager::updateBtStatus() {
-  if (isSplitScreen() || (getScreenMode() != K197sc_normal) )
-    return;
+  if (isSplitScreen() || (getScreenMode() != K197sc_normal) ) { //Note: No BT status in cal mode
+      return;
+  }
   unsigned int x = 95;
   unsigned int y = 2;
   u8g2.setCursor(x, y);
@@ -556,6 +557,7 @@ UImenuItem *logMenuItems[] = {
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource,
                               K197UIeventType eventType) {
+  if (k197dev.isCal()) return false;
   if ( eventSource == K197key_REL && eventType==UIeventLongPress) { // This event is handled the same in all screen modes
       if (isFullScreen())
            showOptionsMenu();
@@ -714,8 +716,10 @@ const char *UImanager::formatNumber(char buf[K197_MSG_SIZE], float f) {
    datalogging is disabled or in no connection has been detected
 */
 void UImanager::logData() {
+  if (k197dev.isCal()) // No logging while in Cal mode
+      return;
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
-    return;
+      return;
   if (logskip_counter < logSkip.getValue()) {
     logskip_counter++;
     return;

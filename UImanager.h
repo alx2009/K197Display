@@ -91,7 +91,7 @@ public:
      @brief  check if display is in full screen mode
      @return true if in full screen mode
   */
- bool isFullScreen() {return screen_mode & K197sc_FullScreenBitMask;}
+ bool isFullScreen() {return k197dev.isCal() || ( (screen_mode & K197sc_FullScreenBitMask) != 0x00);}
   /*!
      @brief  check if display is in split screen mode
      @return true if in split screen mode
@@ -101,7 +101,7 @@ public:
      @brief  chek if the options menu is visible
      @return true if the menu is visible
   */
-  bool isMenuVisible() {return screen_mode & K197sc_MenuBitMask;};
+  bool isMenuVisible() {return k197dev.isNotCal() && ( (screen_mode & K197sc_MenuBitMask) != 0x00);};
   /*!
      @brief  set full screen mode
      @details also clears the other attributes as we do not keep track of them

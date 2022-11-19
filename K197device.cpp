@@ -348,3 +348,7 @@ void K197device::resetStatistics() {
     cache.min = msg_value;
     cache.max = msg_value;  
 }
+
+void setCalibrationMode() {
+    
+}

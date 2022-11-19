@@ -216,7 +216,21 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     //DebugOut.println(F("Btn handled by UI"));
     return;
   }
-  if (uiman.isSplitScreen()) return; // Nothing to do in split screen mode
+  if (k197dev.isNotCal() && uiman.isSplitScreen()) return; // Nothing to do in split screen mode
+
+  // Handle the special case of REL and DB pressed simultaneously (enter cal mode)
+  if ( (eventSource==K197key_REL || eventSource==K197key_DB) && pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
+      uiman.showFullScreen();
+      uiman.updateDisplay();
+      if (eventType==UIeventPress) {
+          pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+          pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+      } else if (eventType==UIeventRelease) {
+          pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
+          pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
+      }
+      return;
+  }
   
   //DebugOut.print(F("Btn "));
   switch (eventSource) {
@@ -239,12 +253,17 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
     //DebugOut.print(F("REL"));
-    if (eventType == UIeventClick) {
+    if (k197dev.isNotCal() && eventType == UIeventClick) {
       //DebugOut.print('.');
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       delayMicroseconds(K197_MB_CLICK_TIME_us);
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
       delay(K197_MB_CLICK_TIME2_ms);
+    }
+    if (k197dev.isCal() && eventType == UIeventPress) {
+      pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if (eventType == UIeventRelease) {
+      pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   case K197key_DB:
