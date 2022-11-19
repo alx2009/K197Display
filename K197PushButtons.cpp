@@ -108,7 +108,7 @@ inline void invoke_callback(int i, K197UIeventType eventType) {
     @param eventSource the event source corresponding to the push button
     @return bool true if the button was pressed at the time the last event was generated
 */
-bool isPressed(K197UIeventsource eventSource) {
+bool k197ButtonCluster::isPressed(K197UIeventsource eventSource) {
     for (unsigned int i=0; i<(sizeof(buttonState)/sizeof(buttonState[0])); i++) {
         if (buttonPinIn[i] == (uint8_t) eventSource) {
             return buttonState[i] == BUTTON_PRESSED_STATE ? true : false;   
