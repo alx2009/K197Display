@@ -34,24 +34,21 @@
 
 uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL,
                          UI_DB}; ///< index to pin mapping for UI push buttons
+/*
 uint8_t buttonPinOut[] = {MB_STO, MB_RCL, MB_REL,
                           MB_DB}; ///< index to pin mapping for output
-k197ButtonCluster::buttonCallBack callBack[] = {
-    NULL, NULL, NULL, NULL}; ///< Stores the call back for each button
+*/
+k197ButtonCluster::buttonCallBack callBack = NULL; ///< Stores the call back for each button
 uint8_t buttonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
     BUTTON_IDLE_STATE}; ///< the current reading from the button pin
 uint8_t lastButtonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
     BUTTON_IDLE_STATE}; ///< the previous reading from the button pin
-unsigned long lastDebounceTime[] = {
-    0UL, 0UL, 0UL, 0UL}; ///< micros() the last time the button pin was toggled
 unsigned long startPressed[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last pressed
-
 unsigned long lastHold[] = {0UL, 0UL, 0UL,
                             0UL}; ///< micros() when last hold event generated
-
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last released
 
@@ -188,15 +185,10 @@ void k197ButtonCluster::detachPinInterrupts() {
 
   setup();
 
-  for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
-    unsigned long now = micros();
+  for (unsigned int i = 0; i < (sizeof(lastButtonState) / sizeof(lastButtonState[0])); i++) {
     int btnow = digitalRead(buttonPinIn[i]);
-    // DebugOut.print(F("Btn. ")); DebugOut.print(i); DebugOut.print(F(", Pin
-    // ")); DebugOut.print(buttonPinIn[i]); DebugOut.print(F("="));
-    // DebugOut.println(btnow);
     lastButtonState[i] = btnow;
     buttonState[i] = btnow;
-    lastDebounceTime[i] = now;
   }
 }
 
@@ -230,16 +222,8 @@ void k197ButtonCluster::setTransparentMode(bool newMode) {
    idnicating that the callback has been set or removed succesfully. False
    otherwise.
 */
-bool k197ButtonCluster::setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack) {
-  uint8_t pin = (uint8_t) eventSource;
-  for (unsigned int i = 0; i < sizeof(buttonPinIn) / sizeof(buttonPinIn[0]);
-       i++) {
-    if (buttonPinIn[i] == pin) { // we found the slot...
-      callBack[i] = pinCallBack;
-      return true;
-    }
-  }
-  return false;
+void k197ButtonCluster::setCallback(buttonCallBack pinCallBack) {
+    callBack = pinCallBack;
 }
 
 /*!
@@ -251,85 +235,9 @@ bool k197ButtonCluster::setCallback(K197UIeventsource eventSource, buttonCallBac
     @param eventType the button event passed to the call back
 */
 inline void invoke_callback(int i, K197UIeventType eventType) {
-  if (callBack[i] != NULL)
-    callBack[i]( (K197UIeventsource) buttonPinIn[i], eventType);
-}
-
-/*!
-    @brief  check for button events for a specific button
-
-    This function is used only within K197PushButton.cpp
-
-    @param i the array index assigned to the push button
-*/
-void k197ButtonCluster::check(
-    uint8_t i) { // Check Index i (note: we assume the caller function checks
-                 // that i is in range
-  unsigned long now = micros();
-  int btnow = digitalRead(buttonPinIn[i]);
-  if (btnow != lastButtonState[i]) {
-    // reset the debouncing timer
-    lastDebounceTime[i] = now;
-    // DebugOut.print(F("pin ")); DebugOut.print(buttonPinIn[i]);
-    // DebugOut.print(F(" now="));DebugOut.println(btnow);
+  if (callBack != NULL) {
+    callBack( (K197UIeventsource) buttonPinIn[i], eventType);
   }
-
-  if ((now - lastDebounceTime[i]) > debounceDelay) {
-    // whatever the reading is at, it's been there for longer than the debounce
-    // delay, so take it as the actual current state:
-
-    // if the button is pressed, we handle LongPress & Hold
-    if (buttonState[i] == BUTTON_PRESSED_STATE) {
-      if (now - startPressed[i] > longPressTime) {
-        if (startPressed[i] == lastHold[i]) { // 1st hold event is a LongPress
-          invoke_callback(i, UIeventLongPress);
-          lastHold[i] = now;
-        } else if (now - lastHold[i] > holdTime) { // hold event
-          invoke_callback(i, UIeventHold);
-          lastHold[i] = now;
-        }
-      }
-    }
-
-    // if the button state has changed:
-    if (btnow != buttonState[i]) {
-      buttonState[i] = btnow;
-      // The following actions are taken at Button release
-      if (btnow == BUTTON_IDLE_STATE) { // button was just released
-        invoke_callback(i, UIeventRelease);
-        if ((now - startPressed[i]) > longPressTime) {
-          invoke_callback(i, UIeventLongClick);
-        } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
-          invoke_callback(i, UIeventClick);
-          invoke_callback(i, UIeventDoubleClick);
-        } else {
-          invoke_callback(i, UIeventClick);
-        }
-        lastReleased[i] = now;
-      } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
-        invoke_callback(i, UIeventPress);
-        startPressed[i] = now;
-        lastHold[i] = now;
-      }
-    }
-  }
-  lastButtonState[i] = btnow;
-}
-
-/*!
-    @brief  check for button events
-
-    This function should be called frequently, e.g. inside loop()
-
-    It will check if the button pin changed status, debounce and call the call
-   back for the relevant events
-*/
-void k197ButtonCluster::check(void) {
-  /*
-  for (unsigned int i = 0; i < (sizeof(callBack) / sizeof(callBack[0])); i++) {
-    check(i);
-  }*/
-  checkNew();
 }
 
 /*!
@@ -370,7 +278,15 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-// New implementation, interrupt based
+// Handling of button events. This is done in two stages:
+// The first stage is HW based, using the event system and the 4 CCL (one for each button). 
+// Button status changes (after CCL filter for debouncing) generate CCL interrupt. The handler queues the button state in fifo queue
+// The events are then extracted from the fifo and processed outside the interrupt handler by checkNew(). This member function must be called periodically from the main Arduino Loop. Change() will:
+// compared to the previous release, this implementation will never lose clicks (with reasonably sized fifo). 
+// At the same time most of the processing is done outside the interrupt handler which is kept reasonably small. This is needed 
+// to avoid holding with other interruts too much [currently we miss one measurement when buttons are pressed very quickly. 
+// This should be solved when dxCore start supporting more efficient interrupt handlers for the Logic library]
+// Despite the need for a fifo queue, the new implementation uses less RAM due to HW debouncing and other optimizations
 /////////////////////////////////////////////////////////////////////////
 
 #define NO_DATA 0xff
@@ -495,6 +411,14 @@ inline uint8_t getButtonState(byte b) {
   return b == 0 ? BUTTON_PRESSED_STATE : BUTTON_IDLE_STATE;
 }
 
+/*!
+    @brief  check for button events
+
+    This function should be called frequently, e.g. inside loop()
+
+    It will check if the button pin changed status, debounce and call the call
+   back for the relevant events
+*/
 void k197ButtonCluster::checkNew() {
    unsigned long now = micros(); 
    for (int i=0; i<4; i++) {       

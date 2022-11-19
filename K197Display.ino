@@ -279,10 +279,7 @@ void setup() {
   PORTD.PORTCTRL = PORT_SRL_bm;
   PORTF.PORTCTRL = PORT_SRL_bm;
   pushbuttons.setup();
-  pushbuttons.setCallback(K197key_STO, myButtonCallback);
-  pushbuttons.setCallback(K197key_RCL, myButtonCallback);
-  pushbuttons.setCallback(K197key_REL, myButtonCallback);
-  pushbuttons.setCallback(K197key_DB, myButtonCallback);
+  pushbuttons.setCallback(myButtonCallback);
   DebugOut.begin();
 
   dxUtil.begin();
@@ -374,5 +371,5 @@ void loop() {
       DebugOut.println(F("cleared"));
     }
   }
-  pushbuttons.check();
+  pushbuttons.checkNew();
 }

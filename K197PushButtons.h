@@ -46,13 +46,9 @@ public:
 
 protected:
   void check(uint8_t i);
-  void checkPressed(uint8_t i, unsigned long now);
   void checkNew(uint8_t i, uint8_t btnow, unsigned long now);
+  void checkPressed(uint8_t i, unsigned long now);
 
-  static const unsigned long debounceDelay =
-      500L; ///< the debounce time us; decrease if the button is not responsive
-         ///< enough, increase in case you experience unintended double
-         ///< presses
   static const unsigned long longPressTime =
       500000L; ///< long press event will be generated when pressed more than
             ///< longPressTime us
@@ -70,8 +66,7 @@ protected:
 
 
 public:
-  bool setCallback(K197UIeventsource eventSource, buttonCallBack pinCallBack);
-  void check();
+  void setCallback(buttonCallBack pinCallBack);
   void checkNew();
 
   static void DebugOut_printEventName(K197UIeventType event);
