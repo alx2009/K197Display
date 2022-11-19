@@ -83,6 +83,9 @@
 #define UI_REL_VPORT VPORTF   ///< VPORT for UI_REL pin
 #define UI_DB_VPORT VPORTF    ///< VPORT for UI_DB pin
 
+// Timer port definitions
+#   define AVR_TCA_PORT   TCA0
+
 // UART definitions
 #define BT_USART USART0 ///< This is the UART connected to the bluetooth module
 
@@ -112,7 +115,11 @@
 #define UI_REL_Event Event4
 #define UI_DB_Event  Event5
 
-// Generally useful constants
+// Othert TIMER definitions
+#define TCA_OVF_vect TCA0_OVF_vect
+#define TCA_CMP0_vect TCA0_CMP0_vect
+inline void takeOverTCA() {takeOverTCA0();}
+
 extern const char
     CH_SPACE; ///< External constant used whenever we need a ' ' character.
               ///< Having it as global constant saves a few bytes of RAM

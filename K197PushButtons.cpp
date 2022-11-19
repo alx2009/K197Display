@@ -34,10 +34,6 @@
 
 uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL,
                          UI_DB}; ///< index to pin mapping for UI push buttons
-/*
-uint8_t buttonPinOut[] = {MB_STO, MB_RCL, MB_REL,
-                          MB_DB}; ///< index to pin mapping for output
-*/
 k197ButtonCluster::buttonCallBack callBack = NULL; ///< Stores the call back for each button
 uint8_t buttonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
@@ -65,6 +61,7 @@ void k197ButtonCluster::setup() {
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
 
   attachTimerInterrupts();
+  setupClicktimer();
 }
 
 /*!
@@ -401,4 +398,70 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
             lastHold[i] = now;
         }
     }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Handling of clicks for REL button
+// Note: this is the only button when this is usueful, due to the fact a double click is used to reset statistics
+// Without this part a fast double quick would be missed by the k197, as it is quite slow
+//////////////////////////////////////////////////////////////////////////////////
+
+void k197ButtonCluster::setupClicktimer() {
+  //Tave over and reset TCAx 
+  takeOverTCA(); // calls the appropriate dxCore function - force the core to stop using the timer and reset to the startup configuration
+  AVR_TCA_PORT.SINGLE.CTRLA = 0x00; // Make sure the timer is disabled
+  AVR_TCA_PORT.SINGLE.CTRLESET = TCA_SINGLE_CMD_RESET_gc | 0x03; // Set CMD to RESET to do a hard reset of the timer
+  AVR_TCA_PORT.SINGLE.CTRLD = 0x00; // Make sure we are in single mode
+  AVR_TCA_PORT.SINGLE.INTCTRL = 0x00; //Disable all interrupts
+  AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm;  // Clear interrupt flags
+}
+
+void k197ButtonCluster::clickREL() {
+  cli();
+  if ( (AVR_TCA_PORT.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm) == 0x00) { // We need to start the timer
+       MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
+       MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
+       //VPORTA.OUT |= 0x80;  // Turn on builtin LED
+       startClickTimer();
+       GPIOR2=0x00;
+       sei();  
+       //DebugOut.print(F("Timer started, PER=0x"));  DebugOut.print(AVR_TCA_PORT.SINGLE.PER);
+       //DebugOut.print(", CMP0="); DebugOut.println(AVR_TCA_PORT.SINGLE.CMP0);
+
+  } else { // engine already running
+       if (GPIOR2<REL_max_pending_clicks) {
+           GPIOR2++; // We need one (more) click
+       }
+       sei();  
+       //DebugOut.println(F("Timer already running"));
+  }
+}
+
+void k197ButtonCluster::startClickTimer() {
+  AVR_TCA_PORT.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc; // Normal mode. Disabled: Compare outputs, lock update. 
+  AVR_TCA_PORT.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);    // Disable event counting
+  AVR_TCA_PORT.SINGLE.PER = totalCount;
+  AVR_TCA_PORT.SINGLE.CMP0 = pulseCount;
+  AVR_TCA_PORT.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm;         // Enable overflow interrupt
+  AVR_TCA_PORT.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1024_gc | TCA_SINGLE_ENABLE_bm;  // enable the timer with clock DIV1024
+}
+
+ISR(TCA_OVF_vect) {
+   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;  // Clear flag
+   if (GPIOR2>0) { // We at least one more click to generate
+       MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
+       MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
+       //VPORTA.OUT |= 0x80;  // Turn on builtin LED
+       GPIOR2--;
+   } else { // We stop here
+       AVR_TCA_PORT.SINGLE.INTCTRL = 0x00; //Disable all interrupts
+       AVR_TCA_PORT.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1024_gc; // disable the timer      
+   }
+}
+
+ISR(TCA_CMP0_vect) {              //TCA COMPARE 0 vector
+  AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_CMP0_bm;      // Clear flag
+  MB_REL_VPORT.DIR &= (~MB_REL_bm); // Set REL pin to input
+  MB_REL_VPORT.OUT &= (~MB_REL_bm); // Set REL pin to low
+  //VPORTA.OUT &= (~0x80);  // Turn off builtin LED
 }

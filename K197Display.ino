@@ -47,6 +47,14 @@ recurring issues
 #include "UImanager.h"
 
 #include "K197PushButtons.h"
+k197ButtonCluster pushbuttons; ///< this object is used to interact with the
+                               ///< push-button cluster
+
+#define K197_MB_CLICK_TIME_us                                                     \
+  750 ///< how much a click should last when sent to the K197 (us)
+#define K197_MB_CLICK_TIME2_ms                                                     \
+  300 ///< how much we should wait after a click is sent to the K197 (ms)
+
 #include "debugUtil.h"
 #include "dxUtil.h"
 
@@ -189,14 +197,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
   }
 }
 
-k197ButtonCluster pushbuttons; ///< this object is used to interact with the
-                               ///< push-button cluster
-
-#define K197_MB_CLICK_TIME_us                                                     \
-  750 ///< how much a click should last when sent to the K197 (us)
-#define K197_MB_CLICK_TIME2_ms                                                     \
-  300 ///< how much we should wait after a click is sent to the K197 (ms)
-
 /*!
       @brief Callback for push button events
 
@@ -219,8 +219,7 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
 
   // Handle the special case of REL and DB pressed simultaneously (enter cal mode)
   if ( (eventSource==K197key_REL || eventSource==K197key_DB) && pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
-      //uiman.showFullScreen();
-      //uiman.updateDisplay();
+      //DebugOut.print(F("REL+DB"));
       if (eventType==UIeventPress) {
           pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
           pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
@@ -253,16 +252,18 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
     //DebugOut.print(F("REL"));
     if (k197dev.isNotCal() && eventType == UIeventClick) {
-      //DebugOut.print('.');
+      /*
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       delayMicroseconds(K197_MB_CLICK_TIME_us);
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
       delay(K197_MB_CLICK_TIME2_ms);
+      */
+      pushbuttons.clickREL();
     }
-    if (k197dev.isCal() && eventType == UIeventPress) {
-      pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-    } else if (eventType == UIeventRelease) {
-      pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
+    if (k197dev.isCal() && (eventType == UIeventPress)) {
+      pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if (k197dev.isCal() && (eventType == UIeventRelease)) {
+      pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
     }
     break;
   case K197key_DB:
@@ -277,8 +278,10 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
   //DebugOut.print(F(" "));
   //k197ButtonCluster::DebugOut_printEventName(eventType);
   //DebugOut.println();
-
 }
+
+//static uint8_t tot=0;
+//static uint8_t pulse=0;
 
 /*!
       @brief Arduino setup function
@@ -391,4 +394,16 @@ void loop() {
     }
   }
   pushbuttons.checkNew();
+  /*
+  uint8_t newval=GPIOR1;
+  if (tot!=newval) {
+      tot=newval;
+      DebugOut.print("TOT count="); DebugOut.println(tot);
+  }
+  newval=GPIOR0;
+  if (pulse!=newval) {
+      pulse=newval;
+      DebugOut.print("Pulse count="); DebugOut.println(pulse);
+  }
+  */
 }

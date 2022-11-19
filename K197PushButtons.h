@@ -58,7 +58,16 @@ protected:
   static const unsigned long doubleClicktime =
       500000L; ///< double click event when pressed within doubleClicktime us from
             ///< a previous release
+
+  // click generator for REL key
+  static const uint16_t pulseCount =   750; // REL click pulse (750=>32 ms) 
+  static const uint16_t totalCount = 15000; // REL click pulse+wait (15000=>640 ms) 
+  static const uint8_t REL_max_pending_clicks =
+      4; ///< maximum number of REL button clicks that can be queued
+      
   void attachTimerInterrupts();
+  void setupClicktimer();
+  void startClickTimer();
 
 public:
   void setCallback(buttonCallBack pinCallBack);
@@ -80,6 +89,9 @@ public:
   }
 
   static void DebugOut_printEventName(K197UIeventType event);
+
+  void clickREL();
+  
 };
 
 #endif //__ABUTTON_H
