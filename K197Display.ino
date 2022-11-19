@@ -275,6 +275,13 @@ void setup() {
   PORTF.PORTCTRL = PORT_SRL_bm;
   pushbuttons.setup();
   pushbuttons.setCallback(myButtonCallback);
+  
+  // Handle REL and DB if they were already pushed at startup
+  if (pushbuttons.isPressed(K197key_DB))
+        pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+  if (pushbuttons.isPressed(K197key_REL))
+        pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+
   DebugOut.begin();
 
   dxUtil.begin();
