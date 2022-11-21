@@ -40,58 +40,54 @@ public:
   k197ButtonCluster(){}; ///< default constructor
   typedef void (*buttonCallBack)(
       K197UIeventsource eventSource,
-      K197UIeventType
-          eventType); ///< define the type of the callback function
+      K197UIeventType eventType); ///< define the type of the callback function
   void setup();
 
 protected:
-  void check(uint8_t i);
   void checkNew(uint8_t i, uint8_t btnow, unsigned long now);
   void checkPressed(uint8_t i, unsigned long now);
 
   static const unsigned long longPressTime =
       500000L; ///< long press event will be generated when pressed more than
-            ///< longPressTime us
+               ///< longPressTime us
   static const unsigned long holdTime =
-      200000L; ///< After a LongPress Hold events will be generated every holdTime 
-               ///< in us while the button is still pressed
+      200000L; ///< After a LongPress Hold events will be generated every
+               ///< holdTime in us while the button is still pressed
   static const unsigned long doubleClicktime =
-      500000L; ///< double click event when pressed within doubleClicktime us from
-            ///< a previous release
+      500000L; ///< double click event when pressed within doubleClicktime us
+               ///< from a previous release
 
   // click generator for REL key
-  static const uint16_t pulseCount =   750; // REL click pulse (750=>32 ms) 
-  static const uint16_t totalCount = 15000; // REL click pulse+wait (15000=>640 ms) 
+  static const uint16_t pulseCount = 750; ///< REL click pulse (750=>32 ms)
+  static const uint16_t totalCount =
+      15000; ///< REL click pulse+idle time (15000=>640 ms)
   static const uint8_t REL_max_pending_clicks =
       4; ///< maximum number of REL button clicks that can be queued
-      
-  void attachTimerInterrupts();
+
   void setupClicktimer();
-  void startClickTimer();
 
 public:
-  void setCallback(buttonCallBack pinCallBack);
+  void setCallback(buttonCallBack clusterCallBack);
   void checkNew();
   bool isPressed(K197UIeventsource eventSource);
 
-  
   /*!
       @brief  check if two buttons are pressed simultaneously
       @param btn1 the event source value corresponding to the first button
       @param btn2 the event source value corresponding to the second button
-      @return true if the two buttons are pressed simultaneously, false otherwise
+      @return true if the two buttons are pressed simultaneously, false
+     otherwise
   */
   bool isSimultaneousPress(K197UIeventsource btn1, K197UIeventsource btn2) {
-      if (isPressed(btn1) && isPressed(btn2)) {
-         return true;
-      }
-      return false;
+    if (isPressed(btn1) && isPressed(btn2)) {
+      return true;
+    }
+    return false;
   }
 
   static void DebugOut_printEventName(K197UIeventType event);
 
   void clickREL();
-  
 };
 
 #endif //__ABUTTON_H

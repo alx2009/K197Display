@@ -342,9 +342,9 @@ public:
       @brief  test if CAL is on
       @return returns true if on, false otherwise
   */
-  inline bool isCal() { 
-    if ( (annunciators8 & K197_Cal_bm) != 0 )
-        return true;
+  inline bool isCal() {
+    if ((annunciators8 & K197_Cal_bm) != 0)
+      return true;
     return false;
   }
   /*!
