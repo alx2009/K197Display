@@ -34,9 +34,9 @@
     - Press-Release-Click
     - Press-Release-LongPress-Release-Longclick (if hold for a longer time)
 
-    A second click event close to the first will generate a double click event right after the second click event
-    Hold is generated after LongPress and before Release (if pressed for a
-   sufficiently long time)
+    A second click event close to the first will generate a double click event
+   right after the second click event Hold is generated after LongPress and
+   before Release (if pressed for a sufficiently long time)
 */
 /**************************************************************************/
 
@@ -59,7 +59,7 @@ enum K197UIeventType {
 /**************************************************************************/
 enum K197UIeventsource {
   K197key_REL = UI_REL, ///< REL key (Alt. functions: up)
-  K197key_DB = UI_DB,  ///< DB key  (Alt. functions: down,   mode)
+  K197key_DB = UI_DB,   ///< DB key  (Alt. functions: down,   mode)
   K197key_STO =
       UI_STO, ///< STO key (Alt. functions: clear, cancel, decrease, left)
   K197key_RCL = UI_RCL, ///< RCL key (Alt. functions: set, Ok, increase, right)

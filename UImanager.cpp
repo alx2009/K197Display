@@ -31,10 +31,10 @@
   Fonts used in the application:
     u8g2_font_5x7_mr  ==> terminal window, local T, Bluetooth status
     u8g2_font_6x12_mr ==> BAT, all menus
-    u8g2_font_8x13_mr ==> AUTO, REL, dB, STO, RCL, Cal, RMT, most annunciators in split screen
-    u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen: message, AC
-    u8g2_font_inr30_mr ==> main message
-    u8g2_font_inr16_mr ==> main message in minmax mode
+    u8g2_font_8x13_mr ==> AUTO, REL, dB, STO, RCL, Cal, RMT, most annunciators
+  in split screen u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen:
+  message, AC u8g2_font_inr30_mr ==> main message u8g2_font_inr16_mr ==> main
+  message in minmax mode
 
     mr ==> monospace restricted
     m ==> monospace
@@ -108,17 +108,17 @@ void setup_draw(void) {
   u8g2.setFontRefHeightExtendedText();
   u8g2.setFontDirection(0);
 
-/*
-  u8g2.setFont(u8g2_font_inr16_mr);
-  DebugOut.print(F("Disp. H="));
-  DebugOut.print(u8g2.getDisplayHeight());
-  DebugOut.print(F(", font h="));
-  DebugOut.print(u8g2.getAscent());
-  DebugOut.print(F("/"));
-  DebugOut.print(u8g2.getDescent());
-  DebugOut.print(F("/"));
-  DebugOut.println(u8g2.getMaxCharHeight());
-*/
+  /*
+    u8g2.setFont(u8g2_font_inr16_mr);
+    DebugOut.print(F("Disp. H="));
+    DebugOut.print(u8g2.getDisplayHeight());
+    DebugOut.print(F(", font h="));
+    DebugOut.print(u8g2.getAscent());
+    DebugOut.print(F("/"));
+    DebugOut.print(u8g2.getDescent());
+    DebugOut.print(F("/"));
+    DebugOut.println(u8g2.getMaxCharHeight());
+  */
   dxUtil.checkFreeStack();
 }
 
@@ -167,9 +167,12 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
-  if ( k197dev.isNotCal() && isSplitScreen()) updateSplitScreen();
-  else if ( k197dev.isCal() || (getScreenMode() == K197sc_normal) ) updateNormalScreen();
-  else updateMinMaxScreen();
+  if (k197dev.isNotCal() && isSplitScreen())
+    updateSplitScreen();
+  else if (k197dev.isCal() || (getScreenMode() == K197sc_normal))
+    updateNormalScreen();
+  else
+    updateMinMaxScreen();
   dxUtil.checkFreeStack();
 }
 
@@ -228,7 +231,7 @@ void UImanager::updateSplitScreen() {
   else
     u8g2.print(F("      "));
 
-  if ( isSplitScreen() && !isMenuVisible() ) { // Show the debug log
+  if (isSplitScreen() && !isMenuVisible()) { // Show the debug log
     u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
     u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
   } else { // For all other modes we show the settings menu when in split mode
@@ -239,7 +242,8 @@ void UImanager::updateSplitScreen() {
 }
 
 /*!
-    @brief  update the display, used when in normal screen mode. See also updateDisplay().
+    @brief  update the display, used when in normal screen mode. See also
+   updateDisplay().
 */
 void UImanager::updateNormalScreen() {
   u8g2.setFont(
@@ -358,12 +362,14 @@ void UImanager::updateNormalScreen() {
 }
 
 /*!
-    @brief  update the display, used when in minmax screen mode. See also updateDisplay().
+    @brief  update the display, used when in minmax screen mode. See also
+   updateDisplay().
 */
 void UImanager::updateMinMaxScreen() {
   u8g2.setFont(
       u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
-  const unsigned int xraw = 130; const unsigned int yraw = 15;
+  const unsigned int xraw = 130;
+  const unsigned int yraw = 15;
   const unsigned int dpsz_x = 3;  // decimal point size in x direction
   const unsigned int dpsz_y = 3;  // decimal point size in y direction
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
@@ -397,7 +403,8 @@ void UImanager::updateMinMaxScreen() {
 
   // set the other announciators
   u8g2.setFont(u8g2_font_6x12_mr);
-  unsigned int x = 0; unsigned int y = 5; 
+  unsigned int x = 0;
+  unsigned int y = 5;
   u8g2.setCursor(x, y);
   if (k197dev.isREL())
     u8g2.print(F("REL"));
@@ -406,17 +413,32 @@ void UImanager::updateMinMaxScreen() {
 
   // Write Min/average/Max labels
   u8g2.setFont(u8g2_font_5x7_mr);
-  x = u8g2.tx+10; y = 5; u8g2.setCursor(x, y); u8g2.print(F("Max "));
-  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(F("Avg "));
-  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(F("Min "));
+  x = u8g2.tx + 10;
+  y = 5;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Max "));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Avg "));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Min "));
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   char buf[K197_MSG_SIZE];
-  x = u8g2.tx; y = 3;    u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getMax()));
-  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getAverage()));
-  y += char_height_9x15; u8g2.setCursor(x, y); u8g2.print(formatNumber(buf, k197dev.getMin()));
+  x = u8g2.tx;
+  y = 3;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getMax()));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getAverage()));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getMin()));
 
-  x = 170; y = 2;
+  x = 170;
+  y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197dev.isTKModeActive()) { // Display local temperature
@@ -438,8 +460,8 @@ void UImanager::updateMinMaxScreen() {
    @details  Three modes are defined: normal mode, menu mode and debug mode.
    In debug and menu mode the measurements are displays on the right of the
    screen (split screen), while the left part is reserved for debug messages and
-   menu items respectively. Normal mode is a fulol screen mode equivalent to the original K197 display. 
-   As the name suggest debug mode is intended for
+   menu items respectively. Normal mode is a fulol screen mode equivalent to the
+   original K197 display. As the name suggest debug mode is intended for
    debugging the code that interacts with the serial port/bluetooth module
    itself, so that Serial cannot be used.
 
@@ -447,19 +469,25 @@ void UImanager::updateMinMaxScreen() {
    respectively
 */
 void UImanager::setScreenMode(K197screenMode mode) {
-  screen_mode = (K197screenMode) (screen_mode & K197sc_AttributesBitMask) ; // clear current screen mode
-  screen_mode = (K197screenMode) (screen_mode | (mode & K197sc_ScreenModeMask)) ; // set the mode bits to enter the new mode
+  screen_mode =
+      (K197screenMode)(screen_mode &
+                       K197sc_AttributesBitMask); // clear current screen mode
+  screen_mode =
+      (K197screenMode)(screen_mode |
+                       (mode & K197sc_ScreenModeMask)); // set the mode bits to
+                                                        // enter the new mode
   clearScreen();
 }
 
 /*!
   @brief clear the display
-  @details This is done automatically when the screen mode changes, there should be no need to call this function elsewhere
+  @details This is done automatically when the screen mode changes, there should
+  be no need to call this function elsewhere
 */
 void UImanager::clearScreen() {
-  //DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
+  // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
-  u8g2.sendBuffer();  
+  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -470,8 +498,9 @@ void UImanager::clearScreen() {
       @param connected true if a BT connection is detected, false otherwise
 */
 void UImanager::updateBtStatus() {
-  if (isSplitScreen() || (getScreenMode() != K197sc_normal) ) { //Note: No BT status in cal mode
-      return;
+  if (isSplitScreen() ||
+      (getScreenMode() != K197sc_normal)) { // Note: No BT status in cal mode
+    return;
   }
   unsigned int x = 95;
   unsigned int y = 2;
@@ -520,7 +549,7 @@ DEF_MENU_BUTTON(reloadSettings, 15,
                 "Reload settings"); ///< TBD: submenu not yet implemented
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
-                uiman.showDebugLog();); ///< show debug log
+                DebugOut.println(); uiman.showDebugLog();); ///< show debug log
 
 UImenuItem *mainMenuItems[] = {
     &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog,
@@ -557,13 +586,16 @@ UImenuItem *logMenuItems[] = {
 */
 bool UImanager::handleUIEvent(K197UIeventsource eventSource,
                               K197UIeventType eventType) {
-  if (k197dev.isCal()) return false;
-  if ( eventSource == K197key_REL && eventType==UIeventLongPress) { // This event is handled the same in all screen modes
-      if (isFullScreen())
-           showOptionsMenu();
-      else
-           showFullScreen();
-      return true;
+  if (k197dev.isCal())
+    return false;
+  if (eventSource == K197key_REL &&
+      eventType == UIeventLongPress) { // This event is handled the same in all
+                                       // screen modes
+    if (isFullScreen())
+      showOptionsMenu();
+    else
+      showFullScreen();
+    return true;
   }
   if (isMenuVisible()) {
     if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType))
@@ -573,44 +605,47 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       showFullScreen();
       return true;
     }
-  } else switch (eventSource) { // Full scren mode
+  } else
+    switch (eventSource) { // Full scren mode
     case K197key_STO:
-        if (reassignStoRcl.getValue()) {
-            if ( eventType==UIeventLongPress ) {
-                K197screenMode screen_mode = uiman.getScreenMode();
-                if (screen_mode==K197sc_normal) uiman.setScreenMode(K197sc_minmax);  
-                else uiman.setScreenMode(K197sc_normal);
-            }
-            return true;
+      if (reassignStoRcl.getValue()) {
+        if (eventType == UIeventLongPress) {
+          K197screenMode screen_mode = uiman.getScreenMode();
+          if (screen_mode == K197sc_normal)
+            uiman.setScreenMode(K197sc_minmax);
+          else
+            uiman.setScreenMode(K197sc_normal);
         }
-        break;
+        return true;
+      }
+      break;
     case K197key_RCL:
-        if (reassignStoRcl.getValue()) {
-            return true;
-        }
-        break;
+      if (reassignStoRcl.getValue()) {
+        return true;
+      }
+      break;
     case K197key_REL:
-        if (eventType == UIeventDoubleClick) {
-            k197dev.resetStatistics();
-            //DebugOut.print('x');
-            return true;
-        }
-        break;
+      if (eventType == UIeventDoubleClick) {
+        k197dev.resetStatistics();
+        // DebugOut.print('x');
+        return true;
+      }
+      break;
     case K197key_DB:
-        if (additionalModes.getValue()) {
-            if (eventType == UIeventPress) {
-                if ( k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
-                    if (!k197dev.getTKMode()) { // TK mode is not yet enabled
-                        k197dev.setTKMode(true);  // Activate TK mode
-                        return true; // Skip normal handling in the main sketch
-                    }                
-                } else {
-                    k197dev.setTKMode(false);
-                }
+      if (additionalModes.getValue()) {
+        if (eventType == UIeventPress) {
+          if (k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
+            if (!k197dev.getTKMode()) { // TK mode is not yet enabled
+              k197dev.setTKMode(true);  // Activate TK mode
+              return true; // Skip normal handling in the main sketch
             }
+          } else {
+            k197dev.setTKMode(false);
+          }
         }
-        break;
-  }
+      }
+      break;
+    }
   return false;
   dxUtil.checkFreeStack();
 }
@@ -717,9 +752,9 @@ const char *UImanager::formatNumber(char buf[K197_MSG_SIZE], float f) {
 */
 void UImanager::logData() {
   if (k197dev.isCal()) // No logging while in Cal mode
-      return;
+    return;
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
-      return;
+    return;
   if (logskip_counter < logSkip.getValue()) {
     logskip_counter++;
     return;

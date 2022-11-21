@@ -11,19 +11,19 @@
   This file is part of the Arduino K197Display sketch, please see
   https://github.com/alx2009/K197Display for more information
 
-  In this file we consolidate all I/O pin definitions for this application. In
-  addition, we include generally useful constants
+  In this file we consolidate all I/O pin definitions and other HW dependent
+  compile options.
 
   Pin definitions are in the form PIN_Pxn where x is PORT x and n is pin n in
   said port. This is the preferred form for dxCore (rather than the pin number
   commonly used with the AVR cores)
 
-  In addition to pin numbers, we also define VPORT and bitmaps for direct port
-  manipulation and a number of useful constants
+  In addition to pin numbers, we also define PORT, VPORT and bitmaps for direct
+  port manipulation and a number of useful constants
 
   Note for users coming from the legacy AVR! PIN_PC1 would normally be the MISO
   pin for the SPI1 port, configured as an output. We use SPI1 to talk to the
-  K197 as client. Now, we have no data to send to the 197, so we re-use PIN_PC1
+  K197 as client. We have no data to send to the 197, so we re-use PIN_PC1
   as an input instead. This would not be possible for the old AVRs, but it is
   supported by the AVR DB when the SPI peripheral is in client mode
 */
@@ -84,7 +84,7 @@
 #define UI_DB_VPORT VPORTF    ///< VPORT for UI_DB pin
 
 // Timer port definitions
-#   define AVR_TCA_PORT   TCA0
+#define AVR_TCA_PORT TCA0 ///< define the TCA timer instance to use
 
 // UART definitions
 #define BT_USART USART0 ///< This is the UART connected to the bluetooth module
@@ -109,19 +109,22 @@
 // PIN SWAP Options
 #define OLED_SPI_SWAP_OPTION SPI0_SWAP_DEFAULT ///< SPI swap to use for OLED
 
-//Event channels
-#define UI_STO_Event Event2
-#define UI_RCL_Event Event3
-#define UI_REL_Event Event4
-#define UI_DB_Event  Event5
+// Event channels
+#define UI_STO_Event Event2 ///< Event channel for STO pushbutton
+#define UI_RCL_Event Event3 ///< Event channel for RCL pushbutton
+#define UI_REL_Event Event4 ///< Event channel for REL pushbutton
+#define UI_DB_Event Event5  ///< Event channel for DB pushbutton
 
 // Other TIMER definitions and checks
 #ifdef MILLIS_USE_TIMERA0
-  #error "This sketch takes over TCA0 - please use a different timer for millis"
+#error "This sketch takes over TCA0 - please use a different timer for millis"
 #endif
-#define TCA_OVF_vect TCA0_OVF_vect
-#define TCA_CMP0_vect TCA0_CMP0_vect
-inline void takeOverTCA() {takeOverTCA0();}
+#define TCA_OVF_vect TCA0_OVF_vect   ///< TCA OVF int. instance to use
+#define TCA_CMP0_vect TCA0_CMP0_vect ///< TCA CMP0 int. instance to use
+
+inline void takeOverTCA() {
+  takeOverTCA0();
+} ///< define the instance of TCA to take over
 
 extern const char
     CH_SPACE; ///< External constant used whenever we need a ' ' character.
