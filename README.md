@@ -36,7 +36,7 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 
 The SW has some support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA2 should be connected to the BT module 5V power via a SW divider (the pin max voltage is 3.3V), pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
 
-The definition of the pins in pinout.h can be changed to support the OLED in 3 wire SPI mode, but in such a case it will not be possible to detect when the Bluetooth module is powered on and off via PIN PA2.
+The definition of the pins in pinout.h can be changed to support the OLED in 4 wire SPI mode, but in such a case it will not be possible to detect when the Bluetooth module is powered on and off via PIN PA2.
 
 Functionality:
 -------------
