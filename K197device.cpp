@@ -35,7 +35,7 @@ K197device k197dev;
 // Lookup table to convert from segments to char
 // Note: before using the table, shift the 5 most significant bit one position
 // to the right (removes DP bit)
-static char seg2char[128] = {
+const char seg2char[128] PROGMEM = {
     ' ',  '\'', 'i', 'I', '^', '*', '*', 'T',
     '-',  '*',  'r', 'f', '*', '*', '*', 'F', // row 0 (0x00-0x0f)
     '_',  '*',  'e', 'L', '*', '*', '*', 'C',
@@ -175,9 +175,10 @@ byte K197device::getNewReading(byte *data) {
     int seg128 = ((data[i] & 0b11111000) >> 1) |
                  (data[i] & 0b00000011); // remove the DP bit and shift right to
                                          // convert to a 7 bits number
-    raw_msg[i] = seg2char[seg128];
-    message[nchar] = seg2char[seg128]; // lookup the character corresponding to
-                                       // the segment combination
+    char c = pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding to the segment combination
+    raw_msg[i] = c;
+    message[nchar] = c; 
+                                       
     if (!isDigitOrSpace(message[nchar]))
       msg_is_num = false;
     nchar++;

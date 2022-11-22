@@ -39,7 +39,7 @@ k197ButtonCluster::buttonCallBack callBack =
 // intervals (debouncing, pressed, released, log press, etc.)
 // All timers are in us (microseconds)
 
-uint8_t buttonPinIn[] = {UI_STO, UI_RCL, UI_REL,
+const uint8_t buttonPinIn[] PROGMEM = {UI_STO, UI_RCL, UI_REL,
                          UI_DB}; ///< index to pin mapping for UI push buttons
 uint8_t buttonState[] = {
     BUTTON_IDLE_STATE, BUTTON_IDLE_STATE, BUTTON_IDLE_STATE,
@@ -72,7 +72,7 @@ void k197ButtonCluster::setCallback(buttonCallBack clusterCallBack) {
 */
 static inline void invoke_callback(int i, K197UIeventType eventType) {
   if (callBack != NULL) {
-    callBack((K197UIeventsource)buttonPinIn[i], eventType);
+    callBack((K197UIeventsource)pgm_read_byte(&buttonPinIn[i]), eventType);
   }
 }
 
@@ -93,7 +93,7 @@ static inline void invoke_callback(int i, K197UIeventType eventType) {
 bool k197ButtonCluster::isPressed(K197UIeventsource eventSource) {
   for (unsigned int i = 0; i < (sizeof(buttonState) / sizeof(buttonState[0]));
        i++) {
-    if (buttonPinIn[i] == (uint8_t)eventSource) {
+    if (pgm_read_byte(&buttonPinIn[i]) == (uint8_t)eventSource) {
       return buttonState[i] == BUTTON_PRESSED_STATE ? true : false;
     }
   }
