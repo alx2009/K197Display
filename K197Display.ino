@@ -37,12 +37,13 @@ recurring issues
 */
 /**************************************************************************/
 // TODO wish list:
-//  Move statistics options to own submenu
 //  Hold
 //  Autohold
 //  Save/retrieve settings to EEPROM
 //  Move seg2char to flash
 //  Graph mode
+//  Move statistics options to own submenu
+//  Improved statistics
 //  Optimize interrupts
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 
