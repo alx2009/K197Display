@@ -63,8 +63,8 @@ UImenu UImainMenu(130, true); ///< the main menu for this application
 UImenu UIlogMenu(130);        ///< the submenu to set logging options
 
 #include "BTmanager.h"
-#include "UImanager.h"
 #include "K197PushButtons.h"
+#include "UImanager.h"
 #include "debugUtil.h"
 #include "dxUtil.h"
 #include "pinout.h"
