@@ -48,12 +48,15 @@ The current SW is implementing the same functions available in the 197/197A (wit
 - The additional measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
 - in temperature mode the temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
 - at the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
+- An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example range switch, REL state, AC button, etc.).
 
 Keyboard: 
 ---------
 compared to the original K197, the use of the the pushbuttons on the front panel changes as follows:
 - Holding the REL button will enter the Options menu
-- Normal STO and RCL function can be disabled from the options menu (in future releases they will be used for additional functions)
+- Normal STO and RCL functions can be disabled from the options menu
+- Holding the STO button alternates between "normal" and "statistics" display (when repurposing of STO and RCL is enabled)
+- double click of the REL button resets the statistics (but otherwise does not affect the reference value)
 
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
 REL = up (hold to exit the menu)
