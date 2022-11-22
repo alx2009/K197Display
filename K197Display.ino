@@ -51,8 +51,6 @@ recurring issues
 #include "UImanager.h"
 
 #include "K197PushButtons.h"
-k197ButtonCluster pushbuttons; ///< this object is used to interact with the
-                               ///< push-button cluster
 #include "debugUtil.h"
 #include "dxUtil.h"
 

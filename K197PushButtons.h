@@ -88,6 +88,9 @@ public:
   static void DebugOut_printEventName(K197UIeventType event);
 
   void clickREL();
+  void cancelClickREL();
 };
+
+extern k197ButtonCluster pushbuttons;
 
 #endif //__ABUTTON_H

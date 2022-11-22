@@ -64,6 +64,7 @@ UImenu UIlogMenu(130);        ///< the submenu to set logging options
 
 #include "BTmanager.h"
 #include "UImanager.h"
+#include "K197PushButtons.h"
 #include "debugUtil.h"
 #include "dxUtil.h"
 #include "pinout.h"
@@ -626,6 +627,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       break;
     case K197key_REL:
       if (eventType == UIeventDoubleClick) {
+        pushbuttons.cancelClickREL();
         k197dev.resetStatistics();
         // DebugOut.print('x');
         return true;

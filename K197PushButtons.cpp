@@ -28,6 +28,9 @@
 
 #include "pinout.h"
 
+k197ButtonCluster pushbuttons; ///< this object is used to interact with the
+                               ///< push-button cluster
+
 k197ButtonCluster::buttonCallBack callBack =
     NULL; ///< Stores the call back for each button
 
@@ -546,8 +549,10 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
       } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
         invoke_callback(i, UIeventClick);
         invoke_callback(i, UIeventDoubleClick);
+        //DebugOut.print(F("Dbclick time: ")); DebugOut.println(now-lastReleased[i]);
       } else {
         invoke_callback(i, UIeventClick);
+        //DebugOut.print(F("Click time: ")); DebugOut.println(now-startPressed[i]);
       }
       lastReleased[i] = now;
     } else { // btnow == BUTTON_PRESSED_STATE   // button was just pressed
@@ -602,16 +607,21 @@ void k197ButtonCluster::setupClicktimer() {
     @details the function does not wait for the click to be completed, it
    schedules the click and starts the timer (if not already started). In the
    latter case interrupts are disabled for a short time (while the TCA timer is
-   started)
+   started). 
+   There is a delay of a full timer cycle before the first click. This is by
+   design, so that a double click can cancel the scheduled clicks to
+   perform an alternative action
 
     General Purpose Register GPIOR2 is used to speed up the interrupt handler
 */
 void k197ButtonCluster::clickREL() {
+  if (GPIOR2 > REL_max_pending_clicks) return;
   cli();
+  GPIOR2++;
   if ((AVR_TCA_PORT.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm) ==
       0x00) {                      // We need to start the timer
-    MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
-    MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
+    //MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
+    //MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
     // VPORTA.OUT |= 0x80;  // Turn on builtin LED
 
     AVR_TCA_PORT.SINGLE.CTRLB =
@@ -627,33 +637,44 @@ void k197ButtonCluster::clickREL() {
         TCA_SINGLE_CLKSEL_DIV1024_gc |
         TCA_SINGLE_ENABLE_bm; // enable the timer with clock DIV1024
 
-    GPIOR2 = 0x00;
+    GPIOR2 = 0x01;
     // DebugOut.print(F("Timer started, PER=0x"));
     // DebugOut.print(AVR_TCA_PORT.SINGLE.PER); DebugOut.print(", CMP0=");
     // DebugOut.println(AVR_TCA_PORT.SINGLE.CMP0);
 
   } else { // engine already running
-    if (GPIOR2 < REL_max_pending_clicks) {
-      GPIOR2++; // We need one (more) click
-    }
     // DebugOut.println(F("Timer already running"));
   }
   sei();
 }
 
 /*!
+    @brief  cancel all the REL button clicks that may have been scheduled
+   board
+
+    @details the function reset the counter, which will prevent any new click to be initiated
+    Any simulated presses already ongoing are not affected, but no new click will be initiated thereafter  
+
+    General Purpose Register GPIOR2 is used to speed up the interrupt handler (see also clickREL())
+*/
+void k197ButtonCluster::cancelClickREL() {
+  GPIOR2 = 0x00;
+}
+
+
+/*!
     @brief  Interrupt handler, called for TCA timer overflow events
     @details This interrupt is called after enough time is passed from the last
-   release, so that  anew press can be recognized by the k197.
-    - If more clicks are scheduled (GPIOR2>9) the MB_REL port is set to high,
+   release, so that a new press can be recognized by the k197.
+    - If any click click is scheduled (GPIOR2>0) the MB_REL port is set to high,
    and GPIOR2 is decremented
-    - If this was the last scheduled click (GPIOR2>9==0) the timer is stopped
-   and for good measure TCA interrupts are disabled Note that the TCA instance
-   used is defined in pinout.h
+    - If this was the last scheduled click (GPIOR2==0) the timer is stopped
+   and for good measure TCA interrupts are disabled.
+   Note that the TCA instance used is defined in pinout.h
 */
 ISR(TCA_OVF_vect) {
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Clear flag
-  if (GPIOR2 > 0) {                // We at least one more click to generate
+  if (GPIOR2 > 0) {                // At least one more click to generate
     MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
     MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
     // VPORTA.OUT |= 0x80;  // Turn on builtin LED
