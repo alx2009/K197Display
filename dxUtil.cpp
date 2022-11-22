@@ -242,6 +242,6 @@ void dxUtilClass::reportStack(bool reportAlways) {
   }
   if (reportAlways) {
     DebugOut.print(F("Stack="));
-    DebugOut.println(minStack);
+    DebugOut.print(minStack);
   }
 }

@@ -11,26 +11,24 @@
   This file is part of the Arduino K197Display sketch, please see
   https://github.com/alx2009/K197Display for more information
 
-  This is the main file for the sketch. In addition to setup() and loop(), the
-following functions are implemented in this file:
+  This is the main file for the sketch. The following functions are implemented
+in this file:
      - Management of the serial user interface
      - Callback for push button events (some handled directly, some passed to
 UImanager)
-     - Setup invokes the setup methods of all key objects such as K197dev, uiman
-and pushbuttons
+     - Arduino setup: invokes the setup methods of all key objects such as
+K197dev, uiman and pushbuttons
+     - Arduino main loop function, loop()
 
-  All the magic happens in the main loop. For each loop iteration:
+  All the magic happens in the main loop function. For each loop() iteration:
   - handle commands from Serial if any has been received
   - check if 197dev has got new data (this should happen 3 times a second)
   - if new data available ask uiman to update the display (and print to Serial
 if the relevant flag is set)
   - check if K197dev detected SPI collisions and if the number of data received
 is the expected one, and print the information to DebugOut
-  - Finally, check for pushbutton events (this will trigger the callback)
-
-    At startup button presses from the UI push buttons are mirrored towards the
-motherboard (transparent mode). At the end of the arduino setup() transparent
-mode is turned off, so that we can assign new functions to the buttons
+  - Finally, check for pushbutton events (if there are events, the callback is
+called)
 
     Note: the way we detect SPI client related problems in loop is not
 fool-proof, but statistically we should print out something if there are
@@ -40,11 +38,13 @@ recurring issues
 /**************************************************************************/
 // TODO wish list:
 //  Move statistics options to own submenu
-//  consider moving to interrupts for button events (as of now it is possible to miss very quick button clicks)
+//  Hold
 //  Autohold
-//  Save/retrieve setting to EEPROM
+//  Save/retrieve settings to EEPROM
+//  Move seg2char to flash
 //  Graph mode
-// Bug: Enable scrolling menu backward even if the item is not selectable
+//  Optimize interrupts
+// Bug2fix: Enable scrolling menu backward even if the item is not selectable
 
 #include "K197device.h"
 
@@ -57,8 +57,7 @@ recurring issues
 #include "BTmanager.h"
 
 #include "pinout.h"
-const char CH_SPACE =
-    ' '; ///< using a constant (defined in pinout.h) saves some RAM
+const char CH_SPACE = ' '; ///< using a global constant saves some RAM
 
 #ifndef DB_28_PINS
 #error AVR32DB28 or AVR64DB28 or AVR128DB28 microcontroller required, using dxCore
@@ -66,13 +65,16 @@ const char CH_SPACE =
 
 bool msg_printout = false; ///< if true prints raw messages to DebugOut
 
+////////////////////////////////////////////////////////////////////////////////////
+// Management of the serial user interface
+////////////////////////////////////////////////////////////////////////////////////
 /*!
       @brief print the prompt to Serial
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
-  dxUtil.reportStack();
   Serial.println();
-  Serial.print(F("> "));
+  dxUtil.reportStack();
+  Serial.println(F("> "));
 }
 
 /*!
@@ -154,7 +156,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     printHelp();
     return;
   }
-
   if (strcasecmp_P(buf, PSTR("wdt")) == 0) {
     Serial.println(F("Testing watchdog reset"));
     Serial.flush();
@@ -186,7 +187,7 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
   } else if ((strcasecmp_P(buf, PSTR("log")) == 0)) {
     cmdLog();
   } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
-    cmdContrast();   
+    cmdContrast();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
@@ -194,13 +195,9 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
   }
 }
 
-k197ButtonCluster pushbuttons; ///< this object is used to interact with the
-                               ///< push-button cluster
-
-#define K197_MB_CLICK_TIME                                                     \
-  750 ///< how much a click should last when sent to the K197 (us)
-#define K197_MB_CLICK_TIME2                                                     \
-  350 ///< how much we should wait after a click is sent to the K197 (us)
+////////////////////////////////////////////////////////////////////////////////////
+// Callback for push button events
+////////////////////////////////////////////////////////////////////////////////////
 
 /*!
       @brief Callback for push button events
@@ -211,19 +208,36 @@ k197ButtonCluster pushbuttons; ///< this object is used to interact with the
       @param eventType one of the eventXXX constants define in class
    k197ButtonCluster
 */
-void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) {
+void myButtonCallback(K197UIeventsource eventSource,
+                      K197UIeventType eventType) {
   dxUtil.checkFreeStack();
-  if (uiman.handleUIEvent(eventSource, eventType)) { // UI related event, no need to do more
-    // DebugOut.print(F(", PIN=")); DebugOut.print((uint8_t) eventSource);
+  if (uiman.handleUIEvent(eventSource,
+                          eventType)) { // UI related event, no need to do more
+    // DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
     // DebugOut.print(F(" "));
     // k197ButtonCluster::DebugOut_printEventName(eventType);
     // DebugOut.println(F("Btn handled by UI"));
     return;
   }
-  if (uiman.isSplitScreen()) return; // Nothing to do in split screen mode
-  
+  if (k197dev.isNotCal() && uiman.isSplitScreen())
+    return; // Nothing to do in split screen mode
+
+  // Handle the special case of REL and DB pressed simultaneously (enter cal
+  // mode)
+  if ((eventSource == K197key_REL || eventSource == K197key_DB) &&
+      pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
+    // DebugOut.print(F("REL+DB"));
+    if (eventType == UIeventPress) {
+      pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+      pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+    } else if (eventType == UIeventRelease) {
+      pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
+      pinConfigure(MB_DB, PIN_DIR_INPUT | PIN_OUT_LOW);
+    }
+    return;
+  }
+
   // DebugOut.print(F("Btn "));
-  if(pushbuttons.isTransparentMode()) return; // No need to do anything here
   switch (eventSource) {
   case K197key_STO:
     // DebugOut.print(F("STO"));
@@ -242,14 +256,16 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     }
     break;
   case K197key_REL:
-    // We cannot use UIeventPress for REL because we need to discriminate a long press from a (short) click
+    // We cannot use UIeventPress for REL because we need to discriminate a long
+    // press from a (short) click
     // DebugOut.print(F("REL"));
-    if (eventType == UIeventClick) {
-      //DebugOut.print('.');
+    if (k197dev.isNotCal() && eventType == UIeventClick) {
+      pushbuttons.clickREL();
+    }
+    if (k197dev.isCal() && (eventType == UIeventPress)) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-      delayMicroseconds(K197_MB_CLICK_TIME);
+    } else if (k197dev.isCal() && (eventType == UIeventRelease)) {
       pinConfigure(MB_REL, PIN_DIR_INPUT | PIN_OUT_LOW);
-      delayMicroseconds(K197_MB_CLICK_TIME2);
     }
     break;
   case K197key_DB:
@@ -261,12 +277,14 @@ void myButtonCallback(K197UIeventsource eventSource, K197UIeventType eventType) 
     }
     break;
   }
-  // DebugOut.print(F(", PIN=")); DebugOut.print(buttonPinIn);
   // DebugOut.print(F(" "));
   // k197ButtonCluster::DebugOut_printEventName(eventType);
   // DebugOut.println();
-
 }
+
+////////////////////////////////////////////////////////////////////////////////////
+// Arduino setup() & loop()
+////////////////////////////////////////////////////////////////////////////////////
 
 /*!
       @brief Arduino setup function
@@ -280,10 +298,14 @@ void setup() {
   PORTD.PORTCTRL = PORT_SRL_bm;
   PORTF.PORTCTRL = PORT_SRL_bm;
   pushbuttons.setup();
-  pushbuttons.setCallback(K197key_STO, myButtonCallback);
-  pushbuttons.setCallback(K197key_RCL, myButtonCallback);
-  pushbuttons.setCallback(K197key_REL, myButtonCallback);
-  pushbuttons.setCallback(K197key_DB, myButtonCallback);
+  pushbuttons.setCallback(myButtonCallback);
+
+  // Handle REL and DB if they were already pushed at startup
+  if (pushbuttons.isPressed(K197key_DB))
+    pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+  if (pushbuttons.isPressed(K197key_REL))
+    pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
+
   DebugOut.begin();
 
   dxUtil.begin();
@@ -317,7 +339,6 @@ void setup() {
     DebugOut.println(F("BT is off"));
   }
 
-  pushbuttons.setTransparentMode(false);
   delay(100);
 
   dxUtil.checkFreeStack();
@@ -332,7 +353,7 @@ byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
                          ///< the voltmeter main board
 
 bool collisionStatus =
-    false; ///< keep track if a collision was detcted by the SPI peripheral
+    false; ///< keep track if a collision was detected by the SPI peripheral
 
 /*!
       @brief Arduino loop function
@@ -375,5 +396,17 @@ void loop() {
       DebugOut.println(F("cleared"));
     }
   }
-  pushbuttons.check();
+  pushbuttons.checkNew();
+  /*
+  uint8_t newval=GPIOR1;
+  if (tot!=newval) {
+      tot=newval;
+      DebugOut.print("TOT count="); DebugOut.println(tot);
+  }
+  newval=GPIOR0;
+  if (pulse!=newval) {
+      pulse=newval;
+      DebugOut.print("Pulse count="); DebugOut.println(pulse);
+  }
+  */
 }

@@ -223,7 +223,7 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource,
   }
   // In the following we use click events to be able to assign the LongPress to
   // other events
-  if ( eventSource == K197key_REL && eventType == UIeventClick ) { // up
+  if (eventSource == K197key_REL && eventType == UIeventClick) { // up
     if (selectedItem == 0)
       return false;
     for (byte i = selectedItem; i > 0; i--) {
