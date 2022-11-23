@@ -51,7 +51,6 @@
 #define K197_A_bm 0x04     ///< bitmap for the "A" annunciator
 #define K197_RMT_bm 0x20   ///< bitmap for the RMT annunciator
 
-#define K197_MSG_SIZE 9     ///< message size = 6 digits + [sign] + [dot] + null
 #define K197_RAW_MSG_SIZE 8 ///< raw message size = 6 digits + [sign] + null
 
 /**************************************************************************/
@@ -80,8 +79,6 @@ private:
                                    ///< term. char array)
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
                       ///< = DP bit for digit/char 0-6 of raw_msg)
-  char message[K197_MSG_SIZE]; ///< stores decoded sign + 6 digits/chars + DP at
-                               ///< the right position
 
   bool msg_is_num = false;     ///< true if message is numeric
   bool msg_is_ovrange = false; ///< true if overange detected
@@ -122,25 +119,13 @@ public:
      called before using the other member functions.
   */
   K197device() {
-    message[0] = 0;
     raw_msg[0] = 0;
   };
   bool getNewReading();
   byte getNewReading(byte *data);
 
   /*!
-      @brief  Return the decoded message
-      @return last message received from the K197/197A, including sign and
-     decimal point.
-  */
-  const char *getMessage() { return message; };
-  /*!
-      @brief  Return the raw message (same as message except there is no decimal
-     point)
-
-      This is useful for example to print out the measurement value to Serial.
-     Not recommended for the actual display (see getRawMessage() and
-     isDecPointOn() instead
+      @brief  Return the raw message
 
       @return last raw message received from the K197/197A
   */
@@ -151,8 +136,8 @@ public:
      message
 
       This is useful because in a 7 segment display the digit position is fixed
-     (obviously). If we used getMessage for the display, the digits would move
-     as the range changes, since the decimal point is considered a character on
+     (obviously). If we printed the numerical on the display, the digits would move
+     as the range change, since the decimal point is considered a character on
      its own by the display driver library. And this is annoying, especially
      with auto range.
 

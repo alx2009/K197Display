@@ -156,7 +156,7 @@ public:
 
   void logData();
 
-  static const char *formatNumber(char buf[K197_MSG_SIZE], float f);
+  static const char *formatNumber(char buf[K197_RAW_MSG_SIZE+1], float f);
 };
 
 extern UImanager uiman;

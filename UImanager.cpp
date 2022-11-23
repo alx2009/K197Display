@@ -206,7 +206,8 @@ void UImanager::updateSplitScreen() {
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197dev.getMessage());
+  if (k197dev.isNumeric())  u8g2.print(k197dev.getValue());
+  else u8g2.print(k197dev.getRawMessage());
   u8g2.print(CH_SPACE);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getUnit(true));
@@ -350,8 +351,8 @@ void UImanager::updateNormalScreen() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197dev.isTKModeActive()) { // Display local temperature
-    char buf[K197_MSG_SIZE];
-    dtostrf(k197dev.getTColdJunction(), K197_MSG_SIZE - 1, 2, buf);
+    char buf[K197_RAW_MSG_SIZE+1];
+    dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
   } else {
@@ -426,7 +427,7 @@ void UImanager::updateMinMaxScreen() {
   u8g2.print(F("Min "));
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  char buf[K197_MSG_SIZE];
+  char buf[K197_RAW_MSG_SIZE+1];
   x = u8g2.tx;
   y = 3;
   u8g2.setCursor(x, y);
@@ -443,8 +444,8 @@ void UImanager::updateMinMaxScreen() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197dev.isTKModeActive()) { // Display local temperature
-    char buf[K197_MSG_SIZE];
-    dtostrf(k197dev.getTColdJunction(), K197_MSG_SIZE - 1, 2, buf);
+    char buf[K197_RAW_MSG_SIZE+1];
+    dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
   } else {
@@ -727,7 +728,7 @@ inline void logU2U() {
       @return a nul terminated char array with the formatted number (same as
    buf)
 */
-const char *UImanager::formatNumber(char buf[K197_MSG_SIZE], float f) {
+const char *UImanager::formatNumber(char buf[K197_RAW_MSG_SIZE+1], float f) {
   if (f > 999999.0)
     f = 999999.0;
   else if (f < -999999.0)
@@ -744,7 +745,7 @@ const char *UImanager::formatNumber(char buf[K197_MSG_SIZE], float f) {
     ndec = 2;
   else if (f_abs <= 99999.9)
     ndec = 1;
-  return dtostrf(f, K197_MSG_SIZE - 1, ndec, buf);
+  return dtostrf(f, K197_RAW_MSG_SIZE, ndec, buf);
 }
 
 /*!
@@ -767,7 +768,8 @@ void UImanager::logData() {
     logU2U();
     Serial.print(F(" ms; "));
   }
-  Serial.print(k197dev.getMessage());
+  if (k197dev.isNumeric())  u8g2.print(k197dev.getValue());
+  else u8g2.print(k197dev.getRawMessage());
   logU2U();
   const __FlashStringHelper *unit = k197dev.getUnit(true);
   Serial.print(unit);
@@ -780,7 +782,7 @@ void UImanager::logData() {
     Serial.print(unit);
   }
   if (logStat.getValue()) {
-    char buf[K197_MSG_SIZE];
+    char buf[K197_RAW_MSG_SIZE+1];
     Serial.print(F("; "));
     Serial.print(formatNumber(buf, k197dev.getMin()));
     logU2U();

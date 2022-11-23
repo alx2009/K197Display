@@ -55,13 +55,12 @@ const char seg2char[128] PROGMEM = {
 };
 
 /*!
-      @brief utility function, return the value of a message up to len
-   characters
+      @brief utility function, return the value of a string
+      @details return the value of a string skipping initial spaces
 
       this function can only be used within K197device.cpp
 
-      @param s a char array with the message (does not need to be null
-   terminated)
+      @param s a null terminated char array 
       @param len the number of characters in s to consider
 
       @return the value using atof(), or 0 if s includes only space characters
@@ -74,8 +73,7 @@ float getMsgValue(char *s, int len) {
     }
     s++;
   }
-  return 0.0; // we consider a string of spaces as equivalent to 0.0. TODO: may
-              // want to return NaN and have the caller handle that
+  return 0.0; // we consider a string of spaces as equivalent to 0.0
 }
 
 /*!
@@ -124,6 +122,7 @@ bool K197device::getNewReading() {
    room for at least 9 elements!
       @return the number of bytes copied into data.
 */
+#define K197_MSG_SIZE (K197_RAW_MSG_SIZE+1) ///< add '.'
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
@@ -143,9 +142,10 @@ byte K197device::getNewReading(byte *data) {
   else
     annunciators8 = 0x00;
 
+  char message[K197_MSG_SIZE];
   for (int i = 0; i < K197_MSG_SIZE; i++)
     message[i] = 0;
-  for (int i = 0; i < K197_RAW_MSG_SIZE - 1; i++)
+  for (int i = 0; i < (K197_RAW_MSG_SIZE - 1); i++)
     raw_msg[0] = CH_SPACE;
   raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
   int nchar = 0;
@@ -175,10 +175,9 @@ byte K197device::getNewReading(byte *data) {
     int seg128 = ((data[i] & 0b11111000) >> 1) |
                  (data[i] & 0b00000011); // remove the DP bit and shift right to
                                          // convert to a 7 bits number
-    char c = pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding to the segment combination
-    raw_msg[i] = c;
-    message[nchar] = c; 
-                                       
+    raw_msg[i] = seg2char[seg128];
+    message[nchar] = seg2char[seg128]; // lookup the character corresponding to
+                                       // the segment combination
     if (!isDigitOrSpace(message[nchar]))
       msg_is_num = false;
     nchar++;
@@ -225,6 +224,7 @@ void K197device::tkConvertV2C() {
     return;
   }
   msg_value = t;
+  char message[K197_MSG_SIZE];
   dtostrf(t, K197_MSG_SIZE - 1, 2, message);
   int j = 0;
   for (int i = 0; i < K197_MSG_SIZE; i++) {
@@ -244,15 +244,14 @@ void K197device::tkConvertV2C() {
 */
 void K197device::setOverrange() {
   msg_is_ovrange = true;
-  message[0] = raw_msg[0] = CH_SPACE;
-  message[1] = raw_msg[1] = CH_SPACE;
-  message[2] = raw_msg[2] = CH_SPACE;
-  message[3] = raw_msg[3] = '0';
-  message[4] = raw_msg[4] = 'L';
-  message[5] = raw_msg[5] = CH_SPACE;
-  message[6] = raw_msg[6] = CH_SPACE;
-  message[7] = CH_SPACE;
-  message[8] = raw_msg[7] = 0;
+  raw_msg[0] = CH_SPACE;
+  raw_msg[1] = CH_SPACE;
+  raw_msg[2] = CH_SPACE;
+  raw_msg[3] = '0';
+  raw_msg[4] = 'L';
+  raw_msg[5] = CH_SPACE;
+  raw_msg[6] = CH_SPACE;
+  raw_msg[7] = 0;
   dxUtil.checkFreeStack();
 }
 
@@ -298,17 +297,17 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
    troubleshooting purposes
 */
 void K197device::debugPrint() {
-  DebugOut.print(message);
+  DebugOut.print(raw_msg);
   if (msg_is_num) {
     DebugOut.print(F(", ("));
     DebugOut.print(msg_value, 6);
     DebugOut.print(')');
   } else {
-    for (int i = 0; i < K197_MSG_SIZE; i++) {
+    for (int i = 0; i < K197_RAW_MSG_SIZE; i++) {
       DebugOut.print(F(" 0x"));
-      if (message[i] < 0x10)
+      if (raw_msg[i] < 0x10)
         DebugOut.print('0');
-      DebugOut.print(message[i], HEX);
+      DebugOut.print(raw_msg[i], HEX);
     }
     DebugOut.println();
   }
