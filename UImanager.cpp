@@ -257,30 +257,31 @@ void UImanager::updateNormalScreen() {
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
-  u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
-  for (byte i = 1; i <= 7; i++) {
-    if (k197dev.isDecPointOn(i)) {
-      u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
-                   yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
-    }
+  if (!k197dev.getDisplayHold()) {
+      u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
+      for (byte i = 1; i <= 7; i++) {
+          if (k197dev.isDecPointOn(i)) {
+          u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
+                       yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
+        }
+      }
+      // set the unit
+      u8g2.setFont(u8g2_font_9x15_m_symbols);
+      const unsigned int xunit = 229;
+      const unsigned int yunit = 20;
+      u8g2.setCursor(xunit, yunit);
+      u8g2.print(k197dev.getUnit());
+
+      // set the AC/DC indicator
+      u8g2.setFont(u8g2_font_9x15_m_symbols);
+      const unsigned int xac = xraw + 3;
+      const unsigned int yac = 40;
+      u8g2.setCursor(xac, yac);
+      if (k197dev.isAC())
+        u8g2.print(F("AC"));
+      else
+        u8g2.print(F("  "));
   }
-
-  // set the unit
-  u8g2.setFont(u8g2_font_9x15_m_symbols);
-  const unsigned int xunit = 229;
-  const unsigned int yunit = 20;
-  u8g2.setCursor(xunit, yunit);
-  u8g2.print(k197dev.getUnit());
-
-  // set the AC/DC indicator
-  u8g2.setFont(u8g2_font_9x15_m_symbols);
-  const unsigned int xac = xraw + 3;
-  const unsigned int yac = 40;
-  u8g2.setCursor(xac, yac);
-  if (k197dev.isAC())
-    u8g2.print(F("AC"));
-  else
-    u8g2.print(F("  "));
 
   // set the other announciators
   u8g2.setFont(u8g2_font_8x13_mr);
@@ -296,41 +297,47 @@ void UImanager::updateNormalScreen() {
   u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setCursor(x, y);
   if (k197dev.isBAT())
-    u8g2.print(F("BAT"));
+      u8g2.print(F("BAT"));
   else
-    u8g2.print(F("   "));
+      u8g2.print(F("   "));
 
   u8g2.setFont(u8g2_font_8x13_mr);
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
-  if (k197dev.isREL())
-    u8g2.print(F("REL"));
-  else
-    u8g2.print(F("   "));
-  x = u8g2.tx;
-  x += (u8g2.getMaxCharWidth() / 2);
-  u8g2.setCursor(x, y);
-  if (k197dev.isdB())
-    u8g2.print(F("dB"));
-  else
-    u8g2.print(F("  "));
 
+  if (!k197dev.getDisplayHold()) {
+  
+      if (k197dev.isREL())
+          u8g2.print(F("REL"));
+      else
+      u8g2.print(F("   "));
+      x = u8g2.tx;
+      x += (u8g2.getMaxCharWidth() / 2);
+      u8g2.setCursor(x, y);
+      if (k197dev.isdB())
+          u8g2.print(F("dB"));
+      else
+          u8g2.print(F("  "));
+  }
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
-  if (k197dev.isSTO())
-    u8g2.print(F("STO"));
-  else
-    u8g2.print(F("   "));
+  if (k197dev.getDisplayHold()) {
+      u8g2.print(F("HOLD"));
+  } else {  
+      if (k197dev.isSTO())
+          u8g2.print(F("STO"));
+      else
+          u8g2.print(F("   "));
 
-  y += u8g2.getMaxCharHeight();
-  u8g2.setCursor(x, y);
-  if (k197dev.isRCL())
-    u8g2.print(F("RCL"));
-  else
-    u8g2.print(F("   "));
-
+      y += u8g2.getMaxCharHeight();
+      u8g2.setCursor(x, y);
+      if (k197dev.isRCL())
+          u8g2.print(F("RCL"));
+      else
+          u8g2.print(F("   "));
+  }
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
@@ -350,12 +357,12 @@ void UImanager::updateNormalScreen() {
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (k197dev.isTKModeActive()) { // Display local temperature
+  if (k197dev.isTKModeActive() && !k197dev.getDisplayHold()) { // Display local temperature
     char buf[K197_RAW_MSG_SIZE+1];
     dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
-  } else {
+  } else if (!k197dev.getDisplayHold()){
     u8g2.print(F("          "));
   }
 
@@ -490,6 +497,7 @@ void UImanager::clearScreen() {
   // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
+  k197dev.setDisplayHold(false);
   dxUtil.checkFreeStack();
 }
 
@@ -611,7 +619,9 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     switch (eventSource) { // Full scren mode
     case K197key_STO:
       if (reassignStoRcl.getValue()) {
-        if (eventType == UIeventLongPress) {
+        if (eventType == UIeventPress) {
+          k197dev.setDisplayHold(!k197dev.getDisplayHold());    
+        } else if (eventType == UIeventLongPress) {
           K197screenMode screen_mode = uiman.getScreenMode();
           if (screen_mode == K197sc_normal)
             uiman.setScreenMode(K197sc_minmax);

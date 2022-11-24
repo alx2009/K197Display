@@ -73,15 +73,24 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
-  bool tkMode = false; ///< show T instead of V (K type thermocouple)
+  struct devflags_struct { 
+     union {
+       unsigned char value = 0x00;
+       struct {
+           bool tkMode:1;         ///< show T instead of V (K type thermocouple)
+           bool msg_is_num:1;     ///< true if message is numeric
+           bool msg_is_ovrange:1; ///< true if overange detected   
+           bool hold:1;           ///< true if the display is holding the value      
+       };
+     } __attribute__((packed));
+  };
+  devflags_struct flags;
 
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
                                    ///< term. char array)
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
                       ///< = DP bit for digit/char 0-6 of raw_msg)
 
-  bool msg_is_num = false;     ///< true if message is numeric
-  bool msg_is_ovrange = false; ///< true if overange detected
   float msg_value = 0.0;       ///< numeric value of message
 
   byte annunciators0 = 0x00; ///< Stores MINUS BAT RCL AC dB STO REL AUTO
@@ -125,6 +134,18 @@ public:
   byte getNewReading(byte *data);
 
   /*!
+      @brief  get display hold mode
+      @return true if display hold mode is active, false otherwise
+  */
+   bool getDisplayHold() {return flags.hold;};
+  
+  /*!
+      @brief  set display hold mode
+      @param newValue true to enter display hold mode, false to exit
+  */
+   void setDisplayHold(bool newValue) {flags.hold=newValue;};
+
+  /*!
       @brief  Return the raw message
 
       @return last raw message received from the K197/197A
@@ -160,20 +181,20 @@ public:
       @return true if overange is detected
   */
 
-  bool isOvrange() { return msg_is_ovrange; };
+  bool isOvrange() { return flags.msg_is_ovrange; };
 
   /*!
       @brief  check if overange is detected
       @return true if overange is NOT detected
   */
-  bool notOvrange() { return !msg_is_ovrange; };
+  bool notOvrange() { return !flags.msg_is_ovrange; };
 
   /*!
       @brief  check if message is a number
       @return true if message is a number (false means something else, like
      "Err", "0L", etc.)
   */
-  bool isNumeric() { return msg_is_num; };
+  bool isNumeric() { return flags.msg_is_num; };
 
   /*!
       @brief  returns the measurement value if available
@@ -361,19 +382,19 @@ public:
       is converted to a temperature value assuming a k thermocouple is connected
       @param mode true if enabled, false if disabled
   */
-  void setTKMode(bool mode) { tkMode = mode; }
+  void setTKMode(bool mode) { flags.tkMode = mode; }
 
   /*!
       @brief  get Thermocuple mode (see also setTKMode())
       @return returns true when K Thermocouple mode is enabled
   */
-  bool getTKMode() { return tkMode; }
+  bool getTKMode() { return flags.tkMode; }
 
   /*!
       @brief  check if the Thermocuple mode is active now
       @return returns true when K Thermocouple mode is enabled and active,
   */
-  bool isTKModeActive() { return isV() && ismV() && tkMode && isDC(); }
+  bool isTKModeActive() { return isV() && ismV() && flags.tkMode && isDC(); }
 
   /*!
       @brief  returns the temperature used for cold junction compensation

@@ -159,7 +159,7 @@ byte K197device::getNewReading(byte *data) {
   }
   int msg_n = n >= 7 ? 7 : n;
   byte num_dp = 0;
-  msg_is_num = true; // assumed true until proven otherwise
+  flags.msg_is_num = true; // assumed true until proven otherwise
   raw_dp = 0x00;
   for (int i = 1; i < msg_n; i++) { // skip i=0 is done on purpose
     if (hasDecimalPoint(data[i])) {
@@ -179,19 +179,19 @@ byte K197device::getNewReading(byte *data) {
     message[nchar] = seg2char[seg128]; // lookup the character corresponding to
                                        // the segment combination
     if (!isDigitOrSpace(message[nchar]))
-      msg_is_num = false;
+      flags.msg_is_num = false;
     nchar++;
   }
 
-  if (msg_is_num) {
+  if (flags.msg_is_num) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
-    msg_is_ovrange = false;
+    flags.msg_is_ovrange = false;
   } else {
     // if (strstr(message, "0L") != NULL) {/
     if (strcasecmp_P(message, PSTR("0L")) == 0) {
-      msg_is_ovrange = true;
+      flags.msg_is_ovrange = true;
     } else {
-      msg_is_ovrange = false;
+      flags.msg_is_ovrange = false;
     }
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
@@ -199,7 +199,7 @@ byte K197device::getNewReading(byte *data) {
       DebugOut.println(F(" CAL found!"));
     }
   }
-  if (isTKModeActive() && msg_is_num) {
+  if (isTKModeActive() && flags.msg_is_num) {
     tkConvertV2C();
   }
   updateCache();
@@ -243,7 +243,7 @@ void K197device::tkConvertV2C() {
     @brief  set the displayed message to Overrange
 */
 void K197device::setOverrange() {
-  msg_is_ovrange = true;
+  flags.msg_is_ovrange = true;
   raw_msg[0] = CH_SPACE;
   raw_msg[1] = CH_SPACE;
   raw_msg[2] = CH_SPACE;
@@ -264,7 +264,7 @@ void K197device::setOverrange() {
 const __FlashStringHelper *
 K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
   if (isV()) {                         // Voltage units
-    if (tkMode && ismV() && isDC())
+    if (flags.tkMode && ismV() && isDC())
       return F("°C");
     else if (ismV())
       return F("mV");
@@ -298,7 +298,7 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
 */
 void K197device::debugPrint() {
   DebugOut.print(raw_msg);
-  if (msg_is_num) {
+  if (flags.msg_is_num) {
     DebugOut.print(F(", ("));
     DebugOut.print(msg_value, 6);
     DebugOut.print(')');
@@ -311,7 +311,7 @@ void K197device::debugPrint() {
     }
     DebugOut.println();
   }
-  if (msg_is_ovrange)
+  if (flags.msg_is_ovrange)
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
 }
@@ -332,7 +332,7 @@ static inline bool change0(byte b1, byte b2) {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
-  if (cache.tkMode != tkMode || change0(cache.annunciators0, annunciators0) ||
+  if (cache.tkMode != flags.tkMode || change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) { // Something changed, reset stats
     resetStatistics();
@@ -346,7 +346,7 @@ void K197device::updateCache() {
       cache.max = msg_value;
   }
   cache.msg_value = msg_value;
-  cache.tkMode = tkMode;
+  cache.tkMode = flags.tkMode;
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
