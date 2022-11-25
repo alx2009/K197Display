@@ -61,6 +61,8 @@ enum K197screenMode {
 */
 /**************************************************************************/
 class UImanager {
+public:
+  unsigned long looptimerMax=0UL;
 private:
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)

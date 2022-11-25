@@ -645,7 +645,9 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       }
       break;
     case K197key_RCL:
-      if (reassignStoRcl.getValue()) {
+      if (reassignStoRcl.getValue() && eventType == UIeventPress) {
+        DebugOut.print(F("Max loop (us): ")); DebugOut.println(looptimerMax);
+        looptimerMax=0UL;
         return true;
       }
       break;

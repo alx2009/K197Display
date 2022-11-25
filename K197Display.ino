@@ -77,12 +77,15 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 ////////////////////////////////////////////////////////////////////////////////////
 // Management of the serial user interface
 ////////////////////////////////////////////////////////////////////////////////////
+
 /*!
       @brief print the prompt to Serial
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   dxUtil.reportStack();
+  Serial.print(F(" Max loop time (us): ")); Serial.println(uiman.looptimerMax);
+  uiman.looptimerMax=0;
   Serial.println(F("> "));
 }
 
@@ -364,10 +367,13 @@ byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
 bool collisionStatus =
     false; ///< keep track if a collision was detected by the SPI peripheral
 
+static unsigned long looptimer=0UL;
+
 /*!
       @brief Arduino loop function
 */
 void loop() {
+  looptimer=micros();
   PROFILE_start(DebugOut.PROFILE_LOOP);
   if (Serial.available()) {
     handleSerial();
@@ -433,4 +439,6 @@ void loop() {
   */
   PROFILE_stop(DebugOut.PROFILE_LOOP);
   PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
+  looptimer=micros()-looptimer;
+  if (uiman.looptimerMax<looptimer) uiman.looptimerMax=looptimer;
 }
