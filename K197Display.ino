@@ -40,7 +40,6 @@ recurring issues
 //  Hold
 //  Autohold
 //  Save/retrieve settings to EEPROM
-//  Move seg2char to flash
 //  Graph mode
 //  Move statistics options to own submenu
 //  Improved statistics

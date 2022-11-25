@@ -51,7 +51,6 @@
 #define K197_A_bm 0x04     ///< bitmap for the "A" annunciator
 #define K197_RMT_bm 0x20   ///< bitmap for the RMT annunciator
 
-#define K197_MSG_SIZE 9     ///< message size = 6 digits + [sign] + [dot] + null
 #define K197_RAW_MSG_SIZE 8 ///< raw message size = 6 digits + [sign] + null
 
 /**************************************************************************/
@@ -74,18 +73,30 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
-  bool tkMode = false; ///< show T instead of V (K type thermocouple)
+  struct devflags_struct {
+    /*!
+       @brief  A union is used to simplify initialization of the flags
+       @return Not really a return type, this attribute will save some RAM
+    */
+    union {
+      unsigned char value = 0x00; ///< allows acccess to all the flags in the
+                                  ///< union as one unsigned char
+      struct {
+        bool tkMode : 1;         ///< show T instead of V (K type thermocouple)
+        bool msg_is_num : 1;     ///< true if message is numeric
+        bool msg_is_ovrange : 1; ///< true if overange detected
+        bool hold : 1;           ///< true if the display is holding the value
+      };
+    } __attribute__((packed)); ///<
+  }; ///< Structure designed to pack a number of flags into one byte
+  devflags_struct flags; ///< holds a number of key flags
 
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
                                    ///< term. char array)
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
                       ///< = DP bit for digit/char 0-6 of raw_msg)
-  char message[K197_MSG_SIZE]; ///< stores decoded sign + 6 digits/chars + DP at
-                               ///< the right position
 
-  bool msg_is_num = false;     ///< true if message is numeric
-  bool msg_is_ovrange = false; ///< true if overange detected
-  float msg_value = 0.0;       ///< numeric value of message
+  float msg_value = 0.0; ///< numeric value of message
 
   byte annunciators0 = 0x00; ///< Stores MINUS BAT RCL AC dB STO REL AUTO
   byte annunciators7 = 0x00; ///< Stores mA, k, V, u (micro), M, m (mV)
@@ -121,26 +132,24 @@ public:
       @brief  constructor for the class. Do not forget that setup() must be
      called before using the other member functions.
   */
-  K197device() {
-    message[0] = 0;
-    raw_msg[0] = 0;
-  };
+  K197device() { raw_msg[0] = 0; };
   bool getNewReading();
   byte getNewReading(byte *data);
 
   /*!
-      @brief  Return the decoded message
-      @return last message received from the K197/197A, including sign and
-     decimal point.
+      @brief  get display hold mode
+      @return true if display hold mode is active, false otherwise
   */
-  const char *getMessage() { return message; };
-  /*!
-      @brief  Return the raw message (same as message except there is no decimal
-     point)
+  bool getDisplayHold() { return flags.hold; };
 
-      This is useful for example to print out the measurement value to Serial.
-     Not recommended for the actual display (see getRawMessage() and
-     isDecPointOn() instead
+  /*!
+      @brief  set display hold mode
+      @param newValue true to enter display hold mode, false to exit
+  */
+  void setDisplayHold(bool newValue) { flags.hold = newValue; };
+
+  /*!
+      @brief  Return the raw message
 
       @return last raw message received from the K197/197A
   */
@@ -151,9 +160,9 @@ public:
      message
 
       This is useful because in a 7 segment display the digit position is fixed
-     (obviously). If we used getMessage for the display, the digits would move
-     as the range changes, since the decimal point is considered a character on
-     its own by the display driver library. And this is annoying, especially
+     (obviously). If we printed the numerical on the display, the digits would
+     move as the range change, since the decimal point is considered a character
+     on its own by the display driver library. And this is annoying, especially
      with auto range.
 
       The display code can use getRawMessage() to display the digits/chars
@@ -175,20 +184,20 @@ public:
       @return true if overange is detected
   */
 
-  bool isOvrange() { return msg_is_ovrange; };
+  bool isOvrange() { return flags.msg_is_ovrange; };
 
   /*!
       @brief  check if overange is detected
       @return true if overange is NOT detected
   */
-  bool notOvrange() { return !msg_is_ovrange; };
+  bool notOvrange() { return !flags.msg_is_ovrange; };
 
   /*!
       @brief  check if message is a number
       @return true if message is a number (false means something else, like
      "Err", "0L", etc.)
   */
-  bool isNumeric() { return msg_is_num; };
+  bool isNumeric() { return flags.msg_is_num; };
 
   /*!
       @brief  returns the measurement value if available
@@ -376,19 +385,19 @@ public:
       is converted to a temperature value assuming a k thermocouple is connected
       @param mode true if enabled, false if disabled
   */
-  void setTKMode(bool mode) { tkMode = mode; }
+  void setTKMode(bool mode) { flags.tkMode = mode; }
 
   /*!
       @brief  get Thermocuple mode (see also setTKMode())
       @return returns true when K Thermocouple mode is enabled
   */
-  bool getTKMode() { return tkMode; }
+  bool getTKMode() { return flags.tkMode; }
 
   /*!
       @brief  check if the Thermocuple mode is active now
       @return returns true when K Thermocouple mode is enabled and active,
   */
-  bool isTKModeActive() { return isV() && ismV() && tkMode && isDC(); }
+  bool isTKModeActive() { return isV() && ismV() && flags.tkMode && isDC(); }
 
   /*!
       @brief  returns the temperature used for cold junction compensation

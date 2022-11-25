@@ -32,10 +32,12 @@
 
 K197device k197dev;
 
-// Lookup table to convert from segments to char
-// Note: before using the table, shift the 5 most significant bit one position
-// to the right (removes DP bit)
-static char seg2char[128] = {
+/*!
+    @brief Lookup table to convert from segments to char
+    @details before using the table, shift the 5 most significant bit one
+   position to the right (removes DP bit)
+*/
+const char seg2char[128] PROGMEM = {
     ' ',  '\'', 'i', 'I', '^', '*', '*', 'T',
     '-',  '*',  'r', 'f', '*', '*', '*', 'F', // row 0 (0x00-0x0f)
     '_',  '*',  'e', 'L', '*', '*', '*', 'C',
@@ -55,13 +57,12 @@ static char seg2char[128] = {
 };
 
 /*!
-      @brief utility function, return the value of a message up to len
-   characters
+      @brief utility function, return the value of a string
+      @details return the value of a string skipping initial spaces
 
       this function can only be used within K197device.cpp
 
-      @param s a char array with the message (does not need to be null
-   terminated)
+      @param s a null terminated char array
       @param len the number of characters in s to consider
 
       @return the value using atof(), or 0 if s includes only space characters
@@ -74,8 +75,7 @@ float getMsgValue(char *s, int len) {
     }
     s++;
   }
-  return 0.0; // we consider a string of spaces as equivalent to 0.0. TODO: may
-              // want to return NaN and have the caller handle that
+  return 0.0; // we consider a string of spaces as equivalent to 0.0
 }
 
 /*!
@@ -83,23 +83,24 @@ float getMsgValue(char *s, int len) {
 
       @details process a new reading that has just been received via SPI.
       A new reading is not processed automatically to make sure no value can be
-   overriden while in use (especially when interrupts are used). Instead,
-   SPIdevice::hasNewData() should be called periodically, when it returns true
-   getNewReading() can be called to process the new information. The information
-   will be available until the next cycle.
+      overriden while in use (especially when interrupts are used). Instead,
+      SPIdevice::hasNewData() should be called periodically, when it returns
+   true getNewReading() can be called to process the new information. The
+   information will be available until the next cycle.
 
       Note that internally this function calls SPIdevice::getNewData(), so
-   afterwards SPIdevice::hasNewData() will return false until a new batch of
-   data is received via SPI.
+      afterwards SPIdevice::hasNewData() will return false until a new batch of
+      data is received via SPI.
 
       @return true if the data was received correctly, false otherwise
-
 */
 bool K197device::getNewReading() {
   byte spiData[PACKET];
   byte n = getNewReading(spiData);
   return n == 9 ? true : false;
 }
+
+#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add '.'
 
 /*!
       @brief process a new reading
@@ -143,23 +144,21 @@ byte K197device::getNewReading(byte *data) {
   else
     annunciators8 = 0x00;
 
+  char message[K197_MSG_SIZE];
   for (int i = 0; i < K197_MSG_SIZE; i++)
     message[i] = 0;
-  for (int i = 0; i < K197_RAW_MSG_SIZE - 1; i++)
+  for (int i = 0; i < (K197_RAW_MSG_SIZE - 1); i++)
     raw_msg[0] = CH_SPACE;
   raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
   int nchar = 0;
-  if (n > 0) {
-    if ((data[0] & K197_MINUS_bm) >
-        0) { // TODO: define inline functions to check for annunciators
-      raw_msg[0] = '-';
-      message[nchar] = '-';
-      nchar++;
-    }
+  if (n > 0 && isMINUS()) {
+    raw_msg[0] = '-';
+    message[nchar] = '-';
+    nchar++;
   }
   int msg_n = n >= 7 ? 7 : n;
   byte num_dp = 0;
-  msg_is_num = true; // assumed true until proven otherwise
+  flags.msg_is_num = true; // assumed true until proven otherwise
   raw_dp = 0x00;
   for (int i = 1; i < msg_n; i++) { // skip i=0 is done on purpose
     if (hasDecimalPoint(data[i])) {
@@ -175,23 +174,24 @@ byte K197device::getNewReading(byte *data) {
     int seg128 = ((data[i] & 0b11111000) >> 1) |
                  (data[i] & 0b00000011); // remove the DP bit and shift right to
                                          // convert to a 7 bits number
-    raw_msg[i] = seg2char[seg128];
-    message[nchar] = seg2char[seg128]; // lookup the character corresponding to
-                                       // the segment combination
-    if (!isDigitOrSpace(message[nchar]))
-      msg_is_num = false;
+    char c =
+        pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding
+                                          // to the segment combination
+    raw_msg[i] = c;
+    message[nchar] = c;
+    if (!isDigitOrSpace(raw_msg[i]))
+      flags.msg_is_num = false;
     nchar++;
   }
-
-  if (msg_is_num) {
+  if (flags.msg_is_num) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
-    msg_is_ovrange = false;
+    flags.msg_is_ovrange = false;
   } else {
     // if (strstr(message, "0L") != NULL) {/
     if (strcasecmp_P(message, PSTR("0L")) == 0) {
-      msg_is_ovrange = true;
+      flags.msg_is_ovrange = true;
     } else {
-      msg_is_ovrange = false;
+      flags.msg_is_ovrange = false;
     }
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
@@ -199,7 +199,7 @@ byte K197device::getNewReading(byte *data) {
       DebugOut.println(F(" CAL found!"));
     }
   }
-  if (isTKModeActive() && msg_is_num) {
+  if (isTKModeActive() && flags.msg_is_num) {
     tkConvertV2C();
   }
   updateCache();
@@ -224,6 +224,7 @@ void K197device::tkConvertV2C() {
     return;
   }
   msg_value = t;
+  char message[K197_MSG_SIZE];
   dtostrf(t, K197_MSG_SIZE - 1, 2, message);
   int j = 0;
   for (int i = 0; i < K197_MSG_SIZE; i++) {
@@ -242,16 +243,15 @@ void K197device::tkConvertV2C() {
     @brief  set the displayed message to Overrange
 */
 void K197device::setOverrange() {
-  msg_is_ovrange = true;
-  message[0] = raw_msg[0] = CH_SPACE;
-  message[1] = raw_msg[1] = CH_SPACE;
-  message[2] = raw_msg[2] = CH_SPACE;
-  message[3] = raw_msg[3] = '0';
-  message[4] = raw_msg[4] = 'L';
-  message[5] = raw_msg[5] = CH_SPACE;
-  message[6] = raw_msg[6] = CH_SPACE;
-  message[7] = CH_SPACE;
-  message[8] = raw_msg[7] = 0;
+  flags.msg_is_ovrange = true;
+  raw_msg[0] = CH_SPACE;
+  raw_msg[1] = CH_SPACE;
+  raw_msg[2] = CH_SPACE;
+  raw_msg[3] = '0';
+  raw_msg[4] = 'L';
+  raw_msg[5] = CH_SPACE;
+  raw_msg[6] = CH_SPACE;
+  raw_msg[7] = 0;
   dxUtil.checkFreeStack();
 }
 
@@ -264,7 +264,7 @@ void K197device::setOverrange() {
 const __FlashStringHelper *
 K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
   if (isV()) {                         // Voltage units
-    if (tkMode && ismV() && isDC())
+    if (flags.tkMode && ismV() && isDC())
       return F("°C");
     else if (ismV())
       return F("mV");
@@ -297,21 +297,21 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
    troubleshooting purposes
 */
 void K197device::debugPrint() {
-  DebugOut.print(message);
-  if (msg_is_num) {
+  DebugOut.print(raw_msg);
+  if (flags.msg_is_num) {
     DebugOut.print(F(", ("));
     DebugOut.print(msg_value, 6);
     DebugOut.print(')');
   } else {
-    for (int i = 0; i < K197_MSG_SIZE; i++) {
+    for (int i = 0; i < K197_RAW_MSG_SIZE; i++) {
       DebugOut.print(F(" 0x"));
-      if (message[i] < 0x10)
+      if (raw_msg[i] < 0x10)
         DebugOut.print('0');
-      DebugOut.print(message[i], HEX);
+      DebugOut.print(raw_msg[i], HEX);
     }
     DebugOut.println();
   }
-  if (msg_is_ovrange)
+  if (flags.msg_is_ovrange)
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
 }
@@ -332,7 +332,8 @@ static inline bool change0(byte b1, byte b2) {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
-  if (cache.tkMode != tkMode || change0(cache.annunciators0, annunciators0) ||
+  if (cache.tkMode != flags.tkMode ||
+      change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) { // Something changed, reset stats
     resetStatistics();
@@ -346,7 +347,7 @@ void K197device::updateCache() {
       cache.max = msg_value;
   }
   cache.msg_value = msg_value;
-  cache.tkMode = tkMode;
+  cache.tkMode = flags.tkMode;
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
