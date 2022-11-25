@@ -36,9 +36,10 @@
 /**************************************************************************/
 class dxUtilClass {
 protected:
-  static const short MVIO_unknown = -1; ///< Indicates the status of MVIO is not known
+  static const short MVIO_unknown =
+      -1; ///< Indicates the status of MVIO is not known
   static const short MVIO_belowRange = 0; ///< Indicates MVIO below range
-  static const short MVIO_ok = 1;         ///< Indicates MVIO within working range
+  static const short MVIO_ok = 1; ///< Indicates MVIO within working range
 
   short MVIO_status = MVIO_unknown; ///< Keep track of MVIO status
 

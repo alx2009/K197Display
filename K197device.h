@@ -73,16 +73,16 @@
 /**************************************************************************/
 class K197device : public SPIdevice {
 private:
-  struct devflags_struct { 
-     union {
-       unsigned char value = 0x00;
-       struct {
-           bool tkMode:1;         ///< show T instead of V (K type thermocouple)
-           bool msg_is_num:1;     ///< true if message is numeric
-           bool msg_is_ovrange:1; ///< true if overange detected   
-           bool hold:1;           ///< true if the display is holding the value      
-       };
-     } __attribute__((packed));
+  struct devflags_struct {
+    union {
+      unsigned char value = 0x00;
+      struct {
+        bool tkMode : 1;         ///< show T instead of V (K type thermocouple)
+        bool msg_is_num : 1;     ///< true if message is numeric
+        bool msg_is_ovrange : 1; ///< true if overange detected
+        bool hold : 1;           ///< true if the display is holding the value
+      };
+    } __attribute__((packed));
   };
   devflags_struct flags;
 
@@ -91,7 +91,7 @@ private:
   byte raw_dp = 0x00; ///< Stores the Decimal Point (bit 0 = not used, bit 1...7
                       ///< = DP bit for digit/char 0-6 of raw_msg)
 
-  float msg_value = 0.0;       ///< numeric value of message
+  float msg_value = 0.0; ///< numeric value of message
 
   byte annunciators0 = 0x00; ///< Stores MINUS BAT RCL AC dB STO REL AUTO
   byte annunciators7 = 0x00; ///< Stores mA, k, V, u (micro), M, m (mV)
@@ -127,9 +127,7 @@ public:
       @brief  constructor for the class. Do not forget that setup() must be
      called before using the other member functions.
   */
-  K197device() {
-    raw_msg[0] = 0;
-  };
+  K197device() { raw_msg[0] = 0; };
   bool getNewReading();
   byte getNewReading(byte *data);
 
@@ -137,13 +135,13 @@ public:
       @brief  get display hold mode
       @return true if display hold mode is active, false otherwise
   */
-   bool getDisplayHold() {return flags.hold;};
-  
+  bool getDisplayHold() { return flags.hold; };
+
   /*!
       @brief  set display hold mode
       @param newValue true to enter display hold mode, false to exit
   */
-   void setDisplayHold(bool newValue) {flags.hold=newValue;};
+  void setDisplayHold(bool newValue) { flags.hold = newValue; };
 
   /*!
       @brief  Return the raw message
@@ -157,9 +155,9 @@ public:
      message
 
       This is useful because in a 7 segment display the digit position is fixed
-     (obviously). If we printed the numerical on the display, the digits would move
-     as the range change, since the decimal point is considered a character on
-     its own by the display driver library. And this is annoying, especially
+     (obviously). If we printed the numerical on the display, the digits would
+     move as the range change, since the decimal point is considered a character
+     on its own by the display driver library. And this is annoying, especially
      with auto range.
 
       The display code can use getRawMessage() to display the digits/chars

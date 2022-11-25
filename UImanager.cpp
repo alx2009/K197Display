@@ -207,10 +207,10 @@ void UImanager::updateSplitScreen() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   if (k197dev.isNumeric()) {
-      char buf[K197_RAW_MSG_SIZE+1];
-      u8g2.print(formatNumber(buf, k197dev.getValue()));
-  }
-  else u8g2.print(k197dev.getRawMessage());
+    char buf[K197_RAW_MSG_SIZE + 1];
+    u8g2.print(formatNumber(buf, k197dev.getValue()));
+  } else
+    u8g2.print(k197dev.getRawMessage());
   u8g2.print(CH_SPACE);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getUnit(true));
@@ -261,29 +261,29 @@ void UImanager::updateNormalScreen() {
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
   if (!k197dev.getDisplayHold()) {
-      u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
-      for (byte i = 1; i <= 7; i++) {
-          if (k197dev.isDecPointOn(i)) {
-          u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
-                       yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
-        }
+    u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
+    for (byte i = 1; i <= 7; i++) {
+      if (k197dev.isDecPointOn(i)) {
+        u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
+                     yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
       }
-      // set the unit
-      u8g2.setFont(u8g2_font_9x15_m_symbols);
-      const unsigned int xunit = 229;
-      const unsigned int yunit = 20;
-      u8g2.setCursor(xunit, yunit);
-      u8g2.print(k197dev.getUnit());
+    }
+    // set the unit
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    const unsigned int xunit = 229;
+    const unsigned int yunit = 20;
+    u8g2.setCursor(xunit, yunit);
+    u8g2.print(k197dev.getUnit());
 
-      // set the AC/DC indicator
-      u8g2.setFont(u8g2_font_9x15_m_symbols);
-      const unsigned int xac = xraw + 3;
-      const unsigned int yac = 40;
-      u8g2.setCursor(xac, yac);
-      if (k197dev.isAC())
-        u8g2.print(F("AC"));
-      else
-        u8g2.print(F("  "));
+    // set the AC/DC indicator
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    const unsigned int xac = xraw + 3;
+    const unsigned int yac = 40;
+    u8g2.setCursor(xac, yac);
+    if (k197dev.isAC())
+      u8g2.print(F("AC"));
+    else
+      u8g2.print(F("  "));
   }
 
   // set the other announciators
@@ -300,9 +300,9 @@ void UImanager::updateNormalScreen() {
   u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setCursor(x, y);
   if (k197dev.isBAT())
-      u8g2.print(F("BAT"));
+    u8g2.print(F("BAT"));
   else
-      u8g2.print(F("   "));
+    u8g2.print(F("   "));
 
   u8g2.setFont(u8g2_font_8x13_mr);
   y += u8g2.getMaxCharHeight();
@@ -310,35 +310,35 @@ void UImanager::updateNormalScreen() {
   u8g2.setCursor(x, y);
 
   if (!k197dev.getDisplayHold()) {
-      if (k197dev.isREL())
-          u8g2.print(F("REL"));
-      else
+    if (k197dev.isREL())
+      u8g2.print(F("REL"));
+    else
       u8g2.print(F("   "));
-      x = u8g2.tx;
-      x += (u8g2.getMaxCharWidth() / 2);
-      u8g2.setCursor(x, y);
-      if (k197dev.isdB())
-          u8g2.print(F("dB"));
-      else
-          u8g2.print(F("  "));
+    x = u8g2.tx;
+    x += (u8g2.getMaxCharWidth() / 2);
+    u8g2.setCursor(x, y);
+    if (k197dev.isdB())
+      u8g2.print(F("dB"));
+    else
+      u8g2.print(F("  "));
   }
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
   if (k197dev.getDisplayHold()) {
-      u8g2.print(F("HOLD"));
-  } else {  
-      if (k197dev.isSTO())
-          u8g2.print(F("STO "));
-      else
-          u8g2.print(F("    "));
+    u8g2.print(F("HOLD"));
+  } else {
+    if (k197dev.isSTO())
+      u8g2.print(F("STO "));
+    else
+      u8g2.print(F("    "));
 
-      y += u8g2.getMaxCharHeight();
-      u8g2.setCursor(x, y);
-      if (k197dev.isRCL())
-          u8g2.print(F("RCL "));
-      else
-          u8g2.print(F("    "));
+    y += u8g2.getMaxCharHeight();
+    u8g2.setCursor(x, y);
+    if (k197dev.isRCL())
+      u8g2.print(F("RCL "));
+    else
+      u8g2.print(F("    "));
   }
   x = 229;
   y = 0;
@@ -359,12 +359,13 @@ void UImanager::updateNormalScreen() {
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (k197dev.isTKModeActive() && !k197dev.getDisplayHold()) { // Display local temperature
-    char buf[K197_RAW_MSG_SIZE+1];
+  if (k197dev.isTKModeActive() &&
+      !k197dev.getDisplayHold()) { // Display local temperature
+    char buf[K197_RAW_MSG_SIZE + 1];
     dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
-  } else if (!k197dev.getDisplayHold()){
+  } else if (!k197dev.getDisplayHold()) {
     u8g2.print(F("          "));
   }
 
@@ -386,91 +387,93 @@ void UImanager::updateMinMaxScreen() {
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
- if (!k197dev.getDisplayHold()) {
-      u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
-      for (byte i = 1; i <= 7; i++) {
-        if (k197dev.isDecPointOn(i)) {
-          u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
-                   yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
-        }
+  if (!k197dev.getDisplayHold()) {
+    u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
+    for (byte i = 1; i <= 7; i++) {
+      if (k197dev.isDecPointOn(i)) {
+        u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
+                     yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
       }
+    }
 
-      // set the unit
-      u8g2.setFont(u8g2_font_9x15_m_symbols);
-      const unsigned int xunit = 229;
-      const unsigned int yunit = 20;
-      u8g2.setCursor(xunit, yunit);
-      u8g2.print(k197dev.getUnit(true));
+    // set the unit
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    const unsigned int xunit = 229;
+    const unsigned int yunit = 20;
+    u8g2.setCursor(xunit, yunit);
+    u8g2.print(k197dev.getUnit(true));
 
-      // set the AC/DC indicator
-      u8g2.setFont(u8g2_font_9x15_m_symbols);
-      int char_height_9x15 = u8g2.getMaxCharHeight(); // needed later on
-      const unsigned int xac = 229;
-      const unsigned int yac = 35;
-      u8g2.setCursor(xac, yac);
-      if (k197dev.isAC())
-         u8g2.print(F("AC"));
-      else
-         u8g2.print(F("  "));
+    // set the AC/DC indicator
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    int char_height_9x15 = u8g2.getMaxCharHeight(); // needed later on
+    const unsigned int xac = 229;
+    const unsigned int yac = 35;
+    u8g2.setCursor(xac, yac);
+    if (k197dev.isAC())
+      u8g2.print(F("AC"));
+    else
+      u8g2.print(F("  "));
 
-      // set the other announciators
-      u8g2.setFont(u8g2_font_6x12_mr);
-      unsigned int x = 0;
-      unsigned int y = 5;
-      u8g2.setCursor(x, y);
-      if (k197dev.isREL())
-          u8g2.print(F("REL"));
-      else
-          u8g2.print(F("   "));
+    // set the other announciators
+    u8g2.setFont(u8g2_font_6x12_mr);
+    unsigned int x = 0;
+    unsigned int y = 5;
+    u8g2.setCursor(x, y);
+    if (k197dev.isREL())
+      u8g2.print(F("REL"));
+    else
+      u8g2.print(F("   "));
 
-      // Write Min/average/Max labels
-      u8g2.setFont(u8g2_font_5x7_mr);
-      x = u8g2.tx + 10;
-      y = 5;
-      u8g2.setCursor(x, y);
-      u8g2.print(F("Max "));
-      y += char_height_9x15;
-      u8g2.setCursor(x, y);
-      u8g2.print(F("Avg "));
-      y += char_height_9x15;
-      u8g2.setCursor(x, y);
-      u8g2.print(F("Min "));
+    // Write Min/average/Max labels
+    u8g2.setFont(u8g2_font_5x7_mr);
+    x = u8g2.tx + 10;
+    y = 5;
+    u8g2.setCursor(x, y);
+    u8g2.print(F("Max "));
+    y += char_height_9x15;
+    u8g2.setCursor(x, y);
+    u8g2.print(F("Avg "));
+    y += char_height_9x15;
+    u8g2.setCursor(x, y);
+    u8g2.print(F("Min "));
 
-      u8g2.setFont(u8g2_font_9x15_m_symbols);
-      char buf[K197_RAW_MSG_SIZE+1];
-      x = u8g2.tx;
-      y = 3;
-      u8g2.setCursor(x, y);
-      u8g2.print(formatNumber(buf, k197dev.getMax()));
-      y += char_height_9x15;
-      u8g2.setCursor(x, y);
-      u8g2.print(formatNumber(buf, k197dev.getAverage()));
-      y += char_height_9x15;
-      u8g2.setCursor(x, y);
-      u8g2.print(formatNumber(buf, k197dev.getMin()));
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    char buf[K197_RAW_MSG_SIZE + 1];
+    x = u8g2.tx;
+    y = 3;
+    u8g2.setCursor(x, y);
+    u8g2.print(formatNumber(buf, k197dev.getMax()));
+    y += char_height_9x15;
+    u8g2.setCursor(x, y);
+    u8g2.print(formatNumber(buf, k197dev.getAverage()));
+    y += char_height_9x15;
+    u8g2.setCursor(x, y);
+    u8g2.print(formatNumber(buf, k197dev.getMin()));
 
-      x = 170;
-      y = 2;
-      u8g2.setCursor(x, y);
-      u8g2.setFont(u8g2_font_5x7_mr);
-      if (k197dev.isTKModeActive()) { // Display local temperature
-          char buf[K197_RAW_MSG_SIZE+1];
-          dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
+    x = 170;
+    y = 2;
+    u8g2.setCursor(x, y);
+    u8g2.setFont(u8g2_font_5x7_mr);
+    if (k197dev.isTKModeActive()) { // Display local temperature
+      char buf[K197_RAW_MSG_SIZE + 1];
+      dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
       u8g2.print(buf);
       u8g2.print(k197dev.getUnit());
-      } else {
-          u8g2.print(F("          "));
-      }
- } 
- u8g2.setFont(u8g2_font_8x13_mr);
- unsigned int x = 0;
- unsigned int y = 5+ u8g2.getMaxCharHeight()*2;
- u8g2.setCursor(x, y);
- u8g2.setFont(u8g2_font_5x7_mr);
- if(k197dev.getDisplayHold()) u8g2.print(F("HOLD"));
- else u8g2.print(F("    "));
- u8g2.sendBuffer();
- dxUtil.checkFreeStack();
+    } else {
+      u8g2.print(F("          "));
+    }
+  }
+  u8g2.setFont(u8g2_font_8x13_mr);
+  unsigned int x = 0;
+  unsigned int y = 5 + u8g2.getMaxCharHeight() * 2;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_5x7_mr);
+  if (k197dev.getDisplayHold())
+    u8g2.print(F("HOLD"));
+  else
+    u8g2.print(F("    "));
+  u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
 }
 
 /*!
@@ -630,7 +633,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     case K197key_STO:
       if (reassignStoRcl.getValue()) {
         if (eventType == UIeventPress) {
-          k197dev.setDisplayHold(!k197dev.getDisplayHold());    
+          k197dev.setDisplayHold(!k197dev.getDisplayHold());
         } else if (eventType == UIeventLongPress) {
           K197screenMode screen_mode = uiman.getScreenMode();
           if (screen_mode == K197sc_normal)
@@ -748,7 +751,7 @@ inline void logU2U() {
       @return a nul terminated char array with the formatted number (same as
    buf)
 */
-const char *UImanager::formatNumber(char buf[K197_RAW_MSG_SIZE+1], float f) {
+const char *UImanager::formatNumber(char buf[K197_RAW_MSG_SIZE + 1], float f) {
   if (f > 999999.0)
     f = 999999.0;
   else if (f < -999999.0)
@@ -789,9 +792,10 @@ void UImanager::logData() {
     Serial.print(F(" ms; "));
   }
   if (k197dev.isNumeric()) {
-      char buf[K197_RAW_MSG_SIZE+1];
-      Serial.print(formatNumber(buf, k197dev.getValue()));
-  } else Serial.print(k197dev.getRawMessage());
+    char buf[K197_RAW_MSG_SIZE + 1];
+    Serial.print(formatNumber(buf, k197dev.getValue()));
+  } else
+    Serial.print(k197dev.getRawMessage());
   logU2U();
   const __FlashStringHelper *unit = k197dev.getUnit(true);
   Serial.print(unit);
@@ -804,7 +808,7 @@ void UImanager::logData() {
     Serial.print(unit);
   }
   if (logStat.getValue()) {
-    char buf[K197_RAW_MSG_SIZE+1];
+    char buf[K197_RAW_MSG_SIZE + 1];
     Serial.print(F("; "));
     Serial.print(formatNumber(buf, k197dev.getMin()));
     logU2U();

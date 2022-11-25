@@ -60,7 +60,7 @@ const char seg2char[128] PROGMEM = {
 
       this function can only be used within K197device.cpp
 
-      @param s a null terminated char array 
+      @param s a null terminated char array
       @param len the number of characters in s to consider
 
       @return the value using atof(), or 0 if s includes only space characters
@@ -122,7 +122,7 @@ bool K197device::getNewReading() {
    room for at least 9 elements!
       @return the number of bytes copied into data.
 */
-#define K197_MSG_SIZE (K197_RAW_MSG_SIZE+1) ///< add '.'
+#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add '.'
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
@@ -149,10 +149,10 @@ byte K197device::getNewReading(byte *data) {
     raw_msg[0] = CH_SPACE;
   raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
   int nchar = 0;
-  if (n > 0 && isMINUS() ) { 
-      raw_msg[0] = '-';
-      message[nchar] = '-';
-      nchar++;
+  if (n > 0 && isMINUS()) {
+    raw_msg[0] = '-';
+    message[nchar] = '-';
+    nchar++;
   }
   int msg_n = n >= 7 ? 7 : n;
   byte num_dp = 0;
@@ -172,9 +172,11 @@ byte K197device::getNewReading(byte *data) {
     int seg128 = ((data[i] & 0b11111000) >> 1) |
                  (data[i] & 0b00000011); // remove the DP bit and shift right to
                                          // convert to a 7 bits number
-    char c = pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding to the segment combination                                  
+    char c =
+        pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding
+                                          // to the segment combination
     raw_msg[i] = c;
-    message[nchar] = c; 
+    message[nchar] = c;
     if (!isDigitOrSpace(raw_msg[i]))
       flags.msg_is_num = false;
     nchar++;
@@ -328,7 +330,8 @@ static inline bool change0(byte b1, byte b2) {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
-  if (cache.tkMode != flags.tkMode || change0(cache.annunciators0, annunciators0) ||
+  if (cache.tkMode != flags.tkMode ||
+      change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) { // Something changed, reset stats
     resetStatistics();
