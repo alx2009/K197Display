@@ -140,8 +140,8 @@ void UImanager::setup() {
     while (true)
       ;
   }
-  // u8g2.setBusClock(12000000); // without this call the default clock is about
-  // 5 MHz, which is more than good enough.
+  u8g2.setBusClock(12000000); // without this call the default clock is about
+                              // 5 MHz, which is more than good enough.
   u8g2.begin();
   setContrast(DEFAULT_CONTRAST);
   u8g2.enableUTF8Print();

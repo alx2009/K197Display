@@ -54,6 +54,7 @@ recurring issues
 // updateDisplay() ==> 120 ms (normal, minmax), 150ms (menu)
 // logData() ==> 7us (no logging), 362 us (default log active), 4ms (all options)
 // BT checks ==> 75us (normal, connected), 10 us (options menu)
+// Increasing the OLED SPI clock shaves 13 ms to the loop time (195 ms to 182 ms)
 //
 #include "K197device.h"
 
