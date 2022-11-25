@@ -149,13 +149,10 @@ byte K197device::getNewReading(byte *data) {
     raw_msg[0] = CH_SPACE;
   raw_msg[K197_RAW_MSG_SIZE - 1] = 0;
   int nchar = 0;
-  if (n > 0) {
-    if ((data[0] & K197_MINUS_bm) >
-        0) { // TODO: define inline functions to check for annunciators
+  if (n > 0 && isMINUS() ) { 
       raw_msg[0] = '-';
       message[nchar] = '-';
       nchar++;
-    }
   }
   int msg_n = n >= 7 ? 7 : n;
   byte num_dp = 0;
@@ -175,14 +172,13 @@ byte K197device::getNewReading(byte *data) {
     int seg128 = ((data[i] & 0b11111000) >> 1) |
                  (data[i] & 0b00000011); // remove the DP bit and shift right to
                                          // convert to a 7 bits number
-    raw_msg[i] = seg2char[seg128];
-    message[nchar] = seg2char[seg128]; // lookup the character corresponding to
-                                       // the segment combination
-    if (!isDigitOrSpace(message[nchar]))
+    char c = pgm_read_byte(&seg2char[seg128]); // lookup the character corresponding to the segment combination                                  
+    raw_msg[i] = c;
+    message[nchar] = c; 
+    if (!isDigitOrSpace(raw_msg[i]))
       flags.msg_is_num = false;
     nchar++;
   }
-
   if (flags.msg_is_num) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
     flags.msg_is_ovrange = false;
