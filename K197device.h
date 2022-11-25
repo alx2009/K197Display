@@ -74,17 +74,22 @@
 class K197device : public SPIdevice {
 private:
   struct devflags_struct {
+    /*!
+       @brief  A union is used to simplify initialization of the flags
+       @return Not really a return type, this attribute will save some RAM
+    */
     union {
-      unsigned char value = 0x00;
+      unsigned char value = 0x00; ///< allows acccess to all the flags in the
+                                  ///< union as one unsigned char
       struct {
         bool tkMode : 1;         ///< show T instead of V (K type thermocouple)
         bool msg_is_num : 1;     ///< true if message is numeric
         bool msg_is_ovrange : 1; ///< true if overange detected
         bool hold : 1;           ///< true if the display is holding the value
       };
-    } __attribute__((packed));
-  };
-  devflags_struct flags;
+    } __attribute__((packed)); ///<
+  }; ///< Structure designed to pack a number of flags into one byte
+  devflags_struct flags; ///< holds a number of key flags
 
   char raw_msg[K197_RAW_MSG_SIZE]; ///< stores decoded sign + 6 char, no DP (0
                                    ///< term. char array)

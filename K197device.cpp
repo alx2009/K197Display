@@ -32,9 +32,11 @@
 
 K197device k197dev;
 
-// Lookup table to convert from segments to char
-// Note: before using the table, shift the 5 most significant bit one position
-// to the right (removes DP bit)
+/*!
+    @brief Lookup table to convert from segments to char
+    @details before using the table, shift the 5 most significant bit one
+   position to the right (removes DP bit)
+*/
 const char seg2char[128] PROGMEM = {
     ' ',  '\'', 'i', 'I', '^', '*', '*', 'T',
     '-',  '*',  'r', 'f', '*', '*', '*', 'F', // row 0 (0x00-0x0f)
@@ -81,23 +83,24 @@ float getMsgValue(char *s, int len) {
 
       @details process a new reading that has just been received via SPI.
       A new reading is not processed automatically to make sure no value can be
-   overriden while in use (especially when interrupts are used). Instead,
-   SPIdevice::hasNewData() should be called periodically, when it returns true
-   getNewReading() can be called to process the new information. The information
-   will be available until the next cycle.
+      overriden while in use (especially when interrupts are used). Instead,
+      SPIdevice::hasNewData() should be called periodically, when it returns
+   true getNewReading() can be called to process the new information. The
+   information will be available until the next cycle.
 
       Note that internally this function calls SPIdevice::getNewData(), so
-   afterwards SPIdevice::hasNewData() will return false until a new batch of
-   data is received via SPI.
+      afterwards SPIdevice::hasNewData() will return false until a new batch of
+      data is received via SPI.
 
       @return true if the data was received correctly, false otherwise
-
 */
 bool K197device::getNewReading() {
   byte spiData[PACKET];
   byte n = getNewReading(spiData);
   return n == 9 ? true : false;
 }
+
+#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add '.'
 
 /*!
       @brief process a new reading
@@ -122,7 +125,6 @@ bool K197device::getNewReading() {
    room for at least 9 elements!
       @return the number of bytes copied into data.
 */
-#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add '.'
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
