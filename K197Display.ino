@@ -45,7 +45,16 @@ recurring issues
 //  Improved statistics
 //  Optimize interrupts
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
-
+//
+// Latest benchmark: 
+// loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+ default logging)
+//            195 (normal + max logging), 142 (menu+max logging), 121 (minmax+max logging)
+//            164 ms (normal hold + max logging), 76 ms (mimmax hold +maxlogging)
+// getNewReading() ==> 135 us
+// updateDisplay() ==> 120 ms (normal, minmax), 150ms (menu)
+// logData() ==> 7us (no logging), 362 us (default log active), 4ms (all options)
+// BT checks ==> 75us (normal, connected), 10 us (options menu)
+//
 #include "K197device.h"
 
 #include "UImanager.h"
@@ -359,12 +368,16 @@ bool collisionStatus =
       @brief Arduino loop function
 */
 void loop() {
+  PROFILE_start(DebugOut.PROFILE_LOOP);
   if (Serial.available()) {
     handleSerial();
   }
 
   if (k197dev.hasNewData()) {
+    PROFILE_start(DebugOut.PROFILE_DEVICE);
     byte n = k197dev.getNewReading(DMMReading);
+    PROFILE_stop(DebugOut.PROFILE_DEVICE);
+    PROFILE_println(DebugOut.PROFILE_DEVICE, F("Time spent in getNewReading()"));
     if (msg_printout) {
       DebugOut.print(F("SPI packet - N="));
       DebugOut.print(n);
@@ -376,15 +389,24 @@ void loop() {
       k197dev.debugPrint();
     }
     if (n == 9) {
+      PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.updateDisplay();
+      PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+      PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in updateDisplay()"));
+      PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.logData();
+      PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+      PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in logData()"));
       dxUtil.checkFreeStack();
       __asm__ __volatile__("wdr" ::);
     }
+    PROFILE_start(DebugOut.PROFILE_DISPLAY);
     BTman.checkPresence();
     if (BTman.checkConnection() == BTmoduleTurnedOff)
       uiman.setLogging(false);
     uiman.updateBtStatus();
+    PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+    PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in BT checks()"));
   }
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {
@@ -409,4 +431,6 @@ void loop() {
       DebugOut.print("Pulse count="); DebugOut.println(pulse);
   }
   */
+  PROFILE_stop(DebugOut.PROFILE_LOOP);
+  PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
 }

@@ -40,10 +40,23 @@
 
 */
 /**************************************************************************/
+
+//#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile sections of code
+
 class debugUtil : public Print {
   bool use_serial = false; ///< enable Serial output if true
   bool use_oled = false;   ///< enable Oled output if true
-public:
+  
+# ifdef PROFILE_TIMER
+     unsigned long proftimer[PROFILE_TIMER];
+  public:
+     static const byte PROFILE_LOOP=0; ///< profiler time slot for loop() 
+     static const byte PROFILE_DEVICE=1;  ///< profiler time slot for K197dev 
+     static const byte PROFILE_DISPLAY=2; ///< profiler time slot for uiman 
+# endif //PROFILE_TIMER
+
+
+  public:
   /*!
      @brief  default constructor for the class.
 
@@ -102,10 +115,59 @@ public:
   virtual size_t write(const uint8_t *buffer, size_t size);
   virtual int availableForWrite();
   virtual void flush();
+
+# ifdef PROFILE_TIMER
+  /*!
+    @brief  start a profile timer
+    @details a profile timer is used to measure the execution time of a given section of code
+    bracketed between profileStart() and profileEnd();
+    @param slot the slot number of this particular timer
+  */
+  void profileStart(unsigned int slot) {
+        if (slot<PROFILE_TIMER) proftimer[slot] = micros();
+  }
+  /*!
+    @brief  Stop a profile timer
+    @param slot the slot number of this particular timer
+  */
+  void profileStop(unsigned int slot) {
+        if (slot<PROFILE_TIMER) proftimer[slot] = micros() - proftimer[slot];
+  }
+  /*!
+    @brief  print a profile timer
+    @param slot the slot number of this particular timer
+  */
+  void profilePrint(unsigned int slot) {
+        if (slot<PROFILE_TIMER) print(proftimer[slot]);
+  }
+  /*!
+    @brief  print a profile timer
+    @param slot the slot number of this particular timer
+    @param slotName the name of the slot 
+  */
+  void profilePrintln(unsigned int slot, const __FlashStringHelper *slotName) {
+        if (slot<PROFILE_TIMER) {
+             print(slotName); print('=');
+             print(proftimer[slot]); println(F("us"));
+        }
+  }
+# endif //PROFILE_TIMER
 };
 
 extern debugUtil
-    DebugOut; ///< this is the predefined oubject that is used with pribnt(),
+    DebugOut; ///< this is the predefined oubject that is used with print(),
               ///< etc. (similar to how Serial is used for debug output)
+
+#ifdef PROFILE_TIMER
+#  define PROFILE_start(...) DebugOut.profileStart(__VA_ARGS__)
+#  define PROFILE_stop(...) DebugOut.profileStop(__VA_ARGS__)  
+#  define PROFILE_print(...) DebugOut.profilePrint(__VA_ARGS__)  
+#  define PROFILE_println(...) DebugOut.profilePrintln(__VA_ARGS__) 
+#else 
+#  define PROFILE_start(...) 
+#  define PROFILE_stop(...)  
+#  define PROFILE_print(...)  
+#  define PROFILE_println(...) 
+#endif //PROFILE_TIMER
 
 #endif // DEBUGUTIL_H__
