@@ -426,18 +426,7 @@ void loop() {
     }
   }
   pushbuttons.checkNew();
-  /*
-  uint8_t newval=GPIOR1;
-  if (tot!=newval) {
-      tot=newval;
-      DebugOut.print("TOT count="); DebugOut.println(tot);
-  }
-  newval=GPIOR0;
-  if (pulse!=newval) {
-      pulse=newval;
-      DebugOut.print("Pulse count="); DebugOut.println(pulse);
-  }
-  */
+
   PROFILE_stop(DebugOut.PROFILE_LOOP);
   PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
   looptimer=micros()-looptimer;

@@ -51,30 +51,32 @@
 #include "debugUtil.h"
 #include "pinout.h"
 
-volatile byte nbyte =
-    0; ///< keep track of characters received from the SPI client
-volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
-volatile bool done = false; ///< set at the end of the SPI transfer, signals
-                            ///< that a complete message is available
+#define nbyte GPIOR1 ///< keep track of characters received from the SPI client
+#define SPIflags GPIOR0 ///< Various flags used in interupt handlers
+#define SPIdone 0x01
 
-#ifdef DEVICE_USE_INTERRUPT
-/*!
+volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
+
+  /*!
     @brief  Interrupt handler, called when the SS pin changes (only when
    DEVICE_USE_INTERRUPT is defined)
 */
-void ss_changing() {
-  if (VPORTC.IN & SPI1_SS_bm) { // device de-selected
-    done = true;
+ISR(SPI1_PORT_vect) {
+  SPI1_VPORT.INTFLAGS |= SPI1_SS_bm; // clears interrupt flag
+  if (SPI1_VPORT.IN & SPI1_SS_bm) { // device de-selected
+    SPIflags  |= SPIdone;
   } else { // device selected
     nbyte = 0;
   }
 }
-#endif // DEVICE_USE_INTERRUPT
+
 /*!
     @brief  setup the SPI peripheral. Must be called first, before any other
    member function
 */
 void SPIdevice::setup() {
+  nbyte=0x00;
+  SPIflags=0x00;
   pinMode(SPI1_MOSI, INPUT);
   pinMode(MB_CD, INPUT); // Command/Data input - It is configured as inpout, so
                          // it won't be used as MISO by the SPI in slave mode
@@ -99,9 +101,10 @@ void SPIdevice::setup() {
   // enable interrupts
   SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used when SPI_BUFEN=0
 
-  attachInterrupt(
-      digitalPinToInterrupt(SPI1_SS), ss_changing,
-      CHANGE); // TODO: reflash bootloader to avoid using attachInterrupt
+# ifndef CORE_ATTACH_NONE // Manual handling of pin interrupts possible
+      #error "attachInterrupt must be set to \"only enabled ports\" in the Tools menu" 
+#  endif
+    SPI1_PORT.SPI1_PIN_SS_CTRL = (SPI1_PORT.SPI1_PIN_SS_CTRL & 0xF8) | PORT_ISC_BOTHEDGES_gc;
 
   sei(); // now we re-enable interrupts
 #endif   // DEVICE_USE_INTERRUPT
@@ -117,7 +120,7 @@ void SPIdevice::setup() {
 */
 bool SPIdevice::hasNewData() {
 #ifdef DEVICE_USE_INTERRUPT
-  return done;
+  return SPIflags & SPIdone;
 #else  // No interrupt - this means we need to poll the SPI registers & do all
        // the work here!
   static bool SS_active = false;
@@ -126,7 +129,7 @@ bool SPIdevice::hasNewData() {
       volatile byte c =
           SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
       if (nbyte < PACKET) {
-        if (VPORTC.IN & MB_CD_bm) { // this is a command, skip
+        if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
                                     // DO Nothing
         } else {                    // this instead is data
           spiBuffer[nbyte] = c;
@@ -134,17 +137,17 @@ bool SPIdevice::hasNewData() {
         }
       }
     }
-    if (VPORTC.IN & SPI1_SS_bm) { // device has been de-selected
-      done = true;
+    if (SPI1_VPORT.IN & SPI1_SS_bm) { // device has been de-selected
+      SPIflags |= SPIdone;
       SS_active = false;
     }
   } else {
-    if ((VPORTC.IN & SPI1_SS_bm) == 0x00) { // device has been selected
+    if ((SPI1_VPORT.IN & SPI1_SS_bm) == 0x00) { // device has been selected
       SS_active = true;
       nbyte = 0;
     }
   }
-  return done;
+  return SPIflags & SPIdone;
 #endif // DEVICE_USE_INTERRUPT
 }
 
@@ -165,7 +168,7 @@ byte SPIdevice::getNewData(byte *data) {
     ;
   }
   memcpy(data, (void *)spiBuffer, PACKET);
-  done = false;
+  SPIflags &= (~SPIdone);
   returnvalue = nbyte;
   nbyte = 0;
   return returnvalue;
@@ -197,13 +200,10 @@ ISR(SPI1_INT_vect) { // TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
     volatile byte c =
         SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
-    // SPI1.INTFLAGS = SPI_RXCIF_bm; // Clear the Interrupt flag by writing 1
-    // (probably not needed)
-
     if (nbyte >= PACKET) {
       return;
     }
-    if (VPORTC.IN & MB_CD_bm) { // this is a command, skip
+    if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
                                 // DO Nothing
     } else {                    // this instead is data
       spiBuffer[nbyte] = c;

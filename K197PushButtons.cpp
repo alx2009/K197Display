@@ -271,7 +271,7 @@ static inline byte fifo_pull() {
 // Interrupt handler for the CCL vector. Whatever the CCL causing the event, we
 // push a copy of the pushbutton pins to the fifo queue This should work in
 // dxCore 1.5.0 when it is released...
-// ISR(CCL_CCL_vect) {
+//ISR(CCL_CCL_vect) {
 
 /*!
     @brief  Interrupt handler, called for CCL events
@@ -293,7 +293,7 @@ static inline byte fifo_pull() {
    port, potentially optimizing the interrupt handler further.
 */
 void CCL_interrupt_handler() {
-  // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
+  //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
   // rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
@@ -439,9 +439,9 @@ void k197ButtonCluster::setup() {
   Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
   Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
 
-  // CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
+  //CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
   // will be released... DebugOut.print(F("CCL.LUT0CTRLA="));
-  // DebugOut.println(CCL.LUT0CTRLA, HEX);
+  //DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
   // at startup or reset (e.g. watchdog reset).
