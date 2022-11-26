@@ -271,6 +271,7 @@ static inline byte fifo_pull() {
 // Interrupt handler for the CCL vector. Whatever the CCL causing the event, we
 // push a copy of the pushbutton pins to the fifo queue This should work in
 // dxCore 1.5.0 when it is released...
+//ISR(CCL_CCL_vect) { //__vector_7
 
 /*!
     @brief  Interrupt handler, called for CCL events
