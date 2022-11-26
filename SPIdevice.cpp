@@ -97,10 +97,12 @@ void SPIdevice::setup() {
 
 #ifdef DEVICE_USE_INTERRUPT
 
-  DebugOut.print(F("old LVL1VEC=")); DebugOut.println(CPUINT.LVL1VEC);
-  CPUINT.LVL1VEC = SPI1_INT_vect_num; // Set the SPI1 INT vector as high priority 
-  DebugOut.print(F("new LVL1VEC=")); DebugOut.println(CPUINT.LVL1VEC);
+  // Set the SPI1 INT vector as high priority (can interrupt other interrupt handlers)
+  CPUINT.LVL1VEC = SPI1_INT_vect_num;  
 
+  // Set the interrupt scheduling to static, with the interrupt used by SPI1 pins as highest priority (will be serviced first)
+  CPUINT.LVL0PRI = SPI1_PORT_vect_num-1;
+  
   cli(); // we want interrupts to fire after they are properly configured
 
   // enable interrupts

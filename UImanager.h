@@ -161,6 +161,51 @@ public:
   static const char *formatNumber(char buf[K197_RAW_MSG_SIZE + 1], float f);
 };
 
+struct permadata {
+  private:
+      static const unsigned long magicNumberExpected=0x1a2b3c4dul;
+      static const unsigned long revisionExpected=0x01ul; //increment whenever the structure is modified
+   
+      // structure identity
+      unsigned long magicNumber=magicNumberExpected;
+      unsigned long revision=revisionExpected;       
+  
+  struct bool_options_struct {
+    /*!
+       @brief  A union is used to simplify initialization of the flags
+       @return Not really a return type, this attribute will save some RAM
+    */
+    union {
+      unsigned char value = 0x00; ///< allows access to all the flags in the
+                                  ///< union as one unsigned char
+      struct {
+        bool additionalModes : 1; ///< store menu option value
+        bool reassignStoRcl : 1;  ///< store menu option value
+        bool logEnable : 1;       ///< store menu option value
+        bool logSplitUnit : 1;    ///< store menu option value
+        bool logTimestamp : 1;    ///< store menu option value
+        bool logTamb : 1;         ///< store menu option value
+        bool logStat : 1;         ///< store menu option value
+      };
+    } __attribute__((packed)); ///< 
+  }; ///< Structure designed to pack a number of flags into one byte
+
+  struct byte_options_struct {
+      byte contrastCtrl;
+      byte logSkip;
+      byte logStatSamples;
+  }; ///< Structure designed to collect all byte optipons together
+
+  bool_options_struct bool_options;
+  byte_options_struct byte_options;
+
+  void copyFromUI();
+  void copyToUI();
+   
+  public:
+      static void store_to_EEPROM();
+      static void retrieve_from_EEPROM();
+};
 extern UImanager uiman;
 
 #endif // UIMANAGER_H__

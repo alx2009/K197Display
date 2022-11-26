@@ -40,7 +40,6 @@ However they could be optimized further if the need arise, but it would require 
 */
 /**************************************************************************/
 // TODO wish list:
-//  Autohold
 //  Save/retrieve settings to EEPROM
 //  Graph mode
 //  Move statistics options to own submenu

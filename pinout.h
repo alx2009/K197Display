@@ -93,6 +93,7 @@
 
 // Interrupt vector definitions
 #define SPI1_PORT_vect PORTC_PORT_vect
+#define SPI1_PORT_vect_num PORTC_PORT_vect_num
 #define TCA_OVF_vect TCA0_OVF_vect   ///< TCA OVF int. instance to use
 #define TCA_CMP0_vect TCA0_CMP0_vect ///< TCA CMP0 int. instance to use
 
