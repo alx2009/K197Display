@@ -62,7 +62,9 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
-  unsigned long looptimerMax=0UL;
+  unsigned long looptimerMax =
+      0UL; ///< used to keep track of the time spent in loop
+
 private:
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
@@ -161,15 +163,29 @@ public:
   static const char *formatNumber(char buf[K197_RAW_MSG_SIZE + 1], float f);
 };
 
+/**************************************************************************/
+/*!
+    @brief  structure used to store and retrieve the configuration to and from
+   the EEPROM
+*/
+/**************************************************************************/
 struct permadata {
-  private:
-      static const unsigned long magicNumberExpected=0x1a2b3c4dul;
-      static const unsigned long revisionExpected=0x01ul; //increment whenever the structure is modified
-   
-      // structure identity
-      unsigned long magicNumber=magicNumberExpected;
-      unsigned long revision=revisionExpected;       
-  
+private:
+  static const unsigned long magicNumberExpected =
+      0x1a2b3c4dul; ///< This is the magic number telling us if the EEPROM
+                    ///< contains data
+  static const unsigned long revisionExpected =
+      0x01ul; ///< the revision of this structure. Increment whenever the
+              ///< structure is modified
+
+  // structure identity
+  unsigned long magicNumber =
+      magicNumberExpected; ///< this is the magic number stored/retrieved from
+                           ///< the EEPROM
+  unsigned long revision =
+      revisionExpected; ///< this is the revision stored/retrieved from the
+                        ///< EEPROM
+
   struct bool_options_struct {
     /*!
        @brief  A union is used to simplify initialization of the flags
@@ -187,24 +203,24 @@ struct permadata {
         bool logTamb : 1;         ///< store menu option value
         bool logStat : 1;         ///< store menu option value
       };
-    } __attribute__((packed)); ///< 
+    } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
 
   struct byte_options_struct {
-      byte contrastCtrl;
-      byte logSkip;
-      byte logStatSamples;
+    byte contrastCtrl;   ///< store menu option value
+    byte logSkip;        ///< store menu option value
+    byte logStatSamples; ///< store menu option value
   }; ///< Structure designed to collect all byte optipons together
 
-  bool_options_struct bool_options;
-  byte_options_struct byte_options;
+  bool_options_struct bool_options; ///< store all bool options
+  byte_options_struct byte_options; ///< store all byte options
 
   void copyFromUI();
   void copyToUI();
-   
-  public:
-      static void store_to_EEPROM();
-      static void retrieve_from_EEPROM();
+
+public:
+  static void store_to_EEPROM();
+  static void retrieve_from_EEPROM();
 };
 extern UImanager uiman;
 

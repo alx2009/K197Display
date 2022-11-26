@@ -271,7 +271,7 @@ static inline byte fifo_pull() {
 // Interrupt handler for the CCL vector. Whatever the CCL causing the event, we
 // push a copy of the pushbutton pins to the fifo queue This should work in
 // dxCore 1.5.0 when it is released...
-//ISR(CCL_CCL_vect) { //__vector_7
+// ISR(CCL_CCL_vect) { //__vector_7
 
 /*!
     @brief  Interrupt handler, called for CCL events
@@ -293,8 +293,8 @@ static inline byte fifo_pull() {
    port, potentially optimizing the interrupt handler further.
 */
 void CCL_interrupt_handler() {
-  //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
-  // rather than missing an event
+  // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
+  //  rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
 }
@@ -439,9 +439,9 @@ void k197ButtonCluster::setup() {
   Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
   Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
 
-  //CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
-  // will be released... DebugOut.print(F("CCL.LUT0CTRLA="));
-  //DebugOut.println(CCL.LUT0CTRLA, HEX);
+  // CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
+  //  will be released... DebugOut.print(F("CCL.LUT0CTRLA="));
+  // DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
   // at startup or reset (e.g. watchdog reset).
@@ -675,7 +675,7 @@ void k197ButtonCluster::cancelClickREL() { GPIOR2 = 0x00; }
    and for good measure TCA interrupts are disabled.
    Note that the TCA instance used is defined in pinout.h
 */
-ISR(TCA_OVF_vect) { // __vector_9
+ISR(TCA_OVF_vect) {                                 // __vector_9
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Clear flag
   if (GPIOR2 > 0) {                // At least one more click to generate
     MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
@@ -697,7 +697,7 @@ ISR(TCA_OVF_vect) { // __vector_9
    LOW). The timer will continue to run as we need to wait an extra "idle" time
    before we can generate a new click (see also ISR(TCA_OVF_vect))
 */
-ISR(TCA_CMP0_vect) { //__vector_11
+ISR(TCA_CMP0_vect) {                                 //__vector_11
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_CMP0_bm; // Clear flag
   MB_REL_VPORT.DIR &= (~MB_REL_bm);                  // Set REL pin to input
   MB_REL_VPORT.OUT &= (~MB_REL_bm);                  // Set REL pin to low

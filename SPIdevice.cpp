@@ -53,18 +53,19 @@
 
 #define nbyte GPIOR1 ///< keep track of characters received from the SPI client
 #define SPIflags GPIOR0 ///< Various flags used in interupt handlers
-#define SPIdone 0x01
+#define SPIdone                                                                \
+  0x01 ///< flag used to signal that all SPI data have been received
 
 volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
 
-  /*!
-    @brief  Interrupt handler, called when the SS pin changes (only when
-   DEVICE_USE_INTERRUPT is defined)
+/*!
+  @brief  Interrupt handler, called when the SS pin changes (only when
+ DEVICE_USE_INTERRUPT is defined)
 */
-ISR(SPI1_PORT_vect) { // __vector_30
+ISR(SPI1_PORT_vect) {                // __vector_30
   SPI1_VPORT.INTFLAGS |= SPI1_SS_bm; // clears interrupt flag
-  if (SPI1_VPORT.IN & SPI1_SS_bm) { // device de-selected
-    SPIflags  |= SPIdone;
+  if (SPI1_VPORT.IN & SPI1_SS_bm) {  // device de-selected
+    SPIflags |= SPIdone;
   } else { // device selected
     nbyte = 0;
   }
@@ -75,8 +76,8 @@ ISR(SPI1_PORT_vect) { // __vector_30
    member function
 */
 void SPIdevice::setup() {
-  nbyte=0x00;
-  SPIflags=0x00;
+  nbyte = 0x00;
+  SPIflags = 0x00;
   pinMode(SPI1_MOSI, INPUT);
   pinMode(MB_CD, INPUT); // Command/Data input - It is configured as inpout, so
                          // it won't be used as MISO by the SPI in slave mode
@@ -97,21 +98,24 @@ void SPIdevice::setup() {
 
 #ifdef DEVICE_USE_INTERRUPT
 
-  // Set the SPI1 INT vector as high priority (can interrupt other interrupt handlers)
-  CPUINT.LVL1VEC = SPI1_INT_vect_num;  
+  // Set the SPI1 INT vector as high priority (can interrupt other interrupt
+  // handlers)
+  CPUINT.LVL1VEC = SPI1_INT_vect_num;
 
-  // Set the interrupt scheduling to static, with the interrupt used by SPI1 pins as highest priority (will be serviced first)
-  CPUINT.LVL0PRI = SPI1_PORT_vect_num-1;
-  
+  // Set the interrupt scheduling to static, with the interrupt used by SPI1
+  // pins as highest priority (will be serviced first)
+  CPUINT.LVL0PRI = SPI1_PORT_vect_num - 1;
+
   cli(); // we want interrupts to fire after they are properly configured
 
   // enable interrupts
   SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used when SPI_BUFEN=0
 
-# ifndef CORE_ATTACH_NONE // Manual handling of pin interrupts possible
-      #error "attachInterrupt must be set to \"only enabled ports\" in the Tools menu" 
-#  endif
-    SPI1_PORT.SPI1_PIN_SS_CTRL = (SPI1_PORT.SPI1_PIN_SS_CTRL & 0xF8) | PORT_ISC_BOTHEDGES_gc;
+#ifndef CORE_ATTACH_NONE // Manual handling of pin interrupts possible
+#error "attachInterrupt must be set to \"only enabled ports\" in the Tools menu"
+#endif
+  SPI1_PORT.SPI1_PIN_SS_CTRL =
+      (SPI1_PORT.SPI1_PIN_SS_CTRL & 0xF8) | PORT_ISC_BOTHEDGES_gc;
 
   sei(); // now we re-enable interrupts
 #endif   // DEVICE_USE_INTERRUPT
@@ -137,8 +141,8 @@ bool SPIdevice::hasNewData() {
           SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
       if (nbyte < PACKET) {
         if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
-                                    // DO Nothing
-        } else {                    // this instead is data
+                                        // DO Nothing
+        } else {                        // this instead is data
           spiBuffer[nbyte] = c;
           nbyte++;
         }
@@ -211,11 +215,11 @@ ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
       return;
     }
     if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
-                                // DO Nothing
-    } else {                    // this instead is data
+                                    // DO Nothing
+    } else {                        // this instead is data
       spiBuffer[nbyte] = c;
       nbyte++;
     }
   }
-} 
+}
 #endif // DEVICE_USE_INTERRUPT

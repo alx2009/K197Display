@@ -568,8 +568,9 @@ DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast",
                   u8g2.setContrast(getValue());); ///< set contrast
 DEF_MENU_ACTION(saveSettings, 15, "Save settings",
                 permadata::store_to_EEPROM();); ///< save config to EEPROM
-DEF_MENU_ACTION(reloadSettings, 15, "Reload settings",
-                permadata::retrieve_from_EEPROM();); ///< load config from EEPROM
+DEF_MENU_ACTION(
+    reloadSettings, 15, "Reload settings",
+    permadata::retrieve_from_EEPROM();); ///< load config from EEPROM
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
@@ -646,8 +647,9 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       break;
     case K197key_RCL:
       if (reassignStoRcl.getValue() && eventType == UIeventPress) {
-        DebugOut.print(F("Max loop (us): ")); DebugOut.println(looptimerMax);
-        looptimerMax=0UL;
+        DebugOut.print(F("Max loop (us): "));
+        DebugOut.println(looptimerMax);
+        looptimerMax = 0UL;
         return true;
       }
       break;
@@ -716,7 +718,7 @@ bool UImanager::isLogging() { return logEnable.getValue(); }
 */
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
-  reassignStoRcl.setValue(true);    
+  reassignStoRcl.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems) / sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
@@ -837,50 +839,52 @@ void UImanager::logData() {
 #define EEPROM_BASE_ADDRESS 0x00 ///< Base address on the EEPROM
 
 /*!
-    @brief copy data from the GUI to the structure 
+    @brief copy data from the GUI to the structure
     @details This function is used inside store_to_EEPROM
 */
 void permadata::copyFromUI() {
-  bool_options.additionalModes=additionalModes.getValue();
-  bool_options.reassignStoRcl=reassignStoRcl.getValue();  
-  bool_options.logEnable=logEnable.getValue();       
-  bool_options.logSplitUnit=logSplitUnit.getValue();    
-  bool_options.logTimestamp=logTimestamp.getValue();    
-  bool_options.logTamb=logTamb.getValue();         
-  bool_options.logStat=logStat.getValue();         
-  byte_options.contrastCtrl=contrastCtrl.getValue();
-  byte_options.logSkip=logSkip.getValue();
-  byte_options.logStatSamples=logStatSamples.getValue();  
+  bool_options.additionalModes = additionalModes.getValue();
+  bool_options.reassignStoRcl = reassignStoRcl.getValue();
+  bool_options.logEnable = logEnable.getValue();
+  bool_options.logSplitUnit = logSplitUnit.getValue();
+  bool_options.logTimestamp = logTimestamp.getValue();
+  bool_options.logTamb = logTamb.getValue();
+  bool_options.logStat = logStat.getValue();
+  byte_options.contrastCtrl = contrastCtrl.getValue();
+  byte_options.logSkip = logSkip.getValue();
+  byte_options.logStatSamples = logStatSamples.getValue();
 }
 
 /*!
-    @brief copy data from the structure to the GUI 
+    @brief copy data from the structure to the GUI
     @details the new options take affect immediately.
     This function is used inside retrieve_from_EEPROM
 */
 void permadata::copyToUI() {
   additionalModes.setValue(bool_options.additionalModes);
-  reassignStoRcl.setValue(bool_options.reassignStoRcl);  
-  logEnable.setValue(bool_options.logEnable);       
-  logSplitUnit.setValue(bool_options.logSplitUnit);    
-  logTimestamp.setValue(bool_options.logTimestamp);    
-  logTamb.setValue(bool_options.logTamb);         
-  logStat.setValue(bool_options.logStat);         
+  reassignStoRcl.setValue(bool_options.reassignStoRcl);
+  logEnable.setValue(bool_options.logEnable);
+  logSplitUnit.setValue(bool_options.logSplitUnit);
+  logTimestamp.setValue(bool_options.logTimestamp);
+  logTamb.setValue(bool_options.logTamb);
+  logStat.setValue(bool_options.logStat);
   uiman.setContrast(byte_options.contrastCtrl);
   logSkip.setValue(byte_options.logSkip);
-  logStatSamples.setValue(byte_options.logStatSamples);    
+  logStatSamples.setValue(byte_options.logStatSamples);
   k197dev.setNsamples(byte_options.logStatSamples);
 }
 
 /*!
     @brief  store all configuration options from the EEPROM
-    @details a confirmation or error message is sent to DebugOut 
+    @details a confirmation or error message is sent to DebugOut
 */
 void permadata::store_to_EEPROM() {
-  if ( (EEPROM_BASE_ADDRESS+sizeof(permadata)) > EEPROM.length() ) {
-     DebugOut.print(F(" Data size ")); DebugOut.print(sizeof(permadata));
-     DebugOut.print(F(" exceed EEPROM len: ")); DebugOut.print(EEPROM.length());
-     return;
+  if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
+    DebugOut.print(F(" Data size "));
+    DebugOut.print(sizeof(permadata));
+    DebugOut.print(F(" exceed EEPROM len: "));
+    DebugOut.print(EEPROM.length());
+    return;
   }
   permadata pdata;
   pdata.copyFromUI();
@@ -891,13 +895,15 @@ void permadata::store_to_EEPROM() {
 /*!
     @brief  retrieve all configuration options to the EEPROM
     @details if successful, the new options take affect immediately.
-    A confirmation or error message is sent to DebugOut 
+    A confirmation or error message is sent to DebugOut
 */
 void permadata::retrieve_from_EEPROM() {
-  if ( (EEPROM_BASE_ADDRESS+sizeof(permadata)) > EEPROM.length() ) {
-     DebugOut.print(F("EEPROM: Data size=")); DebugOut.print(sizeof(permadata));
-     DebugOut.print(F(" exceed ")); DebugOut.println(EEPROM.length());
-     return;
+  if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
+    DebugOut.print(F("EEPROM: Data size="));
+    DebugOut.print(sizeof(permadata));
+    DebugOut.print(F(" exceed "));
+    DebugOut.println(EEPROM.length());
+    return;
   }
   permadata pdata;
   EEPROM.get(EEPROM_BASE_ADDRESS, pdata);
@@ -906,10 +912,12 @@ void permadata::retrieve_from_EEPROM() {
     return;
   }
   if (pdata.revision != revisionExpected) {
-    DebugOut.print(F("EEPROM: rev. ")); DebugOut.print(pdata.revision, HEX);
-    DebugOut.print(F(", expected ")); DebugOut.println(revisionExpected, HEX);
+    DebugOut.print(F("EEPROM: rev. "));
+    DebugOut.print(pdata.revision, HEX);
+    DebugOut.print(F(", expected "));
+    DebugOut.println(revisionExpected, HEX);
     return;
   }
   pdata.copyToUI();
-  DebugOut.println(F("EEPROM: restore ok"));  
+  DebugOut.println(F("EEPROM: restore ok"));
 }
