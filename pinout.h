@@ -32,7 +32,12 @@
 #ifndef PINOUT_H__
 #define PINOUT_H__
 #include <Arduino.h>
-// This is the usage on a AVRxxDB28 (28 pin device) using dxCore
+// This is the usage on a AVRxxDB28 (28 pin device) using dxCore. should work
+// with higher pin count.
+#ifndef __AVR_DB__
+#warning                                                                       \
+    "This sketch is designed for AVR DB. It has not been tested on other platform"
+#endif // __AVR_DB__
 
 // PORT A
 #define SERIAL_TX PIN_PA0 ///< pin corresponding to Serial TX
@@ -71,6 +76,10 @@
 #define UI_REL PIN_PF0 ///< connected to REL push button
 #define UI_DB PIN_PF1  ///< connected to DB push button
 
+// PORT definitions (when using direct port manipulation)
+#define SPI1_PORT PORTC           ///< VPORT for SPI1 pins
+#define SPI1_PIN_SS_CTRL PIN3CTRL ///< Control reg. for SPI1_SS pin
+
 // VPORT definitions (when using direct port manipulation)
 #define SERIAL_VPORT VPORTA   ///< VPORT for Serial pins
 #define BT_STATE_VPORT VPORTA ///< VPORT for BT_STATE pin
@@ -82,8 +91,24 @@
 #define UI_RCL_VPORT VPORTD   ///< VPORT for UI_RCL pin
 #define UI_REL_VPORT VPORTF   ///< VPORT for UI_REL pin
 #define UI_DB_VPORT VPORTF    ///< VPORT for UI_DB pin
+#define SPI1_VPORT VPORTC     ///< VPORT for SPI1 pins
+
+// Interrupt vector definitions
+#define SPI1_PORT_vect PORTC_PORT_vect ///< vector for the port used by SPI1
+#define SPI1_PORT_vect_num                                                     \
+  PORTC_PORT_vect_num              ///< vector number for the port used by SPI1
+#define TCA_OVF_vect TCA0_OVF_vect ///< TCA OVF int. instance to use
+#define TCA_CMP0_vect TCA0_CMP0_vect ///< TCA CMP0 int. instance to use
 
 // Timer port definitions
+#ifdef MILLIS_USE_TIMERA0
+#error                                                                         \
+    "TCA is set as millis timing source. Please select a different timer for millis under the tools menu"
+#endif
+#ifdef MILLIS_USE_TIMERNONE
+#error                                                                         \
+    "This sketch require millis(). Please select any timer except TCA for millis under the tools menu"
+#endif
 #define AVR_TCA_PORT TCA0 ///< define the TCA timer instance to use
 
 // UART definitions
@@ -119,8 +144,6 @@
 #ifdef MILLIS_USE_TIMERA0
 #error "This sketch takes over TCA0 - please use a different timer for millis"
 #endif
-#define TCA_OVF_vect TCA0_OVF_vect   ///< TCA OVF int. instance to use
-#define TCA_CMP0_vect TCA0_CMP0_vect ///< TCA CMP0 int. instance to use
 
 inline void takeOverTCA() {
   takeOverTCA0();

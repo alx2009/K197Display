@@ -34,18 +34,31 @@ called)
 fool-proof, but statistically we should print out something if there are
 recurring issues
 
+Currently interrupt handlers are pretty efficient (except the one for the CCL).
+However they could be optimized further if the need arise, but it would require
+moving to inline assembler and naked interrupt handlers
+
 */
 /**************************************************************************/
 // TODO wish list:
-//  Hold
-//  Autohold
-//  Save/retrieve settings to EEPROM
 //  Graph mode
 //  Move statistics options to own submenu
 //  Improved statistics
-//  Optimize interrupts
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
-
+//
+// Latest benchmark:
+// loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
+// default logging)
+//            195 (normal + max logging), 142 (menu+max logging), 121
+//            (minmax+max logging) 164 ms (normal hold + max logging), 76 ms
+//            (mimmax hold +maxlogging)
+// getNewReading() ==> 135 us
+// updateDisplay() ==> 120 ms (normal, minmax), 150ms (menu)
+// logData() ==> 7us (no logging), 362 us (default log active), 4ms (all
+// options) BT checks ==> 75us (normal, connected), 10 us (options menu)
+// Increasing the OLED SPI clock shaves 13 ms to the loop time (195 ms to 182
+// ms)
+//
 #include "K197device.h"
 
 #include "UImanager.h"
@@ -68,12 +81,16 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 ////////////////////////////////////////////////////////////////////////////////////
 // Management of the serial user interface
 ////////////////////////////////////////////////////////////////////////////////////
+
 /*!
       @brief print the prompt to Serial
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   dxUtil.reportStack();
+  Serial.print(F(" Max loop time (us): "));
+  Serial.println(uiman.looptimerMax);
+  uiman.looptimerMax = 0;
   Serial.println(F("> "));
 }
 
@@ -355,16 +372,24 @@ byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
 bool collisionStatus =
     false; ///< keep track if a collision was detected by the SPI peripheral
 
+static unsigned long looptimer = 0UL;
+
 /*!
       @brief Arduino loop function
 */
 void loop() {
+  looptimer = micros();
+  PROFILE_start(DebugOut.PROFILE_LOOP);
   if (Serial.available()) {
     handleSerial();
   }
 
   if (k197dev.hasNewData()) {
+    PROFILE_start(DebugOut.PROFILE_DEVICE);
     byte n = k197dev.getNewReading(DMMReading);
+    PROFILE_stop(DebugOut.PROFILE_DEVICE);
+    PROFILE_println(DebugOut.PROFILE_DEVICE,
+                    F("Time spent in getNewReading()"));
     if (msg_printout) {
       DebugOut.print(F("SPI packet - N="));
       DebugOut.print(n);
@@ -376,15 +401,24 @@ void loop() {
       k197dev.debugPrint();
     }
     if (n == 9) {
+      PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.updateDisplay();
+      PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+      PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in updateDisplay()"));
+      PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.logData();
+      PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+      PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in logData()"));
       dxUtil.checkFreeStack();
       __asm__ __volatile__("wdr" ::);
     }
+    PROFILE_start(DebugOut.PROFILE_DISPLAY);
     BTman.checkPresence();
     if (BTman.checkConnection() == BTmoduleTurnedOff)
       uiman.setLogging(false);
     uiman.updateBtStatus();
+    PROFILE_stop(DebugOut.PROFILE_DISPLAY);
+    PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in BT checks()"));
   }
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {
@@ -397,16 +431,10 @@ void loop() {
     }
   }
   pushbuttons.checkNew();
-  /*
-  uint8_t newval=GPIOR1;
-  if (tot!=newval) {
-      tot=newval;
-      DebugOut.print("TOT count="); DebugOut.println(tot);
-  }
-  newval=GPIOR0;
-  if (pulse!=newval) {
-      pulse=newval;
-      DebugOut.print("Pulse count="); DebugOut.println(pulse);
-  }
-  */
+
+  PROFILE_stop(DebugOut.PROFILE_LOOP);
+  PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
+  looptimer = micros() - looptimer;
+  if (uiman.looptimerMax < looptimer)
+    uiman.looptimerMax = looptimer;
 }
