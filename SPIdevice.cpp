@@ -61,7 +61,7 @@ volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
     @brief  Interrupt handler, called when the SS pin changes (only when
    DEVICE_USE_INTERRUPT is defined)
 */
-ISR(SPI1_PORT_vect) {
+ISR(SPI1_PORT_vect) { // __vector_30
   SPI1_VPORT.INTFLAGS |= SPI1_SS_bm; // clears interrupt flag
   if (SPI1_VPORT.IN & SPI1_SS_bm) { // device de-selected
     SPIflags  |= SPIdone;
@@ -96,6 +96,11 @@ void SPIdevice::setup() {
                      // need to transmit); SPI_SSD not used when SPI_MASTER=0
 
 #ifdef DEVICE_USE_INTERRUPT
+
+  DebugOut.print(F("old LVL1VEC=")); DebugOut.println(CPUINT.LVL1VEC);
+  CPUINT.LVL1VEC = SPI1_INT_vect_num; // Set the SPI1 INT vector as high priority 
+  DebugOut.print(F("new LVL1VEC=")); DebugOut.println(CPUINT.LVL1VEC);
+
   cli(); // we want interrupts to fire after they are properly configured
 
   // enable interrupts
@@ -196,7 +201,7 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
     @brief  Interrupt handler, called for SPI1 events (only when
    DEVICE_USE_INTERRUPT is defined)
 */
-ISR(SPI1_INT_vect) { // TODO: read all available bytes in one go
+ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
     volatile byte c =
         SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
@@ -210,5 +215,5 @@ ISR(SPI1_INT_vect) { // TODO: read all available bytes in one go
       nbyte++;
     }
   }
-} // end of interrupt service routine (ISR) SPI1_INT_vect
+} 
 #endif // DEVICE_USE_INTERRUPT

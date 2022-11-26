@@ -34,16 +34,17 @@ called)
 fool-proof, but statistically we should print out something if there are
 recurring issues
 
+Currently interrupt handlers are pretty efficient (except the one for the CCL).
+However they could be optimized further if the need arise, but it would require moving to inline assembler and naked interrupt handlers
+
 */
 /**************************************************************************/
 // TODO wish list:
-//  Hold
 //  Autohold
 //  Save/retrieve settings to EEPROM
 //  Graph mode
 //  Move statistics options to own submenu
 //  Improved statistics
-//  Optimize interrupts
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 //
 // Latest benchmark: 
