@@ -150,6 +150,7 @@ void UImanager::setup() {
   u8g2.clearBuffer();
   setup_draw();
   u8g2.sendBuffer();
+  DebugOut.print(F("sizeof(u8g2_uint_t)=")); DebugOut.println(sizeof(u8g2_uint_t));
 
   setupMenus();
 }
@@ -172,8 +173,72 @@ void UImanager::updateDisplay() {
     updateSplitScreen();
   else if (k197dev.isCal() || (getScreenMode() == K197sc_normal))
     updateNormalScreen();
-  else
+  else if (getScreenMode() == K197sc_minmax)
     updateMinMaxScreen();
+  else updateGraphScreen();
+  dxUtil.checkFreeStack();
+}
+
+static k197graph_type k197graph;
+
+/*!
+    @brief  update the display, used when in graph mode
+   screen.
+*/
+void UImanager::updateGraphScreen() {
+  u8g2_uint_t x = 185;
+  u8g2_uint_t y = 5;
+  u8g2.setCursor(x, y);
+
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  u8g2.print(k197dev.getUnit(true));
+  u8g2.setFont(u8g2_font_8x13_mr);
+  if (k197dev.isAC())
+    u8g2.print(F(" AC"));
+  else
+    u8g2.print(F("   "));
+  if (k197dev.isREL())
+    u8g2.print(F(" REL"));
+  else
+    u8g2.print(F("    "));
+
+  y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  if (k197dev.isNumeric()) {
+    char buf[K197_RAW_MSG_SIZE + 1];
+    u8g2.print(formatNumber(buf, k197dev.getValue()));
+  } else
+    u8g2.print(k197dev.getRawMessage());
+
+  x+= 15;
+  y += u8g2.getMaxCharHeight() +3;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_6x12_mr);
+  if (k197dev.isAuto())
+    u8g2.print(F("Auto"));
+  else
+    u8g2.print(F("    ")); 
+  if (k197dev.getDisplayHold())
+    u8g2.print(F(" Hold"));
+  else
+    u8g2.print(F("     ")); 
+  u8g2.setDrawColor(0);
+  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size);
+  u8g2.setDrawColor(1);
+
+  // Get graph data
+  k197dev.fillGraphDisplayData(&k197graph); 
+
+  // Draw the axis
+  u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
+  u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
+
+  // Draw the graph
+  for (int i=0; i<k197graph.npoints; i++) {
+      u8g2.drawPixel(i, k197graph.y_size-k197graph.point[i]);
+  }
+  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -482,22 +547,22 @@ void UImanager::updateMinMaxScreen() {
    @details  Three modes are defined: normal mode, menu mode and debug mode.
    In debug and menu mode the measurements are displays on the right of the
    screen (split screen), while the left part is reserved for debug messages and
-   menu items respectively. Normal mode is a fulol screen mode equivalent to the
+   menu items respectively. Normal mode is a full screen mode equivalent to the
    original K197 display. As the name suggest debug mode is intended for
    debugging the code that interacts with the serial port/bluetooth module
    itself, so that Serial cannot be used.
 
-      @param mode can be displayNormal or displayDebug for normal and debug mode
-   respectively
+      @param mode the new display mode. Only the modes defined in K197screenMode < 0x0f are valid. 
+      Using an invalid mode will have no effect 
 */
 void UImanager::setScreenMode(K197screenMode mode) {
+  if ( (mode <=0) || (mode>K197sc_graph) ) return;
   screen_mode =
       (K197screenMode)(screen_mode &
                        K197sc_AttributesBitMask); // clear current screen mode
   screen_mode =
-      (K197screenMode)(screen_mode |
-                       (mode & K197sc_ScreenModeMask)); // set the mode bits to
-                                                        // enter the new mode
+      (K197screenMode)(screen_mode | mode); // set the mode bits to
+                                            // enter the new mode
   clearScreen();
 }
 
@@ -522,7 +587,7 @@ void UImanager::clearScreen() {
 */
 void UImanager::updateBtStatus() {
   if (isSplitScreen() ||
-      (getScreenMode() != K197sc_normal)) { // Note: No BT status in cal mode
+      (getScreenMode() != K197sc_normal)) {
     return;
   }
   unsigned int x = 95;
@@ -637,10 +702,16 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           k197dev.setDisplayHold(!k197dev.getDisplayHold());
         } else if (eventType == UIeventLongPress) {
           K197screenMode screen_mode = uiman.getScreenMode();
-          if (screen_mode == K197sc_normal)
+          if (screen_mode != K197sc_minmax)
             uiman.setScreenMode(K197sc_minmax);
           else
             uiman.setScreenMode(K197sc_normal);
+        } else if (eventType == UIeventDoubleClick) {
+          K197screenMode screen_mode = uiman.getScreenMode();
+          if (screen_mode != K197sc_graph)
+            uiman.setScreenMode(K197sc_graph);
+          else
+            uiman.setScreenMode(K197sc_normal);          
         }
         return true;
       }
@@ -843,6 +914,7 @@ void UImanager::logData() {
     @details This function is used inside store_to_EEPROM
 */
 void permadata::copyFromUI() {
+  dxUtil.checkFreeStack();
   bool_options.additionalModes = additionalModes.getValue();
   bool_options.reassignStoRcl = reassignStoRcl.getValue();
   bool_options.logEnable = logEnable.getValue();
@@ -861,6 +933,7 @@ void permadata::copyFromUI() {
     This function is used inside retrieve_from_EEPROM
 */
 void permadata::copyToUI() {
+  dxUtil.checkFreeStack();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
   logEnable.setValue(bool_options.logEnable);

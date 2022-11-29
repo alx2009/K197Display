@@ -18,6 +18,8 @@
   through the base class SPIdevice, and make it available to the rest of the
   sketch
 
+  Reference for math functions: https://www.nongnu.org/avr-libc/user-manual/group__avr__math.html
+
 */
 /**************************************************************************/
 #include "K197device.h"
@@ -332,15 +334,16 @@ static inline bool change0(byte b1, byte b2) {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
+  if (!isNumeric()) return; // No point updating statistics now
   if (cache.tkMode != flags.tkMode ||
       change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) { // Something changed, reset stats
     resetStatistics();
   } else {
-    cache.average += (msg_value - cache.average) /
-                     float(cache.nsamples); // This not perfect but good enough
-                                            // in most practical cases.
+    cache.average += (msg_value - cache.average) * 
+                     cache.avg_factor; // This not perfect but good enough
+                                 // in most practical cases.
     if (msg_value < cache.min)
       cache.min = msg_value;
     if (msg_value > cache.max)
@@ -351,7 +354,111 @@ void K197device::updateCache() {
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
+  cache.add2graph(msg_value);
   dxUtil.checkFreeStack();
+}
+
+static float getScaleMultiplierUp(float x, float pow10) { // Look for the maximum
+  float norm=x * powf(10.0, -pow10); // normalized: -1<norm<1
+  if ( norm > 0) {
+     if (norm < 0.2) return 0.2;
+     else if (norm < 0.5) return 0.5;
+     return 1.0;
+  } else {
+     if (norm < -0.5) return -0.5;
+     else if (norm < -0.2) return -0.2;
+     return -0.1;
+  }
+}
+
+static float getScaleMultiplierDown(float x, float pow10) { // Look for the minimum
+  float norm=x * powf(10.0, -pow10); // normalized: 1>=abs(norm)>=1
+  if ( norm > 0) {
+     if (norm > 0.5) return 0.5;
+     else if (norm > 0.2) return 0.2;
+     return 0.1;
+  } else {
+     if (norm > -0.2) return -0.2;
+     else if (norm > -0.5) return -0.5;
+     return -1.0;
+  }
+}
+
+#define SCALE_VALUE_MIN 0.0000001
+#define SCALE_LOG_MIN -7
+static float getPow10(float x) {
+    x=fabsf(x);
+    if (x<SCALE_VALUE_MIN) return SCALE_LOG_MIN;
+    return ceilf(log10f(x));
+}
+
+void K197device::troubleshootAutoscale(float testmin, float testmax) {
+  // Autoscale -  First we find the power of 10
+  float max_pow10 = getPow10(testmin);  // First we bracket max ...
+  float max_mult = getScaleMultiplierUp(testmax, max_pow10);
+  // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
+  float ymax = max_mult*powf(10.0, max_pow10);
+  // Print result
+  DebugOut.print(F("testmax="));DebugOut.println(testmax);
+  DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
+  DebugOut.print(F("=")); DebugOut.println(ymax); 
+
+  // Autoscale -  First we find the power of 10
+  float min_pow10 = getPow10(testmax); // and min with pow. of 10
+  float min_mult = getScaleMultiplierDown(testmin, min_pow10);
+  // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
+  float ymin = min_mult*powf(10.0, min_pow10);
+  // Print result
+  DebugOut.print(F("testmin="));DebugOut.println(testmin);
+  DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
+  DebugOut.print(F("=")); DebugOut.println(ymin); 
+}
+
+void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
+  // Autoscale -  First we find the power of 10
+  float max_pow10 = getPow10(cache.max);  
+  float min_pow10 = getPow10(cache.min);
+  // Then we fine tune the multiplier (1.0x, 0.5x, 0.2x or 0.1x, sign can be + or -)
+  float max_mult = getScaleMultiplierUp(cache.max, max_pow10);   
+  float min_mult = getScaleMultiplierDown(cache.min, min_pow10); 
+
+  float ymax = max_mult*powf(10.0, max_pow10);
+  float ymin = min_mult*powf(10.0, min_pow10);
+  
+  if (ymax == ymin) { //Safeguard from pathological cases...
+     if (ymax>0) {
+        ymax *=10.0;
+        ymin *=0.1;
+     } else if (ymax<0) {
+        ymax *=0.1;
+        ymin *=10.0;   
+     } else { // ymax == ymin == 0.0
+        ymax *= SCALE_VALUE_MIN;
+        ymin *=-SCALE_VALUE_MIN;
+     }
+  }
+
+  //DebugOut.print(F("cache.max="));DebugOut.println(cache.max);
+  //DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
+  //DebugOut.print(F("=")); DebugOut.println(ymax); 
+  //DebugOut.print(F("cache.in="));DebugOut.println(cache.min);
+  //DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
+  //DebugOut.print(F("=")); DebugOut.println(ymin); 
+  
+  float scale_factor = float(graphdata->y_size)/round(ymax-ymin);
+  for (int i=0; i<cache.gr_size; i++) {
+     if (i>=graphdata->x_size) { // should be impossible but just to be safe
+         DebugOut.print(F("i=")); DebugOut.print(i);
+         DebugOut.print(F(", c=")); DebugOut.print(cache.gr_size);
+         DebugOut.print(F(", g=")); DebugOut.print(graphdata->x_size);
+         DebugOut.println(F("graph size!"));
+         break; 
+     }
+     graphdata->point[i] = (cache.graph[i]-ymin)*scale_factor+0.5;
+  }
+  graphdata->current_idx = cache.gr_index==0 ? cache.gr_size: cache.gr_index; 
+  if (graphdata->current_idx >0) graphdata->current_idx--;
+  graphdata->npoints = cache.gr_size;
 }
 
 /*!
@@ -362,4 +469,5 @@ void K197device::resetStatistics() {
   cache.average = msg_value;
   cache.min = msg_value;
   cache.max = msg_value;
+  cache.resetGraph();
 }

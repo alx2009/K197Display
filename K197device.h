@@ -55,20 +55,38 @@
 
 /**************************************************************************/
 /*!
-    @brief  Simple class to handle a cluster of buttons.
+   @brief  auxiliary class to store the graph
 
-    This class is responsible to store and decode the raw information received
-    through the base class SPIdevice, and make it available to the rest of the
-    sketch
+   @details This class is used to pass enough information to represent
+   the data stored in the cache as a graph
+*/
+/**************************************************************************/
+struct k197graph_type {
+     static const byte x_size=180 ;
+     static const byte y_size=63 ;
+     byte point[x_size];
+     byte current_idx=0x00;
+     byte npoints=0x00;
+};
 
-    Usage:
+/**************************************************************************/
+/*!
+   @brief  class to store and manage the K197 information
 
-    Call setup() once before doing anything else
-    then hasNewData() inherited from the base class should be called frequently
+   @details This class is responsible to store and decode the raw data 
+   received through the base class SPIdevice, and make it available to the 
+   rest of the sketch as structured information. It is not conceptually 
+   complicated, but due to the large number of data and inline methods 
+   it may seem that way.
+
+   Usage:
+
+   Call setup() before doing anything else. 
+   The method hasNewData() in the base class should be called frequently
    (tipically in the main Arduino loop). As soon as hasNewData() returns true
    then getNewReading() must be called to decode and store the new batch of data
-   from the K197/197A. After that the new information is available via the other
-   member functions
+   from the K197/197A. 
+   After that the new information is available via the other member functions
 */
 /**************************************************************************/
 class K197device : public SPIdevice {
@@ -208,12 +226,15 @@ public:
 
   void debugPrint();
 
+private:  
+    static const byte max_graph_size = 180; ///< maximum number of measurements that can be cached
+
   /*!
       @brief  structure used to store previus vales, average, max, min, etc.
    */
   struct {
   public:
-    byte nsamples = 3;     ///< Number of samples to use for rolling average
+    float avg_factor = 1.0 / 3.0; ///< Factor used in average calculation
     bool tkMode = false;   ///< caches tkMode from previous measurement
     float msg_value = 0.0; ///< caches msg_value from previous measurement
     byte annunciators0 =
@@ -226,9 +247,40 @@ public:
     float average = 0.0; ///< keep track of the average
     float min = 0.0;     ///< keep track of the minimum
     float max = 0.0;     ///< keep track of the maximum
+
+    float graph[max_graph_size]; ///< stores gr_size records
+                                 ///< when gr_size = max_graph_size
+                                 ///< becomes a circular buffer
+    byte gr_index=0;///< index to the next graph record to be filled
+    byte gr_size=0; ///< amount of data in graph (0-max_graph_size)
+    byte nskip = 0;  ///< Skip counter  
+    byte nsamples = 3; ///< Number of samples to use for rolling average
+
+    /*!
+      @brief add one sample to graph
+      @details Only one out of every nsamples is stored
+      @param nsamples number of samples
+    */
+    void add2graph(float x) {
+        if (nskip == 0) { 
+            graph[gr_index++]=x;
+            if (gr_index >= max_graph_size) gr_index=0; 
+            if (gr_size < max_graph_size) gr_size++; 
+        }
+        if (++nskip>=nsamples) nskip = 0;
+    };
+    /*!
+      @brief reset graph
+    */
+    void resetGraph() { gr_index = 0x00; gr_size = 0x00; nskip = 0x00; };
+    
   } cache;
 
   void updateCache();
+
+public:
+  void fillGraphDisplayData(k197graph_type *graphdata);
+  void troubleshootAutoscale(float testmin, float testmax);
   void resetStatistics();
 
   /*!
@@ -240,7 +292,10 @@ public:
 
       @param nsamples number of samples
   */
-  void setNsamples(byte nsamples) { cache.nsamples = nsamples; };
+  void setNsamples(byte nsamples) { 
+      cache.nsamples = nsamples; 
+      cache.avg_factor = 1.0 / float(nsamples);
+  };
   /*!
       @brief get the number of samples for rolling average calculation
       @return number of samples

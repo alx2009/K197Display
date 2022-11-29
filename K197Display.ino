@@ -41,9 +41,16 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Graph mode
-//  Move statistics options to own submenu
-//  Improved statistics
+//  Horizontal autoscale
+//  Better scaling + units
+//  Graph options (nsamples, scaling, include 0, symmetric, rolling)
+//  Graph cursor
+//  Graph log scale
+//  Graph fixed scale
+//  Review menu structure
+//  Improved statistics ?
+//  Save & restore current screen mode in settings
+//  Add message box after save/restore menu command
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 //
 // Latest benchmark:
@@ -147,6 +154,26 @@ void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
   uiman.setContrast(value);
 }
 
+void cmdTmpScaling() {
+  static char buf[INPUT_BUFFER_SIZE];
+  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
+  buf[i] = 0;
+  if (i == 0) { // no characters read
+    Serial.println(F("Contrast: <no change>"));
+    Serial.flush();
+    return;
+  }
+  float value = atof(buf);
+  Serial.print(F("X="));
+  Serial.println(value);
+  Serial.flush();
+  PROFILE_start(DebugOut.PROFILE_MATH);
+  k197dev.troubleshootAutoscale(value, value);
+  PROFILE_stop(DebugOut.PROFILE_MATH);
+  PROFILE_println(DebugOut.PROFILE_MATH,
+                    F("Time spent in troubleshootAutoscale()"));
+}
+
 /*!
       @brief toggle data logging
 */
@@ -205,6 +232,8 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     cmdLog();
   } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
     cmdContrast();
+  }  else if ((strcasecmp_P(buf, PSTR("x")) == 0)) {
+    cmdTmpScaling();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
