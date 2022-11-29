@@ -167,11 +167,11 @@ void cmdTmpScaling() {
   Serial.print(F("X="));
   Serial.println(value);
   Serial.flush();
-  PROFILE_start(DebugOut.PROFILE_MATH);
+  //PROFILE_start(DebugOut.PROFILE_MATH);
   k197dev.troubleshootAutoscale(value, value);
-  PROFILE_stop(DebugOut.PROFILE_MATH);
-  PROFILE_println(DebugOut.PROFILE_MATH,
-                    F("Time spent in troubleshootAutoscale()"));
+  //PROFILE_stop(DebugOut.PROFILE_MATH);
+  //PROFILE_println(DebugOut.PROFILE_MATH,
+  //                  F("Time spent in troubleshootAutoscale()"));
 }
 
 /*!

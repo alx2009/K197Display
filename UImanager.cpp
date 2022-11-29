@@ -187,12 +187,16 @@ static k197graph_type k197graph;
 */
 void UImanager::updateGraphScreen() {
   u8g2_uint_t x = 185;
-  u8g2_uint_t y = 5;
+  u8g2_uint_t y = 3;
+  u8g2.setFont(u8g2_font_5x7_mr);
+  y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getUnit(true));
-  u8g2.setFont(u8g2_font_8x13_mr);
+  y += u8g2.getMaxCharHeight();
+
+  u8g2.setFont(u8g2_font_6x12_mr);
   if (k197dev.isAC())
     u8g2.print(F(" AC"));
   else
@@ -202,19 +206,18 @@ void UImanager::updateGraphScreen() {
   else
     u8g2.print(F("    "));
 
-  y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
-  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  u8g2.setFont(u8g2_font_8x13_mr);
   if (k197dev.isNumeric()) {
     char buf[K197_RAW_MSG_SIZE + 1];
     u8g2.print(formatNumber(buf, k197dev.getValue()));
   } else
     u8g2.print(k197dev.getRawMessage());
 
-  x+= 15;
-  y += u8g2.getMaxCharHeight() +3;
-  u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_6x12_mr);
+  x+= 15;
+  y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
   if (k197dev.isAuto())
     u8g2.print(F("Auto"));
   else

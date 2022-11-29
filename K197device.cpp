@@ -358,8 +358,32 @@ void K197device::updateCache() {
   dxUtil.checkFreeStack();
 }
 
-static float getScaleMultiplierUp(float x, float pow10) { // Look for the maximum
-  float norm=x * powf(10.0, -pow10); // normalized: -1<norm<1
+// Array saves about 500 uS execution and 830b flash vs. alternative [powf(), ceilf() & logf()] 
+// Faster execution (-150 us] could be achieved putting the array in RAM
+const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10, 1E2, 1E3, 1E4, 1E5, 1E6};
+#define sizeof_scaleFactor int(sizeof(scaleFactor)/sizeof(scaleFactor[0]))
+
+#define SCALE_VALUE_MIN 1E-6
+#define SCALE_LOG_MIN -6
+static int getLog10Ceiling(float x) {
+    x=fabsf(x);
+    if (x<=SCALE_VALUE_MIN) return SCALE_LOG_MIN;
+    //return ceilf(log10f(x)); // next code is equivalent but faster
+    for (int i=sizeof_scaleFactor-1; i>0; i--) {
+        if ( x * pgm_read_float(&scaleFactor[i]) <1.0) return 6-i;
+    }
+    return 6;
+}
+
+static float getpow10(int i) {
+   //return powf(10.0, i); // next code is equivalent but faster
+   if (i<-6) i=-6;
+   else if (i>6) i=6;
+   return  pgm_read_float(&scaleFactor[i+6]);
+}
+
+static float getScaleMultiplierUp(float x, int pow10) { // Look for the maximum
+  float norm=x * getpow10(-pow10); // normalized: -1<norm<1
   if ( norm > 0) {
      if (norm < 0.2) return 0.2;
      else if (norm < 0.5) return 0.5;
@@ -371,8 +395,8 @@ static float getScaleMultiplierUp(float x, float pow10) { // Look for the maximu
   }
 }
 
-static float getScaleMultiplierDown(float x, float pow10) { // Look for the minimum
-  float norm=x * powf(10.0, -pow10); // normalized: 1>=abs(norm)>=1
+static float getScaleMultiplierDown(float x, int pow10) { // Look for the minimum
+  float norm=x * getpow10(-pow10); // normalized: 1>=abs(norm)>=1
   if ( norm > 0) {
      if (norm > 0.5) return 0.5;
      else if (norm > 0.2) return 0.2;
@@ -383,47 +407,44 @@ static float getScaleMultiplierDown(float x, float pow10) { // Look for the mini
      return -1.0;
   }
 }
-
-#define SCALE_VALUE_MIN 0.0000001
-#define SCALE_LOG_MIN -7
-static float getPow10(float x) {
-    x=fabsf(x);
-    if (x<SCALE_VALUE_MIN) return SCALE_LOG_MIN;
-    return ceilf(log10f(x));
-}
-
+                       
 void K197device::troubleshootAutoscale(float testmin, float testmax) {
+  PROFILE_start(DebugOut.PROFILE_MATH);
   // Autoscale -  First we find the power of 10
-  float max_pow10 = getPow10(testmin);  // First we bracket max ...
+  int max_pow10 = getLog10Ceiling(testmin);  // First we bracket max ...
   float max_mult = getScaleMultiplierUp(testmax, max_pow10);
   // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
-  float ymax = max_mult*powf(10.0, max_pow10);
+  float ymax = max_mult*getpow10(max_pow10);
   // Print result
-  DebugOut.print(F("testmax="));DebugOut.println(testmax);
-  DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
-  DebugOut.print(F("=")); DebugOut.println(ymax); 
 
   // Autoscale -  First we find the power of 10
-  float min_pow10 = getPow10(testmax); // and min with pow. of 10
+  int min_pow10 = getLog10Ceiling(testmax); // and min with pow. of 10
   float min_mult = getScaleMultiplierDown(testmin, min_pow10);
   // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
-  float ymin = min_mult*powf(10.0, min_pow10);
+  float ymin = min_mult*getpow10(min_pow10);
+  PROFILE_stop(DebugOut.PROFILE_MATH);
+  PROFILE_println(DebugOut.PROFILE_MATH,
+                    F("Time spent in troubleshootAutoscale()"));
+  
   // Print result
   DebugOut.print(F("testmin="));DebugOut.println(testmin);
   DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
   DebugOut.print(F("=")); DebugOut.println(ymin); 
+  DebugOut.print(F("testmax="));DebugOut.println(testmax);
+  DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
+  DebugOut.print(F("=")); DebugOut.println(ymax); 
 }
 
 void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
   // Autoscale -  First we find the power of 10
-  float max_pow10 = getPow10(cache.max);  
-  float min_pow10 = getPow10(cache.min);
+  int max_pow10 = getLog10Ceiling(cache.max);  
+  int min_pow10 = getLog10Ceiling(cache.min);
   // Then we fine tune the multiplier (1.0x, 0.5x, 0.2x or 0.1x, sign can be + or -)
   float max_mult = getScaleMultiplierUp(cache.max, max_pow10);   
   float min_mult = getScaleMultiplierDown(cache.min, min_pow10); 
 
-  float ymax = max_mult*powf(10.0, max_pow10);
-  float ymin = min_mult*powf(10.0, min_pow10);
+  float ymax = max_mult*getpow10(max_pow10);
+  float ymin = min_mult*getpow10(min_pow10);
   
   if (ymax == ymin) { //Safeguard from pathological cases...
      if (ymax>0) {
