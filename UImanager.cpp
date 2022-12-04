@@ -180,13 +180,41 @@ void UImanager::updateDisplay() {
 }
 
 static k197graph_type k197graph;
+//                            0   1   2   3   4   5   6
+static const char prefix[]={'n','u','m',' ','k','M','G'};
+static inline const char getPrefix(int8_t pow10) {
+   int8_t index = pow10 >=0 ? pow10/3 + 3 : (pow10+1)/3+2;
+   return prefix[index];
+}
 
+static inline int8_t getZeroes(int8_t pow10) {
+   //int8_t nz = pow10 >=0 ? pow10 % 3 : 2+((pow10+1)%3);
+   //DebugOut.print(F("pow10="));DebugOut.println(pow10);
+   //DebugOut.print(F("nz="));DebugOut.println(nz);   
+   //return nz;
+   return pow10 >=0 ? pow10 % 3 : 2+((pow10+1)%3);
+} 
+
+static void printYLabel(k197graph_label_type l) {
+   int8_t pow10_effective = l.pow10+k197dev.getUnitPow10();
+   u8g2.print(l.mult);
+
+   int8_t nzeroes = getZeroes(pow10_effective);
+   for (uint8_t i=0; i<nzeroes; i++) {
+      u8g2.print('0');  
+   }
+   //DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
+   u8g2.print(getPrefix(pow10_effective));
+   for (uint8_t i=0; i<(2-nzeroes); i++) {
+      u8g2.print(CH_SPACE);  
+   }
+}
 /*!
     @brief  update the display, used when in graph mode
    screen.
 */
 void UImanager::updateGraphScreen() {
-  u8g2_uint_t x = 185;
+  u8g2_uint_t x = 185+10;
   u8g2_uint_t y = 3;
   u8g2.setFont(u8g2_font_5x7_mr);
   y += u8g2.getMaxCharHeight();
@@ -197,6 +225,7 @@ void UImanager::updateGraphScreen() {
   y += u8g2.getMaxCharHeight();
 
   u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setCursor(u8g2.tx, u8g2.ty + 1);
   if (k197dev.isAC())
     u8g2.print(F(" AC"));
   else
@@ -206,6 +235,7 @@ void UImanager::updateGraphScreen() {
   else
     u8g2.print(F("    "));
 
+  x = 185+5;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
   if (k197dev.isNumeric()) {
@@ -214,18 +244,6 @@ void UImanager::updateGraphScreen() {
   } else
     u8g2.print(k197dev.getRawMessage());
 
-  u8g2.setFont(u8g2_font_6x12_mr);
-  x+= 15;
-  y += u8g2.getMaxCharHeight();
-  u8g2.setCursor(x, y);
-  if (k197dev.isAuto())
-    u8g2.print(F("Auto"));
-  else
-    u8g2.print(F("    ")); 
-  if (k197dev.getDisplayHold())
-    u8g2.print(F(" Hold"));
-  else
-    u8g2.print(F("     ")); 
   u8g2.setDrawColor(0);
   u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size);
   u8g2.setDrawColor(1);
@@ -236,6 +254,28 @@ void UImanager::updateGraphScreen() {
   // Draw the axis
   u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
+
+  //Draw y axis labels
+  //u8g2.setFont(u8g2_font_5x7_mr);
+  u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
+  printYLabel(k197graph.y0);  
+  u8g2.setCursor(k197graph.x_size+2, 0);
+  printYLabel(k197graph.y1);  
+
+  // Draw AUTO & HOLD at about the same height
+  u8g2.setFont(u8g2_font_5x7_mr);
+  x=u8g2.tx + 5;
+  y = 1;
+  u8g2.setCursor(x, y);
+  if (k197dev.isAuto())
+    u8g2.print(F("AUTO"));
+  else
+    u8g2.print(F("    ")); 
+  if (k197dev.getDisplayHold())
+    u8g2.print(F(" HOLD"));
+  else
+    u8g2.print(F("     ")); 
 
   // Draw the graph
   for (int i=0; i<k197graph.npoints; i++) {

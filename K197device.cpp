@@ -590,10 +590,10 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
 
   //DebugOut.print(F("cache.max="));DebugOut.println(cache.max);
   //DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
-  //DebugOut.print(F("=")); DebugOut.println(ymax); 
+  DebugOut.print(F("=")); DebugOut.println(ymax); 
   //DebugOut.print(F("cache.in="));DebugOut.println(cache.min);
   //DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
-  //DebugOut.print(F("=")); DebugOut.println(ymin); 
+  DebugOut.print(F("=")); DebugOut.println(ymin); 
   
   float scale_factor = float(graphdata->y_size)/round(ymax-ymin);
   for (int i=0; i<cache.gr_size; i++) {
