@@ -34,6 +34,10 @@
 
 K197device k197dev;
 
+// ***************************************************************************************
+//  Segment to Character conversion and handling of display message
+// ***************************************************************************************
+
 /*!
     @brief Lookup table to convert from segments to char
     @details before using the table, shift the 5 most significant bit one
@@ -79,6 +83,10 @@ float getMsgValue(char *s, int len) {
   }
   return 0.0; // we consider a string of spaces as equivalent to 0.0
 }
+
+// ***************************************************************************************
+//  Read data from the voltmenter
+// ***************************************************************************************
 
 /*!
       @brief process a new reading
@@ -257,8 +265,12 @@ void K197device::setOverrange() {
   dxUtil.checkFreeStack();
 }
 
+// ***************************************************************************************
+//  Handling of mesurement units (V, A, etc.)
+// ***************************************************************************************
+
 /*!
-    @brief  return the unit text (V, mV, etc.)
+    @brief  return the unit, including SI prefix (V, mV, etc.)
     @param include_dB if true, returns "dB" as a unit when in dB mode
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
@@ -295,6 +307,68 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
 }
 
 /*!
+    @brief  return the main unit without any prefix, as text (V, A, etc.)
+    @param include_dB if true, returns "dB" as a unit when in dB mode
+    @return the unit (1 or 2 characters + terminating NUL). This is a UTF-8 string
+    because it may include Ω or °
+*/
+const __FlashStringHelper *
+K197device::getMainUnit(bool include_dB) { // Note: includes UTF-8 characters
+  if (isV()) {            // Voltage units
+    if (flags.tkMode && ismV() && isDC())
+      return F("°C");
+    else return F("V");
+      return F("V");
+  } else if (isOmega()) { // Resistence units
+      return F("Ω");
+  } else if (isA()) {     // Current units
+      return F("A");
+  } else {                // No unit found
+    if (include_dB && isdB())
+      return F("dB");
+    else
+      return F("?");
+  }
+}
+
+/*!
+    @brief returns the exponent corresponding to the SI multiplier
+    @details 10 elevated to the exponent returned gives the power of 10 corresponding to the prefix set in the annouciators
+    For example, 1KΩ means 10^3Ω ==> exponent is 3. In 1µA means 10^-6A exponent is -6. with no prefix 0 is returned (10^0=1).
+    @returns the exponent corresponding to the SI multiplier 
+*/
+int8_t K197device::getUnitPow10() {
+  if (isV()) {                         // Voltage units
+    if (flags.tkMode && ismV() && isDC())
+      return 0;
+    else if (ismV())
+      return -3;
+    else
+      return 0;
+  } else if (isOmega()) { // Resistence units
+    if (isM())
+      return 6;
+    else if (isk())
+      return 3;
+    else
+      return 0;
+  } else if (isA()) { // Current units
+    if (ismicro())
+      return -6;
+    else if (ismA())
+      return -3;
+    else
+      return 0;
+  } else { // No unit found
+      return 0;
+  }
+}
+
+// ***************************************************************************************
+//  Debug & troubleshooting
+// ***************************************************************************************
+
+/*!
     @brief  print a summary of the received message to DebugOut for
    troubleshooting purposes
 */
@@ -317,6 +391,10 @@ void K197device::debugPrint() {
     DebugOut.print(F(" + Ov.Range"));
   DebugOut.println();
 }
+
+// ***************************************************************************************
+//  Cache handling
+// ***************************************************************************************
 
 /*!
     @brief  utility function, used to compare two set of annunciator0, ignoring
@@ -358,6 +436,21 @@ void K197device::updateCache() {
   dxUtil.checkFreeStack();
 }
 
+/*!
+    @brief  reset all statistics (min, average, max)
+    @details average, max and min are calculated here
+ */
+void K197device::resetStatistics() {
+  cache.average = msg_value;
+  cache.min = msg_value;
+  cache.max = msg_value;
+  cache.resetGraph();
+}
+
+// ***************************************************************************************
+//  Graph & Autoscaling 
+// ***************************************************************************************
+
 // Array saves about 500 uS execution and 830b flash vs. alternative [powf(), ceilf() & logf()] 
 // Faster execution (-150 us] could be achieved putting the array in RAM
 const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10, 1E2, 1E3, 1E4, 1E5, 1E6};
@@ -365,14 +458,21 @@ const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10, 1
 
 #define SCALE_VALUE_MIN 1E-6
 #define SCALE_LOG_MIN -6
-static int getLog10Ceiling(float x) {
+
+void k197graph_label_type::setLog10Ceiling(float x) {
     x=fabsf(x);
-    if (x<=SCALE_VALUE_MIN) return SCALE_LOG_MIN;
-    //return ceilf(log10f(x)); // next code is equivalent but faster
-    for (int i=sizeof_scaleFactor-1; i>0; i--) {
-        if ( x * pgm_read_float(&scaleFactor[i]) <1.0) return 6-i;
+    if (x<=SCALE_VALUE_MIN) {
+      pow10 = SCALE_LOG_MIN;
+      return;
     }
-    return 6;
+    //return ceilf(log10f(x)); // next code is equivalent but faster
+    for (int8_t i=sizeof_scaleFactor-1; i>0; i--) {
+        if ( x * pgm_read_float(&scaleFactor[i]) <1.0) {
+             pow10=6-i;
+             return;
+        }
+    }
+    pow10=6;
 }
 
 static float getpow10(int i) {
@@ -382,69 +482,98 @@ static float getpow10(int i) {
    return  pgm_read_float(&scaleFactor[i+6]);
 }
 
-static float getScaleMultiplierUp(float x, int pow10) { // Look for the maximum
+void k197graph_label_type::setScaleMultiplierUp(float x) { // Look for the maximum
   float norm=x * getpow10(-pow10); // normalized: -1<norm<1
+  //DebugOut.print(F("setScaleMultiplierUp pow10="));DebugOut.println(pow10);
+  //DebugOut.print(F("setScaleMultiplierUp norm="));DebugOut.println(norm);
   if ( norm > 0) {
-     if (norm < 0.2) return 0.2;
-     else if (norm < 0.5) return 0.5;
-     return 1.0;
+     if (norm < 0.2) {
+        pow10--;
+        mult=2;
+     } else if (norm < 0.5) {
+        pow10--;
+        mult=5;
+     } else {
+        mult=1;
+     }
   } else {
-     if (norm < -0.5) return -0.5;
-     else if (norm < -0.2) return -0.2;
-     return -0.1;
+     if (norm < -0.5) {
+        pow10--;
+        mult=-5;
+     } else if (norm < -0.2) {
+        pow10--;
+        mult=-2;
+     } else {
+        pow10--;
+        mult=-1;
+     }
   }
 }
 
-static float getScaleMultiplierDown(float x, int pow10) { // Look for the minimum
+void k197graph_label_type::setScaleMultiplierDown(float x) { // Look for the minimum
   float norm=x * getpow10(-pow10); // normalized: 1>=abs(norm)>=1
   if ( norm > 0) {
-     if (norm > 0.5) return 0.5;
-     else if (norm > 0.2) return 0.2;
-     return 0.1;
+     if (norm > 0.5) {
+        pow10--;
+        mult=5;
+     } else if (norm > 0.2) {
+        pow10--;
+        mult=2;
+     } else {
+        pow10--;
+        mult=1;
+     }
   } else {
-     if (norm > -0.2) return -0.2;
-     else if (norm > -0.5) return -0.5;
-     return -1.0;
+     if (norm > -0.2) {
+        pow10--;
+        mult=-2;
+     } else if (norm > -0.5) {
+        pow10--;
+        mult=-5;
+     } else {
+        mult=-1;
+     }
   }
 }
                        
 void K197device::troubleshootAutoscale(float testmin, float testmax) {
   PROFILE_start(DebugOut.PROFILE_MATH);
-  // Autoscale -  First we find the power of 10
-  int max_pow10 = getLog10Ceiling(testmin);  // First we bracket max ...
-  float max_mult = getScaleMultiplierUp(testmax, max_pow10);
-  // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
-  float ymax = max_mult*getpow10(max_pow10);
-  // Print result
+  
+  k197graph_label_type y0;
+  y0.setLog10Ceiling(testmin);  // Find order of magnitude
+  // Then we fine tune the multiplier (1x, 5x or 2x)
+  y0.setScaleMultiplierDown(testmax);
+  float ymin = y0.mult*getpow10(y0.pow10);
 
-  // Autoscale -  First we find the power of 10
-  int min_pow10 = getLog10Ceiling(testmax); // and min with pow. of 10
-  float min_mult = getScaleMultiplierDown(testmin, min_pow10);
-  // Then we fine tune the multiplier (1.0x, 0.5x or 0.2x)
-  float ymin = min_mult*getpow10(min_pow10);
+  k197graph_label_type y1;
+  y1.setLog10Ceiling(testmin);  // Find order of magnitude
+  // Then we fine tune the multiplier (1x, 5x or 2x)
+  y1.setScaleMultiplierUp(testmax);
+  float ymax = y1.mult*getpow10(y1.pow10);
+  
   PROFILE_stop(DebugOut.PROFILE_MATH);
   PROFILE_println(DebugOut.PROFILE_MATH,
                     F("Time spent in troubleshootAutoscale()"));
   
   // Print result
   DebugOut.print(F("testmin="));DebugOut.println(testmin);
-  DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
+  DebugOut.print(F("MIN 10^")); DebugOut.print(y0.pow10); DebugOut.print(F("*")); DebugOut.print(y0.mult); 
   DebugOut.print(F("=")); DebugOut.println(ymin); 
   DebugOut.print(F("testmax="));DebugOut.println(testmax);
-  DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
+  DebugOut.print(F("MAX 10^")); DebugOut.print(y1.pow10); DebugOut.print(F("*")); DebugOut.print(y1.mult); 
   DebugOut.print(F("=")); DebugOut.println(ymax); 
 }
 
 void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
-  // Autoscale -  First we find the power of 10
-  int max_pow10 = getLog10Ceiling(cache.max);  
-  int min_pow10 = getLog10Ceiling(cache.min);
-  // Then we fine tune the multiplier (1.0x, 0.5x, 0.2x or 0.1x, sign can be + or -)
-  float max_mult = getScaleMultiplierUp(cache.max, max_pow10);   
-  float min_mult = getScaleMultiplierDown(cache.min, min_pow10); 
+  // Autoscale -  First we find the order of magnitude (power of 10)
+  graphdata->y0.setLog10Ceiling(cache.min);
+  graphdata->y1.setLog10Ceiling(cache.max);
+  // Then we fine tune the multiplier (1x, 2x, 5x, sign can be + or -)
+  graphdata->y0.setScaleMultiplierDown(cache.min); 
+  graphdata->y1.setScaleMultiplierUp(cache.max);   
 
-  float ymax = max_mult*getpow10(max_pow10);
-  float ymin = min_mult*getpow10(min_pow10);
+  float ymin = graphdata->y0.mult*getpow10(graphdata->y0.pow10);
+  float ymax = graphdata->y1.mult*getpow10(graphdata->y1.pow10);
   
   if (ymax == ymin) { //Safeguard from pathological cases...
      if (ymax>0) {
@@ -480,15 +609,4 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
   graphdata->current_idx = cache.gr_index==0 ? cache.gr_size: cache.gr_index; 
   if (graphdata->current_idx >0) graphdata->current_idx--;
   graphdata->npoints = cache.gr_size;
-}
-
-/*!
-    @brief  reset all statistics (min, average, max)
-    @details average, max and min are calculated here
- */
-void K197device::resetStatistics() {
-  cache.average = msg_value;
-  cache.min = msg_value;
-  cache.max = msg_value;
-  cache.resetGraph();
 }

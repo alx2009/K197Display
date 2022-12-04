@@ -55,6 +55,22 @@
 
 /**************************************************************************/
 /*!
+   @brief auxiliary class to specify the axis labels of a graph
+
+   @details This class is used to pass enough information to represent
+   the data stored in the cache as a graph
+*/
+/**************************************************************************/
+struct k197graph_label_type {
+     int8_t mult;
+     int8_t pow10;
+     void setLog10Ceiling(float x);
+     void setScaleMultiplierUp(float x);
+     void setScaleMultiplierDown(float x);
+};
+
+/**************************************************************************/
+/*!
    @brief  auxiliary class to store the graph
 
    @details This class is used to pass enough information to represent
@@ -67,6 +83,8 @@ struct k197graph_type {
      byte point[x_size];
      byte current_idx=0x00;
      byte npoints=0x00;
+     k197graph_label_type y1;
+     k197graph_label_type y0;
 };
 
 /**************************************************************************/
@@ -196,6 +214,9 @@ public:
 
   const __FlashStringHelper *
   getUnit(bool include_dB = false); // Note: includes UTF-8 characters
+  const __FlashStringHelper *
+  getMainUnit(bool include_dB = false); // Note: includes UTF-8 characters
+  int8_t getUnitPow10();
 
   /*!
       @brief  check if overange is detected
