@@ -565,12 +565,20 @@ void K197device::troubleshootAutoscale(float testmin, float testmax) {
 }
 
 void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
+  // find max and min in the data set
+  float grmin = cache.gr_size>0 ? cache.graph[0] : 0.0;     ///< keep track of the minimum
+  float grmax = grmin;                                      ///< keep track of the maximum
+  for (int i = 1; i<cache.gr_size; i++) {
+       if (cache.graph[i]<grmin) grmin = cache.graph[i];
+       if (cache.graph[i]>grmax) grmax = cache.graph[i];
+  }
+  
   // Autoscale -  First we find the order of magnitude (power of 10)
-  graphdata->y0.setLog10Ceiling(cache.min);
-  graphdata->y1.setLog10Ceiling(cache.max);
+  graphdata->y0.setLog10Ceiling(grmin);
+  graphdata->y1.setLog10Ceiling(grmax);
   // Then we fine tune the multiplier (1x, 2x, 5x, sign can be + or -)
-  graphdata->y0.setScaleMultiplierDown(cache.min); 
-  graphdata->y1.setScaleMultiplierUp(cache.max);   
+  graphdata->y0.setScaleMultiplierDown(grmin); 
+  graphdata->y1.setScaleMultiplierUp(grmax);   
 
   float ymin = graphdata->y0.mult*getpow10(graphdata->y0.pow10);
   float ymax = graphdata->y1.mult*getpow10(graphdata->y1.pow10);
@@ -588,12 +596,12 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
      }
   }
 
-  //DebugOut.print(F("cache.max="));DebugOut.println(cache.max);
+  //DebugOut.print(F("grmax="));DebugOut.println(grmax);
   //DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
-  DebugOut.print(F("=")); DebugOut.println(ymax); 
-  //DebugOut.print(F("cache.in="));DebugOut.println(cache.min);
+  //DebugOut.print(F("=")); DebugOut.println(ymax); 
+  //DebugOut.print(F("cache.in="));DebugOut.println(grmin);
   //DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
-  DebugOut.print(F("=")); DebugOut.println(ymin); 
+  //DebugOut.print(F("=")); DebugOut.println(ymin); 
   
   float scale_factor = float(graphdata->y_size)/round(ymax-ymin);
   for (int i=0; i<cache.gr_size; i++) {
