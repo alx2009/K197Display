@@ -41,9 +41,11 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Horizontal autoscale
-//  Better scaling + units
-//  Graph options (nsamples, scaling, include 0, symmetric, rolling)
+//  Menu option list
+//  Graph basic menu options
+//  Graph line mode rather than dot mode
+//  Graph Horizontal autoscale
+//  Graph more menu options (nsamples, scaling, include 0, symmetric, rolling)
 //  Graph cursor
 //  Graph log scale
 //  Graph fixed scale

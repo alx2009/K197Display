@@ -302,7 +302,7 @@ public:
     A byte input menu item is a line of text with a number on the right
    reflecting the value of the item. When selected, When selected, the left and
    right pushbuttons decrement and increment the value respectly. Holding the
-   key result in faster increments/decrements. Relesing the key triggers the
+   key result in faster increments/decrements. Releasing the key triggers the
    "change" method. A subclass can override the method to implement any action
    (see DEF_MENU_BOOL_ACT macro).
 
@@ -357,7 +357,53 @@ public:
   virtual bool handleUIEvent(K197UIeventsource eventSource,
                              K197UIeventType eventType);
 };
+/**************************************************************************/
+/*!
+    @brief  class implementing options input
 
+    An options input menu item allows selecting between pre-defined options.
+   reflecting the value of the item. When selected, the left and
+   right pushbuttons select the option. Holding the
+   key result in faster increments/decrements. Releasing the key triggers the
+   "change" method. A subclass can override the method to implement any action
+   (see DEF_MENU_BOOL_ACT macro).
+
+    setValue and getValue are used to access the value programmatically (note
+   that this does not trigger the change method).
+*/
+/**************************************************************************/
+class MenuInputOptions : public UIMenuButtonItem {
+protected:
+  const __FlashStringHelper **options; ///<array defining the options.  
+  const byte options_size = 0; ///< the number of options in options[]
+  byte value = 0; ///< the index corresponding to the selected item in options[]
+
+public:
+  /*!
+     @brief  constructor for the object
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+  */
+  MenuInputOptions(u8g2_uint_t height, const __FlashStringHelper *text, const __FlashStringHelper *myoptions[], byte myoptions_size)
+      : UIMenuButtonItem(height, text), options(myoptions), options_size(myoptions_size) {};
+  /*!
+     @brief  set the value for this item
+     @param newValue the new value that will be assigned to the item
+  */
+  void setValue(byte newValue) { value = newValue; if (value>=options_size) value = 0;};
+  /*!
+     @brief  get the value for this item
+     @return the value assigned to the item
+  */
+  byte getValue() { return value; };
+
+  
+
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
+                    bool selected);
+  virtual bool handleUIEvent(K197UIeventsource eventSource,
+                             K197UIeventType eventType);
+};
 /**************************************************************************/
 /*!
     @brief  class implementing a menu close action
@@ -480,6 +526,50 @@ public:
 */
 #define DEF_MENU_BYTE(instance_name, height, text)                             \
   DEF_MENU_CLASS(MenuInputByte, instance_name, height, text)
+
+/*!
+     @brief  macro, used to simplify definition of menu options
+     @details creates a constant char array in PROGMEM, name 
+     and a constant symbol= value
+     intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     @param instance_name name of the option 
+     @param symbol symbolic name for the option 
+     @param value valuie corresponding to symbolic name (0 is the first option in DEF_MENU_OPTION_INPUT, 1 the secomnd and so on) 
+     @param text the text displayed for this option
+*/
+#define DEF_MENU_OPTION(instance_name, symbol, value, text)           \
+     static const uint8_t symbol = value;                   \
+     const char instance_name[] PROGMEM = text;
+
+/*!
+     @brief  macro, used to simplify definition of menu options
+     @details convert a const char array allocated in progmem to const __FlashStringHelper *
+         intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     @param PROGMEM_char_array name of the option 
+*/
+#define OPT(PROGMEM_char_array) \
+    reinterpret_cast<const __FlashStringHelper *>(PROGMEM_char_array)
+
+/*!
+     @brief  macro, used to simplify definition of menu options inputs
+     @details defines a menu item used to enter a number of pre-defined options
+      Each option must be defined with a unique name in DEF_MENU_OPTION
+      All the instance_names defined by DEF_MENU_OPTION must then be passed 
+      as OPT(instance_name). The value of the first option must be 0, the second 1 and so on,
+      otherwise getValue() will not return a value corresponding to the option
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param options_array a pointer to an array defining the options  
+*/
+#define DEF_MENU_OPTION_INPUT(instance_name, height, text, options...)           \
+  const __FlashStringHelper *options_array[] = { options };                    \
+  const char __txt_##instance_name[] PROGMEM = text;                           \
+  MenuInputOptions instance_name(                                              \
+      height,                                                                  \
+      reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name),    \
+      options_array,                                                           \
+      sizeof(options_array)/sizeof(options_array[0]));
 
 /*!
      @brief  macro, used to simplify definition of menu close actions
