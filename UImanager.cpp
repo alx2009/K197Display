@@ -794,9 +794,6 @@ static void printYLabel(k197graph_label_type l) {
    }
    //DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
    u8g2.print(getPrefix(pow10_effective));
-   for (uint8_t i=0; i<=(2-nzeroes); i++) {
-      u8g2.print(CH_SPACE);  
-   }
 }
 
 static void printXYLabel(k197graph_label_type l, byte nseconds) {
@@ -811,11 +808,6 @@ static void printXYLabel(k197graph_label_type l, byte nseconds) {
    }
    //DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
    u8g2.print(getPrefix(pow10_effective));
-
-   if (nseconds<10) u8g2.print(CH_SPACE);
-   for (uint8_t i=0; i<=(2-nzeroes); i++) {
-      u8g2.print(CH_SPACE);  
-   }
 }
 
 /*!
