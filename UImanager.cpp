@@ -870,8 +870,12 @@ void UImanager::updateGraphScreen() {
   u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
 
-  //Draw axis labels
+  //Draw axis labels  
   u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setDrawColor(0);
+  u8g2.drawBox( k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight(), 256,  k197graph.y_size);
+  u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
+  u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
   printXYLabel(k197graph.y0, i1/3);  
   u8g2.setCursor(k197graph.x_size+2, 0);
