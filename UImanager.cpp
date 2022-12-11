@@ -606,11 +606,17 @@ DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0, "Lines");
 DEF_MENU_OPTION(opt_gr_type_dots,  OPT_GRAPH_TYPE_DOTS,  1, "Dots");
 DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines), OPT(opt_gr_type_dots));
 
-DEF_MENU_OPTION(opt_gr_yscale_max, OPT_GRAPH_YSCALE_MAX, 0, "zoom");
-DEF_MENU_OPTION(opt_gr_yscale_zero, OPT_GRAPH_YSCALE_ZERO, 1, "Always Incl. 0");
-DEF_MENU_OPTION(opt_gr_yscale_prefsym, OPT_GRAPH_YSCALE_PREFSYM, 2, "Pref. symmetric");
-DEF_MENU_OPTION(opt_gr_yscale_forcesym, OPT_GRAPH_YSCALE_FORCESYM, 3, "Force symmetric");
-DEF_MENU_OPTION_INPUT(opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
+//DEF_MENU_OPTION(opt_gr_yscale_max, OPT_GRAPH_YSCALE_MAX, 0, "zoom");
+//DEF_MENU_OPTION(opt_gr_yscale_zero, OPT_GRAPH_YSCALE_ZERO, 1, "Always Incl. 0");
+//DEF_MENU_OPTION(opt_gr_yscale_prefsym, OPT_GRAPH_YSCALE_PREFSYM, 2, "Pref. symmetric");
+//DEF_MENU_OPTION(opt_gr_yscale_forcesym, OPT_GRAPH_YSCALE_FORCESYM, 3, "Force symmetric");
+//DEF_MENU_OPTION_INPUT(opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
+
+BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom, "zoom");
+BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero, "Always Incl. 0");
+BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym, "Pref. symmetric");
+BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symmetric");
+DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
 
 DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show 0");
 
@@ -858,7 +864,7 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
 
   // Get graph data
-  k197dev.fillGraphDisplayData(&k197graph, (k197graph_yscale_opt) opt_gr_yscale.getValue()); 
+  k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue()); 
 
   // autoscale x axis
   uint16_t i1 = 16;
