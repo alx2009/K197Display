@@ -475,7 +475,7 @@ void k197graph_label_type::setLog10Ceiling(float x) {
     pow10=6;
 }
 
-static float getpow10(int i) {
+float k197graph_label_type::getpow10(int i) {
    //return powf(10.0, i); // next code is equivalent but faster
    if (i<-6) i=-6;
    else if (i>6) i=6;
@@ -543,13 +543,13 @@ void K197device::troubleshootAutoscale(float testmin, float testmax) {
   y0.setLog10Ceiling(testmin);  // Find order of magnitude
   // Then we fine tune the multiplier (1x, 5x or 2x)
   y0.setScaleMultiplierDown(testmax);
-  float ymin = y0.mult*getpow10(y0.pow10);
+  float ymin = y0.getValue();
 
   k197graph_label_type y1;
   y1.setLog10Ceiling(testmin);  // Find order of magnitude
   // Then we fine tune the multiplier (1x, 5x or 2x)
   y1.setScaleMultiplierUp(testmax);
-  float ymax = y1.mult*getpow10(y1.pow10);
+  float ymax = y1.getValue();
   
   PROFILE_stop(DebugOut.PROFILE_MATH);
   PROFILE_println(DebugOut.PROFILE_MATH,
@@ -564,6 +564,49 @@ void K197device::troubleshootAutoscale(float testmin, float testmax) {
   DebugOut.print(F("=")); DebugOut.println(ymax); 
 }
 
+void k197graph_type::setScale(float grmin, float grmax, k197graph_yscale_opt yopt) {
+  // Autoscale -  First we find the order of magnitude (power of 10)
+  y0.setLog10Ceiling(grmin);
+  y1.setLog10Ceiling(grmax);
+  // Then we fine tune the multiplier (1x, 2x, 5x, sign can be + or -)
+  y0.setScaleMultiplierDown(grmin); 
+  y1.setScaleMultiplierUp(grmax);   
+
+  if (y0 == y1) { //Safeguard from pathological cases...
+     if (y1.isPositive()) {
+       ++y1;
+       --y0;
+     } else if (y1.isNegative()) {
+        --y1;
+        ++y0;
+     } else { // y1 == y0 == 0.0
+        y1.setValue(1, SCALE_LOG_MIN);
+        y0.setValue(-1, SCALE_LOG_MIN);
+     }
+  }
+
+  // apply y scale options
+  if (yopt==k197graph_yscale_zero || yopt==k197graph_yscale_0sym) {  // Make sure the value 0 is included
+      if ( y0.isPositive()) y0.reset();
+      if ( y1.isNegative()) y1.reset();
+  }
+  if (yopt==k197graph_yscale_prefsym || yopt==k197graph_yscale_0sym) { // Make symmetric if 0 is included
+      if (y0.isNegative() && y1.isPositive() ) { // zero is included in the graph
+         if (y0.abs()>y1) y1.setValue(-y0);
+         else y0.setValue(-y1);
+      }
+  } else if (yopt==k197graph_yscale_forcesym) { // Make symmetric even if 0 not included
+      if (y1.isPositive() && y0.isPositive()) { // all values are above 0
+         y0.setValue(-y1);
+      } else if (y1.isNegative() && y0.isNegative()) { // all values are below 0
+         y1.setValue(-y0);
+      } else {
+         if (y0.abs()>y1) y1.setValue(-y0);
+         else y0.setValue(-y1);
+      }
+  }
+}
+
 void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt) {
   // find max and min in the data set
   float grmin = cache.gr_size>0 ? cache.graph[0] : 0.0;     ///< keep track of the minimum
@@ -573,29 +616,10 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
        if (cache.graph[i]>grmax) grmax = cache.graph[i];
   }
   
-  // Autoscale -  First we find the order of magnitude (power of 10)
-  graphdata->y0.setLog10Ceiling(grmin);
-  graphdata->y1.setLog10Ceiling(grmax);
-  // Then we fine tune the multiplier (1x, 2x, 5x, sign can be + or -)
-  graphdata->y0.setScaleMultiplierDown(grmin); 
-  graphdata->y1.setScaleMultiplierUp(grmax);   
-
-  float ymin = graphdata->y0.mult*getpow10(graphdata->y0.pow10);
-  float ymax = graphdata->y1.mult*getpow10(graphdata->y1.pow10);
+  graphdata->setScale(grmin, grmax, yopt);
+  float ymin = graphdata->y0.getValue();
+  float ymax = graphdata->y1.getValue();
   
-  if (ymax == ymin) { //Safeguard from pathological cases...
-     if (ymax>0) {
-        ymax *=10.0;
-        ymin *=0.1;
-     } else if (ymax<0) {
-        ymax *=0.1;
-        ymin *=10.0;   
-     } else { // ymax == ymin == 0.0
-        ymax *= SCALE_VALUE_MIN;
-        ymin *=-SCALE_VALUE_MIN;
-     }
-  }
-
   //DebugOut.print(F("grmax="));DebugOut.println(grmax);
   //DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
   //DebugOut.print(F("=")); DebugOut.println(ymax); 
@@ -613,6 +637,11 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
          break; 
      }
      graphdata->point[i] = (cache.graph[i]-ymin)*scale_factor+0.5;
+  }
+  if ( graphdata->y0.isNegative() && graphdata->y1.isPositive() ) { // 0 is included in the graph
+     graphdata->y_zero = -ymin*scale_factor+0.5;
+  } else {
+     graphdata->y_zero = 0;
   }
   graphdata->current_idx = cache.gr_index==0 ? cache.gr_size: cache.gr_index; 
   if (graphdata->current_idx >0) graphdata->current_idx--;

@@ -64,9 +64,54 @@
 struct k197graph_label_type {
      int8_t mult;
      int8_t pow10;
+     k197graph_label_type() : mult(0), pow10(0) {};
+     k197graph_label_type(int8_t init_mult, int8_t init_pow10) : mult(init_mult), pow10(init_pow10) {};
+     static float getpow10(int i);
      void setLog10Ceiling(float x);
      void setScaleMultiplierUp(float x);
      void setScaleMultiplierDown(float x);
+     float getValue() const {return mult==0 ? 0.0 : float(mult)*getpow10(pow10);}; ///< return equivalent float value
+     void setValue(int8_t new_mult, int8_t new_pow10) {mult=new_mult; pow10=new_pow10;}; ///< set new multiple and new power of 10
+     void setValue(const k197graph_label_type l) {mult=l.mult; pow10=l.pow10;}; ///< set value from another object
+     void reset() {mult=0; pow10=0;}; // set new multiple and new power of 10
+     bool isNormalized() const {return ::abs(mult)<10 ? true : false;}; ///< check if normalized (-10<mult<+10)
+     bool isPositive() const {return mult > 0;}; ///< check if value >0
+     bool isNegative() const {return mult < 0;}; ///< check if value <0
+     k197graph_label_type abs() const { ///< returns a new object with the absolute value of the original object 
+         return k197graph_label_type(mult>0 ? mult : mult, pow10);
+     };
+
+     // overloading operators used in label scaling
+     k197graph_label_type operator-() { ///< unary Minus (-) operator 
+        return k197graph_label_type(-(this->mult), (this->pow10) );
+     };
+     k197graph_label_type &operator--() { ///< Prefix decrement (--) operator 
+        --pow10;
+        return *this;
+     };
+     k197graph_label_type &operator++() { ///< Postfix increment (++) operator 
+        ++pow10;
+        return *this;
+     };
+};
+
+//Overloading common functions and operators useful in autoscaling
+inline bool operator==(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (==) operator 
+         if (lhs.isNormalized() && rhs.isNormalized()) return (lhs.mult == rhs.mult) && (lhs.pow10 == rhs.pow10);
+         else return lhs.getValue() == rhs.getValue();
+};
+inline bool operator!=(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (!=) operator 
+         if (lhs.isNormalized() && rhs.isNormalized()) return (lhs.mult != rhs.mult) || (lhs.pow10 != rhs.pow10);
+         else return lhs.getValue() != rhs.getValue();
+};
+inline bool operator==(const float& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (==) operator 
+         return lhs == rhs.getValue();
+};
+inline bool operator!=(const float& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (!=) operator 
+         return lhs == rhs.getValue();
+};
+inline bool operator>(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (>) operator 
+         return lhs.getValue() > rhs.getValue();
 };
 
 /**************************************************************************/
@@ -75,10 +120,11 @@ struct k197graph_label_type {
 */
 /**************************************************************************/
 enum k197graph_yscale_opt {
-  k197graph_yscale_zoom = 0x00,     ///< zoom the graph as much as possible
-  k197graph_yscale_zero = 0x01,     ///< always incluide zero in the graph
-  k197graph_yscale_prefsym = 0x02,  ///< If graph cross zero, the scale is symmetric
-  k197graph_yscale_forcesym = 0x03, ///< Always use a symmetric scale
+  k197graph_yscale_zoom =     0x00, ///< zoom the graph as much as possible
+  k197graph_yscale_zero =     0x01, ///< always include zero in the graph
+  k197graph_yscale_prefsym =  0x02, ///< If graph cross zero, the scale is symmetric
+  k197graph_yscale_0sym =     0x03, ///< combine the previous two
+  k197graph_yscale_forcesym = 0x04, ///< Always use a symmetric scale
 };
 
 /**************************************************************************/
@@ -97,6 +143,9 @@ struct k197graph_type {
      byte npoints=0x00;
      k197graph_label_type y1;
      k197graph_label_type y0;
+     byte y_zero=0x00; ///< the point value for 0, if included in the graph
+
+     void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
 };
 
 /**************************************************************************/
@@ -286,21 +335,23 @@ private:
                                  ///< becomes a circular buffer
     byte gr_index=0;///< index to the next graph record to be filled
     byte gr_size=0; ///< amount of data in graph (0-max_graph_size)
-    byte nskip = 0;  ///< Skip counter  
+    byte nskip = 0;  ///< Skip counter for rolling average
     byte nsamples = 3; ///< Number of samples to use for rolling average
 
+    uint16_t nskip_graph=0;      ///< Skip counter for graph
+    uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
     /*!
       @brief add one sample to graph
       @details Only one out of every nsamples is stored
       @param nsamples number of samples
     */
     void add2graph(float x) {
-        if (nskip == 0) { 
+        if (nskip_graph == 0) { 
             graph[gr_index++]=x;
             if (gr_index >= max_graph_size) gr_index=0; 
             if (gr_size < max_graph_size) gr_size++; 
         }
-        if (++nskip>=nsamples) nskip = 0;
+        if (++nskip_graph>=nsamples_graph) nskip_graph = 0;
     };
     /*!
       @brief reset graph
@@ -334,6 +385,26 @@ public:
       @return number of samples
   */
   float getNsamples() { return cache.nsamples; };
+
+  /*!
+      @brief  set the sampling period for the graph in seconds
+
+      @details the actual sapling time will approximate the requested time, depending on the actual sampling rate of the K197.
+      when set to zero, all samples received from the K197 are graphed (the data rate is about 3Hz)
+
+      @param nseconds sampling time in seconds
+  */
+  void setGraphPeriod(byte nseconds) { 
+      cache.nsamples_graph = nseconds * 3; 
+
+  };
+  /*!
+      @brief get the sampling period for the graph in seconds
+      @details the actual sapling time will approximate the returned time, depending on the actual sampling rate of the K197.
+      When zero is returned, all samples received from the K197 are graphed (the data rate is about 3Hz)
+      @return number the sampling period in seconds 
+  */
+  float getGraphPeriod() { return cache.nsamples_graph / 3; };
 
   /*!
       @brief  returns the average value (see also setNsamples())

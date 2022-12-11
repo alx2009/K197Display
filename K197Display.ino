@@ -41,13 +41,16 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Graph more menu options (nsamples, scaling, include 0, symmetric, rolling)
+//  Dotted line for x axis
+//  Graph more menu options (x scaling, rolling)
 //  Graph cursor
 //  Review menu structure
+//  Save new options to EEPROM
 //  Improved statistics ?
 //  Manual scaling ?
 //  Save & restore current screen mode in settings
 //  Add message box after save/restore menu command
+//  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 //
 // Latest benchmark:

@@ -601,27 +601,24 @@ UImenuItem *logMenuItems[] = {
     &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
 DEF_MENU_SEPARATOR(graphSeparator0, 15, "< Graph options >"); ///< Menu separator
+DEF_MENU_BYTE_ACT(gr_sample_time, 15, "Sample time (s)",
+                  k197dev.setGraphPeriod(getValue()););      ///< Menu input
 
 DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0, "Lines");
 DEF_MENU_OPTION(opt_gr_type_dots,  OPT_GRAPH_TYPE_DOTS,  1, "Dots");
 DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines), OPT(opt_gr_type_dots));
 
-//DEF_MENU_OPTION(opt_gr_yscale_max, OPT_GRAPH_YSCALE_MAX, 0, "zoom");
-//DEF_MENU_OPTION(opt_gr_yscale_zero, OPT_GRAPH_YSCALE_ZERO, 1, "Always Incl. 0");
-//DEF_MENU_OPTION(opt_gr_yscale_prefsym, OPT_GRAPH_YSCALE_PREFSYM, 2, "Pref. symmetric");
-//DEF_MENU_OPTION(opt_gr_yscale_forcesym, OPT_GRAPH_YSCALE_FORCESYM, 3, "Force symmetric");
-//DEF_MENU_OPTION_INPUT(opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
-
 BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom, "zoom");
-BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero, "Always Incl. 0");
-BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym, "Pref. symmetric");
-BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symmetric");
-DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
-
+BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero, "Incl. 0");
+BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym, "Symmetric");
+BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym, "0+symm");
+BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symm.");
+DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_0sym), OPT(opt_gr_yscale_forcesym));
+  
 DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show 0");
 
 UImenuItem *graphMenuItems[] = {
-    &graphSeparator0, &opt_gr_type, &opt_gr_yscale, &gr_yscale_show0, &closeMenu, &exitMenu};
+    &graphSeparator0, &gr_sample_time, &opt_gr_type, &opt_gr_yscale, &gr_yscale_show0, &closeMenu, &exitMenu};
 
 /*!
       @brief set the display contrast
@@ -677,6 +674,8 @@ void UImanager::setupMenus() {
   UIgraphMenu.items = graphMenuItems;
   UIgraphMenu.num_items = sizeof(graphMenuItems) / sizeof(UImenuItem *);
   UIgraphMenu.selectFirstItem();
+
+  gr_sample_time.setValue(k197dev.getGraphPeriod());
 
   permadata::retrieve_from_EEPROM();
 }
@@ -875,6 +874,8 @@ void UImanager::updateGraphScreen() {
   // Draw the axis
   u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
+  if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
+      u8g2.drawLine(0, k197graph.y_zero, k197graph.x_size, k197graph.y_zero); // zero axis    
 
   //Draw axis labels  
   u8g2.setFont(u8g2_font_6x12_mr);
@@ -883,7 +884,8 @@ void UImanager::updateGraphScreen() {
   u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
-  printXYLabel(k197graph.y0, i1/3);  
+  byte nseconds = gr_sample_time.getValue();
+  printXYLabel(k197graph.y0, nseconds == 0 ? i1/3 : i1 * nseconds);  
   u8g2.setCursor(k197graph.x_size+2, 0);
   printYLabel(k197graph.y1);
 
