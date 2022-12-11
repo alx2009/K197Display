@@ -395,9 +395,7 @@ public:
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  byte getValue() { return value; };
-
-  
+  byte getValue() { return value; };  
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
@@ -534,11 +532,25 @@ public:
      intended to use together with OPT() and DEF_MENU_OPTION_INPUT
      @param instance_name name of the option 
      @param symbol symbolic name for the option 
-     @param value valuie corresponding to symbolic name (0 is the first option in DEF_MENU_OPTION_INPUT, 1 the secomnd and so on) 
+     @param value value corresponding to symbolic name (0 is the first option in DEF_MENU_OPTION_INPUT, 1 the secomnd and so on) 
      @param text the text displayed for this option
 */
 #define DEF_MENU_OPTION(instance_name, symbol, value, text)           \
      static const uint8_t symbol = value;                   \
+     const char instance_name[] PROGMEM = text;
+
+/*!
+     @brief  macro, used to simplify definition of menu options
+     @details like DEF_MENU_OPTION but does not create a symbolic name
+     intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     to bind text to an existing enum
+     The enum values should always be sequential, starting from 0
+     Note that the macro does not actually bind anything, value is there only to document the binding 
+     @param instance_name name of the option 
+     @param value value corresponding to symbolic name  
+     @param text the text displayed for this option
+*/
+#define BIND_MENU_OPTION(instance_name, value, text)           \
      const char instance_name[] PROGMEM = text;
 
 /*!
@@ -571,6 +583,29 @@ public:
       __optarr_##instance_name,                                                           \
       sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0]));
 
+/*!
+     @brief  macro, used to simplify definition of menu options inputs
+     @details like DEF_MENU_OPTION_INPUT, but it also redefines getValue and setValue
+     so that they return an enum type rather than a byte
+     @param enum_type enum that must be returned by setValue and getValue
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param options_array a pointer to an array defining the options  
+*/
+#define DEF_MENU_ENUM_INPUT(enum_type, instance_name, height, text, options...)\
+  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
+  class __class_##instance_name : public MenuInputOptions {                    \
+  public:                                                                      \
+    __class_##instance_name() : MenuInputOptions(height, F(text),              \
+      __optarr_##instance_name,                                                \
+      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0])){}; \
+      void setValue(enum_type newValue) {                                      \
+             MenuInputOptions::setValue((byte)newValue);};                     \
+      enum_type getValue() { return  (enum_type) MenuInputOptions::getValue(); \
+              };                                                               \
+  } instance_name
+      
 /*!
      @brief  macro, used to simplify definition of menu close actions
      @param instance_name name of the object instance defined by the macro
