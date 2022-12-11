@@ -71,6 +71,18 @@ struct k197graph_label_type {
 
 /**************************************************************************/
 /*!
+    @brief  Define the scaling options for the y axis
+*/
+/**************************************************************************/
+enum k197graph_yscale_opt {
+  k197graph_yscale_zoom = 0x00,     ///< zoom the graph as much as possible
+  k197graph_yscale_zero = 0x01,     ///< always incluide zero in the graph
+  k197graph_yscale_prefsym = 0x02,  ///< If graph cross zero, the scale is symmetric
+  k197graph_yscale_forcesym = 0x03, ///< Always use a symmetric scale
+};
+
+/**************************************************************************/
+/*!
    @brief  auxiliary class to store the graph
 
    @details This class is used to pass enough information to represent
@@ -300,7 +312,7 @@ private:
   void updateCache();
 
 public:
-  void fillGraphDisplayData(k197graph_type *graphdata);
+  void fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt);
   void troubleshootAutoscale(float testmin, float testmax);
   void resetStatistics();
 

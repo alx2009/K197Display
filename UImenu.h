@@ -562,14 +562,14 @@ public:
      @param text the text displayed for this item
      @param options_array a pointer to an array defining the options  
 */
-#define DEF_MENU_OPTION_INPUT(instance_name, height, text, options...)           \
-  const __FlashStringHelper *options_array[] = { options };                    \
+#define DEF_MENU_OPTION_INPUT(instance_name, height, text, options...)         \
+  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
   const char __txt_##instance_name[] PROGMEM = text;                           \
   MenuInputOptions instance_name(                                              \
       height,                                                                  \
       reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name),    \
-      options_array,                                                           \
-      sizeof(options_array)/sizeof(options_array[0]));
+      __optarr_##instance_name,                                                           \
+      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0]));
 
 /*!
      @brief  macro, used to simplify definition of menu close actions

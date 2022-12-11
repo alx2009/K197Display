@@ -606,8 +606,16 @@ DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0, "Lines");
 DEF_MENU_OPTION(opt_gr_type_dots,  OPT_GRAPH_TYPE_DOTS,  1, "Dots");
 DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines), OPT(opt_gr_type_dots));
 
+DEF_MENU_OPTION(opt_gr_yscale_max, OPT_GRAPH_YSCALE_MAX, 0, "zoom");
+DEF_MENU_OPTION(opt_gr_yscale_zero, OPT_GRAPH_YSCALE_ZERO, 1, "Always Incl. 0");
+DEF_MENU_OPTION(opt_gr_yscale_prefsym, OPT_GRAPH_YSCALE_PREFSYM, 2, "Pref. symmetric");
+DEF_MENU_OPTION(opt_gr_yscale_forcesym, OPT_GRAPH_YSCALE_FORCESYM, 3, "Force symmetric");
+DEF_MENU_OPTION_INPUT(opt_gr_yscale, 15, "Y Scale", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_forcesym));
+
+DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show 0");
+
 UImenuItem *graphMenuItems[] = {
-    &graphSeparator0, &opt_gr_type, &closeMenu, &exitMenu};
+    &graphSeparator0, &opt_gr_type, &opt_gr_yscale, &gr_yscale_show0, &closeMenu, &exitMenu};
 
 /*!
       @brief set the display contrast
@@ -850,7 +858,7 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
 
   // Get graph data
-  k197dev.fillGraphDisplayData(&k197graph); 
+  k197dev.fillGraphDisplayData(&k197graph, (k197graph_yscale_opt) opt_gr_yscale.getValue()); 
 
   // autoscale x axis
   uint16_t i1 = 16;

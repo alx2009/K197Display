@@ -564,7 +564,7 @@ void K197device::troubleshootAutoscale(float testmin, float testmax) {
   DebugOut.print(F("=")); DebugOut.println(ymax); 
 }
 
-void K197device::fillGraphDisplayData(k197graph_type *graphdata) {
+void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt) {
   // find max and min in the data set
   float grmin = cache.gr_size>0 ? cache.graph[0] : 0.0;     ///< keep track of the minimum
   float grmax = grmin;                                      ///< keep track of the maximum

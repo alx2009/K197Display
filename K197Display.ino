@@ -45,6 +45,7 @@ moving to inline assembler and naked interrupt handlers
 //  Graph cursor
 //  Review menu structure
 //  Improved statistics ?
+//  Manual scaling ?
 //  Save & restore current screen mode in settings
 //  Add message box after save/restore menu command
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
