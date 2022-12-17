@@ -42,7 +42,11 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 //  ==> Dotted line for x axis
-//  Graph more menu options (x scaling, rolling)
+//  ==>Graph more menu options (x scaling)
+// implement autosample
+// implement x axis autoscale option
+// add marker for current measurement
+// Add option for rolling
 //  Graph cursor
 //  Review menu structure
 //  Save new options to EEPROM
