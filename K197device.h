@@ -340,6 +340,7 @@ private:
 
     uint16_t nskip_graph=0;      ///< Skip counter for graph
     uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
+    bool autosample_graph=false; ///< if true set nsamples_graph automatically 
     /*!
       @brief add one sample to graph
       @details Only one out of every nsamples is stored
@@ -402,9 +403,28 @@ public:
       @brief get the sampling period for the graph in seconds
       @details the actual sapling time will approximate the returned time, depending on the actual sampling rate of the K197.
       When zero is returned, all samples received from the K197 are graphed (the data rate is about 3Hz)
-      @return number the sampling period in seconds 
+      @return number the sampling period in seconds
   */
-  float getGraphPeriod() { return cache.nsamples_graph / 3; };
+  uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
+
+  /*!
+      @brief  set the autosample flag
+
+      @details when this flag is set, when the graph is full the sampling period is increased automatically
+      data already sampled are decimated, so that they match the new sampling time 
+
+      @param autosample the new value of the autosample flag
+  */
+  void setAutosample(bool autosample) { 
+      cache.autosample_graph = autosample; 
+
+  };
+  /*!
+      @brief get the autosample flag
+      @details see setAutosample()
+      @return the value of the autosample flag 
+  */
+  bool getAutosample() { return cache.nsamples_graph / 3; };
 
   /*!
       @brief  returns the average value (see also setNsamples())
