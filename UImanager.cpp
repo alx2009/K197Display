@@ -96,6 +96,27 @@ uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT]; ///< buffer for the log window
 U8G2LOG u8g2log;                                  ///< the log window
 
 // ***************************************************************************************
+// Graphics utility functions
+// ***************************************************************************************
+void drawDottedHLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t dotsize=10, uint16_t dotDistance=20) {
+   if (dotsize==0) dotsize=1;
+   if (dotDistance==0) dotDistance=dotsize*5;
+   uint16_t xdot;
+   do {
+       xdot=x0+dotsize;
+       if (xdot>x1)xdot=x1;
+       u8g2.drawLine(x0, y0, xdot, y0);
+       x0+=dotDistance;
+   } while (x0<=x1);
+}
+
+/*
+void drawHArrowHead(uint16_t x0, uint16_t y0, uint16_t arrowSize){
+    u8g2.drawLine(x0, y0, x0+arrowSize, y0+arrowSize);
+    u8g2.drawLine(x0, y0, x0+arrowSize, y0-arrowSize);
+}*/
+
+// ***************************************************************************************
 // UI Setup 
 // ***************************************************************************************
 
@@ -614,13 +635,12 @@ UImenuItem *logMenuItems[] = {
     &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
 DEF_MENU_SEPARATOR(graphSeparator0, 15, "< Graph options >"); ///< Menu separator
-DEF_MENU_BYTE_ACT(gr_sample_time, 15, "Sample time (s)",
-                  k197dev.setGraphPeriod(getValue()););      ///< Menu input
 
 DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0, "Lines");
 DEF_MENU_OPTION(opt_gr_type_dots,  OPT_GRAPH_TYPE_DOTS,  1, "Dots");
 DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines), OPT(opt_gr_type_dots));
 
+DEF_MENU_SEPARATOR(graphSeparator1, 15, "< Y axis >"); ///< Menu separator
 BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom, "zoom");
 BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero, "Incl. 0");
 BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym, "Symmetric");
@@ -628,10 +648,20 @@ BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym, "0+symm");
 BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symm.");
 DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_0sym), OPT(opt_gr_yscale_forcesym));
   
-DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show 0");
+DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show y=0");
+
+DEF_MENU_SEPARATOR(graphSeparator2, 15, "< X axis >"); ///< Menu separator
+DEF_MENU_BOOL(gr_xscale_autoscale, 15, "Autoscale X");       ///< Menu input
+DEF_MENU_BOOL_ACT(gr_xscale_autosample, 15, "Auto sample",
+                  k197dev.setAutosample(getValue()););       ///< Menu input
+DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
+                  k197dev.setGraphPeriod(newValue);,
+                  return k197dev.getGraphPeriod(););         ///< Menu input
 
 UImenuItem *graphMenuItems[] = {
-    &graphSeparator0, &gr_sample_time, &opt_gr_type, &opt_gr_yscale, &gr_yscale_show0, &closeMenu, &exitMenu};
+    &graphSeparator0, &opt_gr_type, 
+    &graphSeparator1, &opt_gr_yscale, &gr_yscale_show0, 
+    &graphSeparator2, &gr_xscale_autoscale, &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu};
 
 /*!
       @brief set the display contrast
@@ -671,7 +701,8 @@ void UImanager::setupMenus() {
   UIgraphMenu.num_items = sizeof(graphMenuItems) / sizeof(UImenuItem *);
   UIgraphMenu.selectFirstItem();
 
-  gr_sample_time.setValue(k197dev.getGraphPeriod());
+  //gr_sample_time.setValue(k197dev.getGraphPeriod());
+  gr_xscale_autosample.setValue(k197dev.getAutosample());
 
   permadata::retrieve_from_EEPROM();
 }
@@ -892,7 +923,7 @@ void UImanager::updateGraphScreen() {
   u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
-      u8g2.drawLine(0, k197graph.y_zero, k197graph.x_size, k197graph.y_zero); // zero axis    
+      drawDottedHLine(0, k197graph.y_zero, k197graph.x_size); // zero axis
 
   //Draw axis labels  
   u8g2.setFont(u8g2_font_6x12_mr);

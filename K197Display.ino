@@ -41,7 +41,7 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Dotted line for x axis
+//  ==> Dotted line for x axis
 //  Graph more menu options (x scaling, rolling)
 //  Graph cursor
 //  Review menu structure
