@@ -282,12 +282,12 @@ public:
      @brief  set the value for this item
      @param newValue the new value that will be assigned to the item
   */
-  void setValue(bool newValue) { value = newValue; };
+  virtual void setValue(bool newValue) { value = newValue; };
   /*!
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  bool getValue() { return value; };
+  virtual bool getValue() { return value; };
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
@@ -345,12 +345,12 @@ public:
      @brief  set the value for this item
      @param newValue the new value that will be assigned to the item
   */
-  void setValue(byte newValue) { value = newValue; };
+  virtual void setValue(byte newValue) { value = newValue; };
   /*!
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  byte getValue() { return value; };
+  virtual byte getValue() { return value; };
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
@@ -682,5 +682,49 @@ public:
 #define DEF_MENU_BYTE_ACT(instance_name, height, text, action_code)            \
   DEF_MENU_ACTION_SUBCLASS(MenuInputByte, instance_name, height, text,         \
                            action_code)
+
+/*!
+     @brief  macro, used used to simplify class creation overriding the setValue(newValue) and getValue() methods
+     @param parent_class name of the parent class. instance_name will be an
+   object of a new class derived from parent_class
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param value_type the type returned by getValue() and passed in setValue(newValue)
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_SETGET_SUBCLASS(parent_class, instance_name, height, text,    \
+                                 value_type, set_code, get_code)               \
+  /*! define a new class derived from parent_class */                          \
+  class __class_##instance_name : public parent_class {                        \
+  public:                                                                      \
+    __class_##instance_name() : parent_class(height, F(text)){};               \
+    virtual void setValue(value_type newValue){set_code};                      \
+    virtual value_type getValue(){get_code};                                   \
+  } instance_name
+
+/*!
+     @brief  macro, used to simplify definition of a menu bool input overriding the setValue(newValue) and getValue() methods
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_BOOL_SETGET(instance_name, height, text, set_code, get_code)  \
+  DEF_MENU_SETGET_SUBCLASS(MenuInputBool, instance_name, height, text,         \
+                           bool, set_code, get_code)
+/*!
+     @brief  macro, used to simplify definition of a menu byte input overriding the setValue(newValue) and getValue() methods
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_BYTE_SETGET(instance_name, height, text, set_code, get_code)  \
+  DEF_MENU_SETGET_SUBCLASS(MenuInputByte, instance_name, height, text,         \
+                           byte, set_code, get_code)
 
 #endif // UIMENU_H__
