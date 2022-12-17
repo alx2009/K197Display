@@ -254,7 +254,7 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
   x = x + w - checkbox_size - checkbox_margin;
   y = y + MENU_TEXT_OFFSET_Y;
   u8g2->drawFrame(x, y, checkbox_size, checkbox_size);
-  if (value) {
+  if (getValue()) {
     u8g2->drawLine(x, y, x + checkbox_size, y + checkbox_size);
     u8g2->drawLine(x, y + checkbox_size, x + checkbox_size, y);
   }
@@ -296,17 +296,17 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
   u8g2->setDrawColor(1);
   u8g2->setFontMode(0);
   u8g2->setCursor(x + w - value_size, y + MENU_TEXT_OFFSET_Y);
-  u8g2->print(value);
+  u8g2->print(getValue());
   if (selected) {
     x = x + slide_xmargin;
     y = y + height + slide_ymargin0;
     w = w - 2 * slide_xmargin;
     u8g2_uint_t h = height - slide_ymargin0 - slide_ymargin1;
-    if (value == 255) {
+    if (getValue() == 255) {
       u8g2->drawBox(x, y, w, h);
     } else {
       u8g2->drawFrame(x, y, w, h);
-      unsigned int m = int(value) * int(w) / int(255);
+      unsigned int m = int(getValue()) * int(w) / int(255);
       u8g2->drawBox(x, y, (u8g2_uint_t)m, h);
     }
   }
@@ -372,13 +372,13 @@ bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
   if ((eventSource == K197key_RCL || eventSource == K197key_STO)) {
     switch (eventType) {
     case UIeventPress:
-      value = calcIncrement(value, eventSource, 1);
+      setValue(calcIncrement(value, eventSource, 1));
       break;
     case UIeventLongPress:
-      value = calcIncrement(value, eventSource, 10);
+      setValue(calcIncrement(value, eventSource, 10));
       break;
     case UIeventHold:
-      value = calcIncrement(value, eventSource, 5);
+      setValue(calcIncrement(value, eventSource, 5));
       break;
     case UIeventRelease:
       change();
