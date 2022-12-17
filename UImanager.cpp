@@ -95,6 +95,10 @@ u8g2(U8G2_R0, OLED_SS
 uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT]; ///< buffer for the log window
 U8G2LOG u8g2log;                                  ///< the log window
 
+// ***************************************************************************************
+// UI Setup 
+// ***************************************************************************************
+
 /*!
     @brief  this function is intended to include any drawing command that may be
    needed the very first time the display is used
@@ -155,6 +159,10 @@ void UImanager::setup() {
 
   setupMenus();
 }
+
+// ***************************************************************************************
+// Display update 
+// ***************************************************************************************
 
 /*!
     @brief  update the display. The information comes from the pointer to
@@ -480,6 +488,44 @@ void UImanager::updateMinMaxScreen() {
 }
 
 /*!
+      @brief display the BT module status (detected or not detected)
+
+      @param present true if a BT module is detected, false otherwise
+      @param connected true if a BT connection is detected, false otherwise
+*/
+void UImanager::updateBtStatus() {
+  if (isSplitScreen() ||
+      (getScreenMode() != K197sc_normal)) {
+    return;
+  }
+  unsigned int x = 95;
+  unsigned int y = 2;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_5x7_mr);
+  if (BTman.isPresent()) {
+    u8g2.print(F("bt "));
+  } else {
+    u8g2.print(F("   "));
+  }
+  x += u8g2.getStrWidth("   ");
+  u8g2.setCursor(x, y);
+  bool connected = BTman.isConnected();
+  if (connected && isLogging()) {
+    u8g2.print(F("<=>"));
+  } else if (connected) {
+    u8g2.print(F("<->"));
+  } else {
+    u8g2.print(F("   "));
+  }
+  u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
+}
+
+// ***************************************************************************************
+// Screen mode & clear screen
+// ***************************************************************************************
+
+/*!
       @brief set the screen mode
 
    @details  Three modes are defined: normal mode, menu mode and debug mode.
@@ -517,39 +563,6 @@ void UImanager::clearScreen() {
   dxUtil.checkFreeStack();
 }
 
-/*!
-      @brief display the BT module status (detected or not detected)
-
-      @param present true if a BT module is detected, false otherwise
-      @param connected true if a BT connection is detected, false otherwise
-*/
-void UImanager::updateBtStatus() {
-  if (isSplitScreen() ||
-      (getScreenMode() != K197sc_normal)) {
-    return;
-  }
-  unsigned int x = 95;
-  unsigned int y = 2;
-  u8g2.setCursor(x, y);
-  u8g2.setFont(u8g2_font_5x7_mr);
-  if (BTman.isPresent()) {
-    u8g2.print(F("bt "));
-  } else {
-    u8g2.print(F("   "));
-  }
-  x += u8g2.getStrWidth("   ");
-  u8g2.setCursor(x, y);
-  bool connected = BTman.isConnected();
-  if (connected && isLogging()) {
-    u8g2.print(F("<=>"));
-  } else if (connected) {
-    u8g2.print(F("<->"));
-  } else {
-    u8g2.print(F("   "));
-  }
-  u8g2.sendBuffer();
-  dxUtil.checkFreeStack();
-}
 
 // ***************************************************************************************
 //  Menu definition/handling
@@ -635,23 +648,6 @@ void UImanager::setContrast(uint8_t value) {
 }
 
 /*!
-      @brief  set data logging to Serial
-      @param yesno true to enabl, false to disable
-*/
-void UImanager::setLogging(bool yesno) {
-  if (!yesno)
-    logskip_counter = 0;
-  logEnable.setValue(yesno);
-  dxUtil.checkFreeStack();
-}
-
-/*!
-      @brief  query data logging to Serial
-      @return returns true if logging is active
-*/
-bool UImanager::isLogging() { return logEnable.getValue(); }
-
-/*!
       @brief  setup the menu
       @details this method setup all the menus. It must be called before the
    menu can be displayed.
@@ -679,6 +675,27 @@ void UImanager::setupMenus() {
 
   permadata::retrieve_from_EEPROM();
 }
+
+// ***************************************************************************************
+//  Logging
+// ***************************************************************************************
+
+/*!
+      @brief  set data logging to Serial
+      @param yesno true to enabl, false to disable
+*/
+void UImanager::setLogging(bool yesno) {
+  if (!yesno)
+    logskip_counter = 0;
+  logEnable.setValue(yesno);
+  dxUtil.checkFreeStack();
+}
+
+/*!
+      @brief  query data logging to Serial
+      @return returns true if logging is active
+*/
+bool UImanager::isLogging() { return logEnable.getValue(); }
 
 /*!
       @brief  Utility function, print a ";" if the option logSplit is active,
