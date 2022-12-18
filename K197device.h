@@ -333,7 +333,7 @@ private:
     float graph[max_graph_size]; ///< stores gr_size records
                                  ///< when gr_size = max_graph_size
                                  ///< becomes a circular buffer
-    byte gr_index=0;///< index to the next graph record to be filled
+    byte gr_index=max_graph_size-1;///< index to the most recent record
     byte gr_size=0; ///< amount of data in graph (0-max_graph_size)
     byte nskip = 0;  ///< Skip counter for rolling average
     byte nsamples = 3; ///< Number of samples to use for rolling average
@@ -348,8 +348,9 @@ private:
     */
     void add2graph(float x) {
         if (nskip_graph == 0) { 
-            graph[gr_index++]=x;
+            gr_index++;
             if (gr_index >= max_graph_size) gr_index=0; 
+            graph[gr_index]=x;
             if (gr_size < max_graph_size) gr_size++; 
         }
         if (++nskip_graph>=nsamples_graph) nskip_graph = 0;
@@ -358,7 +359,6 @@ private:
       @brief reset graph
     */
     void resetGraph() { gr_index = 0x00; gr_size = 0x00; nskip = 0x00; };
-    
   } cache;
 
   void updateCache();

@@ -643,7 +643,6 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
   } else {
      graphdata->y_zero = 0;
   }
-  graphdata->current_idx = cache.gr_index==0 ? cache.gr_size: cache.gr_index; 
-  if (graphdata->current_idx >0) graphdata->current_idx--;
+  graphdata->current_idx = cache.gr_index; 
   graphdata->npoints = cache.gr_size;
 }
