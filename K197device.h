@@ -341,6 +341,16 @@ private:
     uint16_t nskip_graph=0;      ///< Skip counter for graph
     uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
     bool autosample_graph=false; ///< if true set nsamples_graph automatically 
+
+    /*!
+      @brief get the array index from logical index
+      @details the logical index is 0 for the oldest record and increases as we get towards newer records
+      The array index is the index in the circular buffer graph[] corresponding to the logical index
+      @param logic_index the logical index (range: 0 - gr_size-1)
+      @return arry index (range: 0 - gr_size-1)
+    */
+    inline uint16_t grGetArrayIdx(uint16_t logic_index) {return (logic_index+gr_index+1) % gr_size;};
+    
     /*!
       @brief add one sample to graph
       @details Only one out of every nsamples is stored
