@@ -653,7 +653,37 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
    @param nsampled_new new value of nsamples_graph
 */
 void K197device::resampleGraph(uint16_t nsampled_new) {
-  if (nsampled_new == cache.nsamples_graph) return;
-  
+  if (cache.gr_size == 0 || nsampled_new == cache.nsamples_graph) return;
+  if (nsampled_new>cache.nsamples_graph) { // Decimation to match the new sample rate 
+      unsigned int new_idx=0;
+      uint16_t nsamples_old = cache.nsamples_graph == 0 ? 1 : cache.nsamples_graph;
+      uint16_t gr_size_new = 1 + nsamples_old * cache.gr_size / nsampled_new;
+      float buffer[gr_size_new];
+      // Copy the decimated data into the buffer, with correct ordering
+      for (int i=0; i<cache.gr_size; i++) { 
+          if ( i*nsamples_old >= new_idx*nsampled_new) {
+             if (new_idx>=gr_size_new) {
+                 DebugOut.println("Error: new_idx 1");
+                  break;
+             }
+             buffer[new_idx] = cache.graph[cache.grGetArrayIdx(i)];
+             new_idx++;  
+          }    
+          if (new_idx!=gr_size_new) {
+             DebugOut.println("Error: new_idx 2");
+             break;
+          }
+
+          dxUtil.checkFreeStack(); // We use quite a bit of stack for the buffer
+          //Adjust cache size. Note that nskip_graph  
+          cache.gr_index=new_idx-1;
+          cache.gr_size=new_idx;
+          
+          //Copy the buffer back to the cache
+          for (int i=0; i<cache.gr_size; i++) {
+              cache.graph[i] = buffer[i];  
+          }
+      }
+  }
   cache.nsamples_graph = nsampled_new;
 }
