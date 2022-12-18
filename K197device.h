@@ -368,10 +368,12 @@ private:
     /*!
       @brief reset graph
     */
-    void resetGraph() { gr_index = 0x00; gr_size = 0x00; nskip = 0x00; };
+    void resetGraph() { gr_index = max_graph_size-1; gr_size = 0x00; nskip = 0x00; };
+
   } cache;
 
   void updateCache();
+  void resampleGraph(uint16_t nsampled_new);
 
 public:
   void fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt);
@@ -406,8 +408,8 @@ public:
       @param nseconds sampling time in seconds
   */
   void setGraphPeriod(byte nseconds) { 
-      cache.nsamples_graph = nseconds * 3; 
-
+      uint16_t nsamples_new = nseconds * 3;
+      resampleGraph(nsamples_new); 
   };
   /*!
       @brief get the sampling period for the graph in seconds

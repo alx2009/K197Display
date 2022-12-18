@@ -646,3 +646,14 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
   graphdata->current_idx = cache.gr_index; 
   graphdata->npoints = cache.gr_size;
 }
+
+/*!
+   @brief resample the graph
+   @details resample the stored data to match the new sample rate, then set nsamples_graph to nsampled_new
+   @param nsampled_new new value of nsamples_graph
+*/
+void K197device::resampleGraph(uint16_t nsampled_new) {
+  if (nsampled_new == cache.nsamples_graph) return;
+  
+  cache.nsamples_graph = nsampled_new;
+}
