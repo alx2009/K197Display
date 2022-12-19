@@ -310,11 +310,11 @@ public:
 
 private:  
     static const byte max_graph_size = 180; ///< maximum number of measurements that can be cached
-
+    static const byte max_graph_period = 180; ///< maximum number of seconds between samples
   /*!
       @brief  structure used to store previus vales, average, max, min, etc.
    */
-  struct {
+  struct k197_cache_struct {
   public:
     float avg_factor = 1.0 / 3.0; ///< Factor used in average calculation
     bool tkMode = false;   ///< caches tkMode from previous measurement
@@ -369,11 +369,10 @@ private:
       @brief reset graph
     */
     void resetGraph() { gr_index = max_graph_size-1; gr_size = 0x00; nskip = 0x00; };
-
+    void resampleGraph(uint16_t nsamples_new);
   } cache;
 
   void updateCache();
-  void resampleGraph(uint16_t nsampled_new);
 
 public:
   void fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt);
@@ -409,7 +408,7 @@ public:
   */
   void setGraphPeriod(byte nseconds) { 
       uint16_t nsamples_new = nseconds * 3;
-      resampleGraph(nsamples_new); 
+      cache.resampleGraph(nsamples_new); 
   };
   /*!
       @brief get the sampling period for the graph in seconds
@@ -436,7 +435,7 @@ public:
       @details see setAutosample()
       @return the value of the autosample flag 
   */
-  bool getAutosample() { return cache.nsamples_graph / 3; };
+  bool getAutosample() { return cache.autosample_graph; };
 
   /*!
       @brief  returns the average value (see also setNsamples())

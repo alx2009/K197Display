@@ -432,6 +432,16 @@ void K197device::updateCache() {
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
+  if (getAutosample() && cache.nskip_graph == 0) { // Autosample is on and a sample is ready
+      if (cache.gr_size == max_graph_size) { // And no room left for an extra sample
+          uint16_t graphPeriod = getGraphPeriod();
+          if ( graphPeriod < max_graph_period) { //   And we have room to increase graphPeriod  
+              graphPeriod*=2;
+              if (graphPeriod>max_graph_period) graphPeriod = max_graph_period;
+              cache.resampleGraph(graphPeriod);       // Then we resample & make room for new data
+          }
+      }
+  }
   cache.add2graph(msg_value);
   dxUtil.checkFreeStack();
 }
@@ -649,24 +659,28 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
 
 /*!
    @brief resample the graph
-   @details resample the stored data to match the new sample rate, then set nsamples_graph to nsampled_new
-   @param nsampled_new new value of nsamples_graph
+   @details resample the stored data to match the new sample rate, then set nsamples_graph to nsamples_new
+   @param nsamples_new new value of nsamples_graph
 */
-void K197device::resampleGraph(uint16_t nsampled_new) {
-  if (cache.gr_size == 0 || nsampled_new == cache.nsamples_graph) return;
-  if (nsampled_new>cache.nsamples_graph) { // Decimation to match the new sample rate 
-      unsigned int new_idx=0;
-      uint16_t nsamples_old = cache.nsamples_graph == 0 ? 1 : cache.nsamples_graph;
-      uint16_t gr_size_new = 1 + nsamples_old * cache.gr_size / nsampled_new;
-      float buffer[gr_size_new];
+void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
+  if (gr_size == 0 || nsamples_new == nsamples_graph) {
+    return;
+  }
+  uint16_t nsamples_old = nsamples_graph == 0 ? 1 : nsamples_graph;
+  unsigned long gr_size_new = long(gr_size-1) * long(nsamples_old / nsamples_new) + 1l + nskip_graph/nsamples_new;
+  if (gr_size_new>max_graph_size) gr_size_new = max_graph_size;
+  float buffer[gr_size_new];
+  
+  if (nsamples_new>nsamples_graph) { // Decimation to match the new sample rate 
       // Copy the decimated data into the buffer, with correct ordering
-      for (int i=0; i<cache.gr_size; i++) { 
-          if ( i*nsamples_old >= new_idx*nsampled_new) {
+      unsigned int new_idx=0;
+      for (int old_idx=0; old_idx<gr_size; old_idx++) { 
+          if ( old_idx*nsamples_old >= new_idx*nsamples_new) {
              if (new_idx>=gr_size_new) {
                  DebugOut.println("Error: new_idx 1");
                   break;
              }
-             buffer[new_idx] = cache.graph[cache.grGetArrayIdx(i)];
+             buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
              new_idx++;  
           }    
           if (new_idx!=gr_size_new) {
@@ -674,16 +688,37 @@ void K197device::resampleGraph(uint16_t nsampled_new) {
              break;
           }
 
-          dxUtil.checkFreeStack(); // We use quite a bit of stack for the buffer
-          //Adjust cache size. Note that nskip_graph  
-          cache.gr_index=new_idx-1;
-          cache.gr_size=new_idx;
-          
-          //Copy the buffer back to the cache
-          for (int i=0; i<cache.gr_size; i++) {
-              cache.graph[i] = buffer[i];  
-          }
+          //Adjust cache size. Note that nskip_graph does not need to change  
+          gr_index=new_idx-1;
+          gr_size=new_idx;   
       }
+  } else { // Add more data to match the new sample rate
+      unsigned int old_idx=gr_size-1;
+      int new_idx = gr_size_new-1;
+      
+      // Adjust nskip_graph
+      for (unsigned int n = 0; n<(nskip_graph/nsamples_new); n++) {
+          buffer[new_idx] = graph[grGetArrayIdx(gr_size-1)];
+          new_idx--;
+      }
+      nskip_graph = nskip_graph % nsamples_new;
+
+      //Resample with shorter period. Old data may be lost here if there is no room
+      for (; new_idx>=0; new_idx--) { 
+          if (new_idx*nsamples_new < old_idx*nsamples_old) {
+              if (old_idx>0) old_idx--;
+          }
+          buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
+      }
+      //Adjust cache size  
+      gr_index=gr_size_new-1;
+      gr_size=gr_size_new;
   }
-  cache.nsamples_graph = nsampled_new;
+  dxUtil.checkFreeStack(); // We may be using quite a bit of stack for the buffer
+  
+  //Copy the buffer back to the cache
+  for (int i=0; i<gr_size; i++) {
+      graph[i] = buffer[i];  
+  }
+  nsamples_graph = nsamples_new;
 }

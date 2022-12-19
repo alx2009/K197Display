@@ -35,15 +35,15 @@ fool-proof, but statistically we should print out something if there are
 recurring issues
 
 Currently interrupt handlers are pretty efficient (except the one for the CCL).
-However they could be optimized further if the need arise, but it would require
+They could be optimized further if the need arise, but it would require
 moving to inline assembler and naked interrupt handlers
 
 */
 /**************************************************************************/
 // TODO wish list:
-//  ==> Dotted line for x axis
-//  ==>Graph more menu options (x scaling)
-// implement autosample
+//  test ==> Dotted line for x axis
+//  test ==> Graph more menu options (x scaling)
+//  test ==> autosample
 // implement x axis autoscale option
 // add marker for current measurement
 // Add option for rolling
