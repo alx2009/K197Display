@@ -161,9 +161,21 @@ public:
 
 /**************************************************************************/
 /*!
+    @brief  base class for all windows in the UI
+    
+    Only the class UImanager
+   (declared as friend) can create a working UImenu.
+*/
+/**************************************************************************/
+class UIwindow {
+  
+};
+
+/**************************************************************************/
+/*!
     @brief  class implementing a menu
 
-    A menu is a collection of object of type MenuItem. Only the class UImanager
+    A menu is a window consisting in a collection of object of type MenuItem. Only the class UImanager
    (declared as friend) can create a working UImenu.
 
     Scrolling up and down is controlled by the up and down pushbutto source.
@@ -174,7 +186,7 @@ public:
 
 */
 /**************************************************************************/
-class UImenu {
+class UImenu : UIwindow {
 protected:
   UImenuItem *
       *items; ///< point to an array, storing all menu items in this menu
