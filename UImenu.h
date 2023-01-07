@@ -164,10 +164,24 @@ public:
     @brief  base class for all windows in the UI
     
     Only the class UImanager
-   (declared as friend) can create a working UImenu.
+   (declared as friend) can create a working UIwindow.
 */
 /**************************************************************************/
 class UIwindow {
+  protected:
+  friend class UImanager;    ///< Windows are managed by UImanager 
+  u8g2_uint_t width = 100;   ///< display width of the menu in pixels
+
+  public:
+  /*!
+     @brief  constructor of the object
+     @param width width of the menu window
+     @param isRoot true if this is the root menu (it will be set as default
+     menu)
+  */
+  UIwindow(u8g2_uint_t width, bool isRoot = false) {
+      this->width = width;  
+  };
   
 };
 
@@ -194,9 +208,7 @@ protected:
 
   byte firstVisibleItem = 0; ///< keep track of the first visible item
   byte selectedItem = 0;     ///< keep track of the selected item
-  u8g2_uint_t width = 100;   ///< display width of the menu in pixels
-  friend class UImanager;    ///< Menus are managed by UImanager and no other
-                             ///< object
+  friend class UImanager;    ///< Menus are managed by UImanager 
 
   bool selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
   void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
@@ -211,8 +223,7 @@ public:
      @param isRoot true if this is the root menu (it will be set as default
      menu)
   */
-  UImenu(u8g2_uint_t width, bool isRoot = false) {
-    this->width = width;
+  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot) {
     if (isRoot)
       currentMenu = this;
   };
