@@ -124,9 +124,7 @@ bool UIMenuButtonItem::handleUIEvent(K197UIeventsource eventSource,
      @param x the x coordinate of the top/left corner
      @param y the y coordinate of the top/left corner
 */
-void     if (isRoot)
-      currentWindow = this;
-draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
+void UImenu::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
   u8g2->setFont(u8g2_font_6x12_mr);
   u8g2->setCursor(x, y);
   u8g2->setFontMode(0);

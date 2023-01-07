@@ -187,7 +187,9 @@ class UIwindow {
           currentWindow = this;
   };
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};  ///< virtual function, see derived classes
-  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){}; ///< virtual function, see derived classes
+  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){
+      return false;  
+  }; ///< virtual function, see derived classes
   
   /*!
      @brief  open a child menu
@@ -258,8 +260,8 @@ public:
      @param isRoot true if this is the root menu (it will be set as default
      menu)
   */
-  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot);
-  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {};
+  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot) {};
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
   virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
   /*!
