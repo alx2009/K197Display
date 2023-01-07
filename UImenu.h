@@ -171,6 +171,8 @@ class UIwindow {
   protected:
   friend class UImanager;    ///< Windows are managed by UImanager 
   u8g2_uint_t width = 100;   ///< display width of the menu in pixels
+  UIwindow *parent = NULL; ///< the parent menu, can only be set via openWindow().
+  static UIwindow *currentWindow; ///< Keeps track of the current menu
 
   public:
   /*!
@@ -181,8 +183,44 @@ class UIwindow {
   */
   UIwindow(u8g2_uint_t width, bool isRoot = false) {
       this->width = width;  
+      if (isRoot)
+          currentWindow = this;
   };
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};  ///< virtual function, see derived classes
+  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){}; ///< virtual function, see derived classes
   
+  /*!
+     @brief  open a child menu
+     @details when a menu is opened in this way, this menu becomes the parent
+     menu of the child, then the child becomes the current menu, that is the
+     object returned by getcurrentWindow().
+     @param child pointer to an object of type UImenu, it will become the
+     current menu
+  */
+  void openWindow(UIwindow *child) {
+    child->parent = this;
+    currentWindow = child;
+  };
+
+  /*!
+     @brief  close a menu
+     @details when a menu is closed in this way, its parent menu becomes the
+     current menu, that is the object returned by getcurrentWindow(). trying to
+     close the root menu has no effect (the root menu has the parent set to
+     NULL).
+  */
+  void closeWindow() {
+    if (parent == NULL)
+      return;
+    currentWindow = parent;
+    parent = NULL;
+  };
+
+  /*!
+     @brief  get the currrent menu
+     @return pointer to UImenu object representing the current menu
+  */
+  static UIwindow *getcurrentWindow() { return currentWindow; };
 };
 
 /**************************************************************************/
@@ -196,11 +234,11 @@ class UIwindow {
 
     A tree of submenus is suppported, as long as there is only one root.
     Moving within the hyerarchy is done using UIMenuActionOpen and
-   UIMenuActionClose, alternatively methods openMenu() and closeMenu()
+   UIMenuActionClose, alternatively methods openWindow() and closeMenu()
 
 */
 /**************************************************************************/
-class UImenu : UIwindow {
+class UImenu : public UIwindow {
 protected:
   UImenuItem *
       *items; ///< point to an array, storing all menu items in this menu
@@ -213,9 +251,6 @@ protected:
   bool selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
   void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
 
-  UImenu *parent = NULL; ///< the parent menu, can only be set via openMenu().
-  static UImenu *currentMenu; ///< Keeps track of the current menu
-
 public:
   /*!
      @brief  constructor of the object
@@ -223,12 +258,9 @@ public:
      @param isRoot true if this is the root menu (it will be set as default
      menu)
   */
-  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot) {
-    if (isRoot)
-      currentMenu = this;
-  };
-  void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
-  bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot);
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {};
+  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
   /*!
      @brief  get the currently selected item
@@ -237,38 +269,6 @@ public:
   const UImenuItem *getSelectedItem() { return items[selectedItem]; };
   void selectFirstItem();
 
-  /*!
-     @brief  open a child menu
-     @details when a menu is opened in this way, this menu becomes the parent
-     menu of the child, then the child becomes the current menu, that is the
-     object returned by getCurrentMenu().
-     @param child pointer to an object of type UImenu, it will become the
-     current menu
-  */
-  void openMenu(UImenu *child) {
-    child->parent = this;
-    currentMenu = child;
-  };
-
-  /*!
-     @brief  close a menu
-     @details when a menu is closed in this way, its parent menu becomes the
-     current menu, that is the object returned by getCurrentMenu(). trying to
-     close the root menu has no effect (the root menu has the parent set to
-     NULL).
-  */
-  void closeMenu() {
-    if (parent == NULL)
-      return;
-    currentMenu = parent;
-    parent = NULL;
-  };
-
-  /*!
-     @brief  get the currrent menu
-     @return pointer to UImenu object representing the current menu
-  */
-  static UImenu *getCurrentMenu() { return currentMenu; };
 };
 
 /**************************************************************************/
@@ -448,7 +448,7 @@ public:
      or the item is asked to perform its default action
      @details for this element this method closes the current menu
   */
-  virtual void change() { UImenu::getCurrentMenu()->closeMenu(); };
+  virtual void change() { UIwindow::getcurrentWindow()->closeWindow(); };
 };
 
 /**************************************************************************/
@@ -483,7 +483,7 @@ public:
      @details for this element this method asks the current menu to opens the
      child menu passed at contruction
   */
-  virtual void change() { UImenu::getCurrentMenu()->openMenu(child); };
+  virtual void change() { UIwindow::getcurrentWindow()->openWindow(child); };
 };
 
 // *********************************************************************************

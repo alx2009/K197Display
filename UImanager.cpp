@@ -272,7 +272,7 @@ void UImanager::updateSplitScreen() {
     u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
     u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
   } else { // For all other modes we show the settings menu when in split mode
-    UImenu::getCurrentMenu()->draw(&u8g2, 0, 10);
+    UIwindow::getcurrentWindow()->draw(&u8g2, 0, 10);
   }
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
@@ -995,7 +995,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     return true;
   }
   if (isMenuVisible()) {
-    if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType))
+    if (UIwindow::getcurrentWindow()->handleUIEvent(eventSource, eventType))
       return true;
   } else if (isSplitScreen()) { // Split screen with no menu visible
     if (eventType == UIeventClick || eventType == UIeventLongPress) {
