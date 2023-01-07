@@ -186,10 +186,16 @@ class UIwindow {
       if (isRoot)
           currentWindow = this;
   };
+  
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored                                                 \
+    "-Wunused-parameter" // A derived class may eturn a different valuse
+                         // depending on being selected
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};  ///< virtual function, see derived classes
   virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){
       return false;  
   }; ///< virtual function, see derived classes
+  #pragma GCC diagnostic pop
   
   /*!
      @brief  open a child menu
