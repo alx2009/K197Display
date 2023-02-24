@@ -663,19 +663,25 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
    @param nsamples_new new value of nsamples_graph
 */
 void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
+  //DebugOut.print(F("Resample graph: "));
   if (gr_size == 0 || nsamples_new == nsamples_graph) {
+    //DebugOut.println("not needed");
     return;
   }
-  uint16_t nsamples_old = nsamples_graph == 0 ? 1 : nsamples_graph;
-  unsigned long gr_size_new = long(gr_size-1) * long(nsamples_old / nsamples_new) + 1l + nskip_graph/nsamples_new;
+  if (nsamples_new == 0) nsamples_new = 1;
+  //DebugOut.print(F("begin...")); DebugOut.flush();
+  uint16_t nsamples_old_positive = nsamples_graph == 0 ? 1 : nsamples_graph;
+  uint16_t nsamples_new_positive = nsamples_new == 0 ? 1 : nsamples_new;
+  unsigned long gr_size_new = long(gr_size-1) * long(nsamples_old_positive / nsamples_new_positive) + 1l + nskip_graph/nsamples_new_positive;
   if (gr_size_new>max_graph_size) gr_size_new = max_graph_size;
   float buffer[gr_size_new];
   
   if (nsamples_new>nsamples_graph) { // Decimation to match the new sample rate 
+      //DebugOut.print(F(" > ")); DebugOut.flush();
       // Copy the decimated data into the buffer, with correct ordering
       unsigned int new_idx=0;
       for (int old_idx=0; old_idx<gr_size; old_idx++) { 
-          if ( old_idx*nsamples_old >= new_idx*nsamples_new) {
+          if ( old_idx*nsamples_old_positive >= new_idx*nsamples_new_positive) {
              if (new_idx>=gr_size_new) {
                  DebugOut.println("Error: new_idx 1");
                   break;
@@ -693,19 +699,20 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
           gr_size=new_idx;   
       }
   } else { // Add more data to match the new sample rate
+      //DebugOut.print(F(" < ")); DebugOut.flush();
       unsigned int old_idx=gr_size-1;
       int new_idx = gr_size_new-1;
       
       // Adjust nskip_graph
-      for (unsigned int n = 0; n<(nskip_graph/nsamples_new); n++) {
+      for (unsigned int n = 0; n<(nskip_graph/nsamples_new_positive); n++) {
           buffer[new_idx] = graph[grGetArrayIdx(gr_size-1)];
           new_idx--;
       }
-      nskip_graph = nskip_graph % nsamples_new;
+      nskip_graph = nskip_graph % nsamples_new_positive;
 
       //Resample with shorter period. Old data may be lost here if there is no room
       for (; new_idx>=0; new_idx--) { 
-          if (new_idx*nsamples_new < old_idx*nsamples_old) {
+          if (new_idx*nsamples_new_positive < old_idx*nsamples_old_positive) {
               if (old_idx>0) old_idx--;
           }
           buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
@@ -721,4 +728,5 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
       graph[i] = buffer[i];  
   }
   nsamples_graph = nsamples_new;
+  //DebugOut.println(F("...end")); DebugOut.flush();
 }
