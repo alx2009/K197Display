@@ -310,7 +310,7 @@ public:
 
 private:  
     static const byte max_graph_size = 180; ///< maximum number of measurements that can be cached
-    static const byte max_graph_period = 180; ///< maximum number of seconds between samples
+    static const byte max_graph_period = 210; ///< maximum number of seconds between samples
   /*!
       @brief  structure used to store previus vales, average, max, min, etc.
    */
