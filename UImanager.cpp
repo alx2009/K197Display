@@ -857,7 +857,8 @@ static void printYLabel(k197graph_label_type l) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
-static void printXYLabel(k197graph_label_type l, byte nseconds) {
+static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
+   //DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
    u8g2.print(nseconds); u8g2.print(F("s/"));
   
    int8_t pow10_effective = l.pow10+k197dev.getUnitPow10();
@@ -917,6 +918,8 @@ void UImanager::updateGraphScreen() {
   uint16_t i1 = 16;
   while (i1<k197graph.npoints) i1*=2;    
   if (i1>k197graph.x_size) i1=k197graph.x_size;
+  DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
+
   byte xscale = k197graph.x_size / i1;
 
   // Draw the axis
@@ -932,7 +935,7 @@ void UImanager::updateGraphScreen() {
   u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
-  byte nseconds = gr_sample_time.getValue();
+  uint16_t nseconds = gr_sample_time.getValue();
   printXYLabel(k197graph.y0, nseconds == 0 ? i1/3 : i1 * nseconds);  
   u8g2.setCursor(k197graph.x_size+2, 0);
   printYLabel(k197graph.y1);

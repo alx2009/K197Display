@@ -44,7 +44,7 @@ moving to inline assembler and naked interrupt handlers
 //  test ==> Dotted line for x axis
 //  test ==> Graph more menu options (x scaling)
 //  test ==> autosample
-// implement x axis autoscale option
+// remove x axis autoscale option
 // add marker for current measurement
 // Add option for rolling
 //  Graph cursor
@@ -57,6 +57,7 @@ moving to inline assembler and naked interrupt handlers
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 // Graph scale wraps around from 180s to 32s, sample rate remains at 2
+//         Correct problem with new size, but now I get a Error: new_idx 2 when resampling 0==>1
 // Position of x axis along vertical (y) direction is sometimes wrong
 // Graph is plot at wrong y coordinate (e.g. when the scale is +-100uV)
 //
