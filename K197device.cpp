@@ -436,9 +436,9 @@ void K197device::updateCache() {
       if (cache.gr_size == max_graph_size) { // And no room left for an extra sample
           uint16_t graphPeriod = getGraphPeriod();
           if ( graphPeriod < max_graph_period) { //   And we have room to increase graphPeriod  
-              graphPeriod*=2;
+              if (graphPeriod==0) graphPeriod=1; else graphPeriod*=2;
               if (graphPeriod>max_graph_period) graphPeriod = max_graph_period;
-              cache.resampleGraph(graphPeriod);       // Then we resample & make room for new data
+              setGraphPeriod(graphPeriod);   // Then we set the new period (this will also trigger the re-sampling)
           }
       }
   }
