@@ -44,6 +44,7 @@ moving to inline assembler and naked interrupt handlers
 //  test ==> Dotted line for x axis
 //  test ==> Graph more menu options (x scaling)
 //  test ==> autosample
+// reset sample rate when graph is reset if autosample set
 // implement x axis autoscale option
 // add marker for current measurement
 // Add option for rolling
@@ -56,6 +57,7 @@ moving to inline assembler and naked interrupt handlers
 //  Add message box after save/restore menu command
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
+// Graph scale wraps around from 180s to 32s, sample rate remains at 2
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
