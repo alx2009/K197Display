@@ -44,7 +44,6 @@ moving to inline assembler and naked interrupt handlers
 //  test ==> Dotted line for x axis
 //  test ==> Graph more menu options (x scaling)
 //  test ==> autosample
-// reset sample rate when graph is reset if autosample set
 // implement x axis autoscale option
 // add marker for current measurement
 // Add option for rolling

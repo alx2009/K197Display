@@ -460,13 +460,14 @@ void K197device::resetStatistics() {
 /*!
    @brief reset graph
 */
-void K197device::resetGraph() {
+void K197device::k197_cache_struct::resetGraph() {
   gr_index = max_graph_size-1; 
   gr_size = 0x00; 
   nskip_graph = 0x00;
-  
-};
-
+  if (autosample_graph) { // if autosample is set then...
+      nsamples_graph = 0; // set fastest sampling period
+  }
+}
 
 // ***************************************************************************************
 //  Graph & Autoscaling 
