@@ -365,10 +365,7 @@ private:
         }
         if (++nskip_graph>=nsamples_graph) nskip_graph = 0;
     };
-    /*!
-      @brief reset graph
-    */
-    void resetGraph() { gr_index = max_graph_size-1; gr_size = 0x00; nskip_graph = 0x00; };
+    void resetGraph();
     void resampleGraph(uint16_t nsamples_new);
   } cache;
 

@@ -457,6 +457,17 @@ void K197device::resetStatistics() {
   cache.resetGraph();
 }
 
+/*!
+   @brief reset graph
+*/
+void K197device::resetGraph() {
+  gr_index = max_graph_size-1; 
+  gr_size = 0x00; 
+  nskip_graph = 0x00;
+  
+};
+
+
 // ***************************************************************************************
 //  Graph & Autoscaling 
 // ***************************************************************************************
