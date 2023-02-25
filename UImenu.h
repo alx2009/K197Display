@@ -321,7 +321,8 @@ protected:
   static const u8g2_uint_t slide_ymargin1 =
       4; ///< empty space at the bottom of the value area
 
-  byte value = 0; ///< the value of this item
+  bool edit_mode=false; ///< true while the value is being edited (selected + STO or RCL button is still pressed)
+  byte value = 0; ///< the value of this item. If set/getValue is overridden, this is used as a temporary storage while handling UI events.
 
 public:
   /*!

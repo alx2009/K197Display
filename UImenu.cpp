@@ -296,17 +296,18 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
   u8g2->setDrawColor(1);
   u8g2->setFontMode(0);
   u8g2->setCursor(x + w - value_size, y + MENU_TEXT_OFFSET_Y);
-  u8g2->print(getValue());
+  byte draw_value = edit_mode ? value : getValue();
+  u8g2->print(draw_value);
   if (selected) {
     x = x + slide_xmargin;
     y = y + height + slide_ymargin0;
     w = w - 2 * slide_xmargin;
     u8g2_uint_t h = height - slide_ymargin0 - slide_ymargin1;
-    if (getValue() == 255) {
+    if (draw_value == 255) {
       u8g2->drawBox(x, y, w, h);
     } else {
       u8g2->drawFrame(x, y, w, h);
-      unsigned int m = int(getValue()) * int(w) / int(255);
+      unsigned int m = int(draw_value) * int(w) / int(255);
       u8g2->drawBox(x, y, (u8g2_uint_t)m, h);
     }
   }
@@ -332,6 +333,7 @@ static byte calcIncrement(const byte val, const K197UIeventsource eventSource,
     if (newval > val)
       newval = 0;
   }
+  DebugOut.print(F("New inc: ")); DebugOut.println(newval);
   return newval;
 }
 
@@ -362,7 +364,7 @@ static byte calcIncrementExt(const byte val, const K197UIeventsource eventSource
 /*!
    @brief handle UI events
    @details increase/decrease the value when STO/RCL pressed (repeatedly when
-   hold), then invoke change at release
+   hold), then invoke setValue() and change() at release
    @param eventSource the source of the event (see K197UIeventsource)
    @param eventType the type of event (see K197UIeventType)
    @return true if the event has been entirely handled by this object
@@ -372,16 +374,19 @@ bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
   if ((eventSource == K197key_RCL || eventSource == K197key_STO)) {
     switch (eventType) {
     case UIeventPress:
-      setValue(calcIncrement(value, eventSource, 1));
+      value = calcIncrement(getValue(), eventSource, 1);
+      edit_mode = true;
       break;
     case UIeventLongPress:
-      setValue(calcIncrement(value, eventSource, 10));
+      value = calcIncrement(value, eventSource, 10);
       break;
     case UIeventHold:
-      setValue(calcIncrement(value, eventSource, 5));
+      value = calcIncrement(value, eventSource, 5);
       break;
     case UIeventRelease:
+      setValue(value);
       change();
+      edit_mode = false;
       break;
     default:
       break;
