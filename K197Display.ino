@@ -58,6 +58,8 @@ moving to inline assembler and naked interrupt handlers
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 // Graph scale wraps around from 180s to 32s, sample rate remains at 2
+// Position of x axis along vertical (y) direction is sometimes wrong
+// Graph is plot at wrong y coordinate (e.g. when the scale is +-100uV)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
