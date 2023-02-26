@@ -918,7 +918,7 @@ void UImanager::updateGraphScreen() {
   uint16_t i1 = 16;
   while (i1<k197graph.npoints) i1*=2;    
   if (i1>k197graph.x_size) i1=k197graph.x_size;
-  DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
+  //DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
 
   byte xscale = k197graph.x_size / i1;
 
