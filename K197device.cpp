@@ -457,6 +457,10 @@ void K197device::resetStatistics() {
   cache.resetGraph();
 }
 
+// ***************************************************************************************
+//  Graph & Autoscaling 
+// ***************************************************************************************
+
 /*!
    @brief reset graph
 */
@@ -470,11 +474,7 @@ void K197device::k197_cache_struct::resetGraph() {
   }
 }
 
-// ***************************************************************************************
-//  Graph & Autoscaling 
-// ***************************************************************************************
-
-// Array saves about 500 uS execution and 830b flash vs. alternative [powf(), ceilf() & logf()] 
+// scaleFactor array saves about 500 uS execution and 830b flash vs. alternative [powf(), ceilf() & logf()] 
 // Faster execution (-150 us] could be achieved putting the array in RAM
 const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10, 1E2, 1E3, 1E4, 1E5, 1E6};
 #define sizeof_scaleFactor int(sizeof(scaleFactor)/sizeof(scaleFactor[0]))
