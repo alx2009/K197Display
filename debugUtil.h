@@ -41,7 +41,7 @@
 */
 /**************************************************************************/
 
-//#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
+#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
 //sections of code
 
 class debugUtil : public Print {
@@ -52,9 +52,10 @@ class debugUtil : public Print {
   unsigned long proftimer[PROFILE_TIMER];
 
 public:
-  static const byte PROFILE_LOOP = 0;    ///< profiler time slot for loop()
-  static const byte PROFILE_DEVICE = 1;  ///< profiler time slot for K197dev
-  static const byte PROFILE_DISPLAY = 2; ///< profiler time slot for uiman
+  static const byte PROFILE_MATH = 0; ///< profiler time slot for math stuff
+  static const byte PROFILE_LOOP = 1;    ///< profiler time slot for loop()
+  static const byte PROFILE_DEVICE = 2;  ///< profiler time slot for K197dev
+  static const byte PROFILE_DISPLAY = 3; ///< profiler time slot for uiman
 #endif                                   // PROFILE_TIMER
 
 public:

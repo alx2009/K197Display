@@ -55,20 +55,117 @@
 
 /**************************************************************************/
 /*!
-    @brief  Simple class to handle a cluster of buttons.
+   @brief auxiliary class to specify the axis labels of a graph
 
-    This class is responsible to store and decode the raw information received
-    through the base class SPIdevice, and make it available to the rest of the
-    sketch
+   @details This class is used to pass enough information to represent
+   the data stored in the cache as a graph
+*/
+/**************************************************************************/
+struct k197graph_label_type {
+     int8_t mult;
+     int8_t pow10;
+     k197graph_label_type() : mult(0), pow10(0) {};
+     k197graph_label_type(int8_t init_mult, int8_t init_pow10) : mult(init_mult), pow10(init_pow10) {};
+     static float getpow10(int i);
+     void setLog10Ceiling(float x);
+     void setScaleMultiplierUp(float x);
+     void setScaleMultiplierDown(float x);
+     float getValue() const {return mult==0 ? 0.0 : float(mult)*getpow10(pow10);}; ///< return equivalent float value
+     void setValue(int8_t new_mult, int8_t new_pow10) {mult=new_mult; pow10=new_pow10;}; ///< set new multiple and new power of 10
+     void setValue(const k197graph_label_type l) {mult=l.mult; pow10=l.pow10;}; ///< set value from another object
+     void reset() {mult=0; pow10=0;}; // set new multiple and new power of 10
+     bool isNormalized() const {return ::abs(mult)<10 ? true : false;}; ///< check if normalized (-10<mult<+10)
+     bool isPositive() const {return mult > 0;}; ///< check if value >0
+     bool isNegative() const {return mult < 0;}; ///< check if value <0
+     k197graph_label_type abs() const { ///< returns a new object with the absolute value of the original object 
+         return k197graph_label_type(mult>0 ? mult : mult, pow10);
+     };
 
-    Usage:
+     // overloading operators used in label scaling
+     k197graph_label_type operator-() { ///< unary Minus (-) operator 
+        return k197graph_label_type(-(this->mult), (this->pow10) );
+     };
+     k197graph_label_type &operator--() { ///< Prefix decrement (--) operator 
+        --pow10;
+        return *this;
+     };
+     k197graph_label_type &operator++() { ///< Postfix increment (++) operator 
+        ++pow10;
+        return *this;
+     };
+};
 
-    Call setup() once before doing anything else
-    then hasNewData() inherited from the base class should be called frequently
+//Overloading common functions and operators useful in autoscaling
+inline bool operator==(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (==) operator 
+         if (lhs.isNormalized() && rhs.isNormalized()) return (lhs.mult == rhs.mult) && (lhs.pow10 == rhs.pow10);
+         else return lhs.getValue() == rhs.getValue();
+};
+inline bool operator!=(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (!=) operator 
+         if (lhs.isNormalized() && rhs.isNormalized()) return (lhs.mult != rhs.mult) || (lhs.pow10 != rhs.pow10);
+         else return lhs.getValue() != rhs.getValue();
+};
+inline bool operator==(const float& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (==) operator 
+         return lhs == rhs.getValue();
+};
+inline bool operator!=(const float& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (!=) operator 
+         return lhs == rhs.getValue();
+};
+inline bool operator>(const k197graph_label_type& lhs, const k197graph_label_type& rhs) { ///< overloaded comparison (>) operator 
+         return lhs.getValue() > rhs.getValue();
+};
+
+/**************************************************************************/
+/*!
+    @brief  Define the scaling options for the y axis
+*/
+/**************************************************************************/
+enum k197graph_yscale_opt {
+  k197graph_yscale_zoom =     0x00, ///< zoom the graph as much as possible
+  k197graph_yscale_zero =     0x01, ///< always include zero in the graph
+  k197graph_yscale_prefsym =  0x02, ///< If graph cross zero, the scale is symmetric
+  k197graph_yscale_0sym =     0x03, ///< combine the previous two
+  k197graph_yscale_forcesym = 0x04, ///< Always use a symmetric scale
+};
+
+/**************************************************************************/
+/*!
+   @brief  auxiliary class to store the graph
+
+   @details This class is used to pass enough information to represent
+   the data stored in the cache as a graph
+*/
+/**************************************************************************/
+struct k197graph_type {
+     static const byte x_size=180 ;
+     static const byte y_size=63 ;
+     byte point[x_size];
+     byte current_idx=0x00;
+     byte npoints=0x00;
+     k197graph_label_type y1;
+     k197graph_label_type y0;
+     byte y_zero=0x00; ///< the point value for 0, if included in the graph
+
+     void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+};
+
+/**************************************************************************/
+/*!
+   @brief  class to store and manage the K197 information
+
+   @details This class is responsible to store and decode the raw data 
+   received through the base class SPIdevice, and make it available to the 
+   rest of the sketch as structured information. It is not conceptually 
+   complicated, but due to the large number of data and inline methods 
+   it may seem that way.
+
+   Usage:
+
+   Call setup() before doing anything else. 
+   The method hasNewData() in the base class should be called frequently
    (tipically in the main Arduino loop). As soon as hasNewData() returns true
    then getNewReading() must be called to decode and store the new batch of data
-   from the K197/197A. After that the new information is available via the other
-   member functions
+   from the K197/197A. 
+   After that the new information is available via the other member functions
 */
 /**************************************************************************/
 class K197device : public SPIdevice {
@@ -178,6 +275,9 @@ public:
 
   const __FlashStringHelper *
   getUnit(bool include_dB = false); // Note: includes UTF-8 characters
+  const __FlashStringHelper *
+  getMainUnit(bool include_dB = false); // Note: includes UTF-8 characters
+  int8_t getUnitPow10();
 
   /*!
       @brief  check if overange is detected
@@ -208,12 +308,15 @@ public:
 
   void debugPrint();
 
+private:  
+    static const byte max_graph_size = 180; ///< maximum number of measurements that can be cached
+    static const byte max_graph_period = 210; ///< maximum number of seconds between samples
   /*!
       @brief  structure used to store previus vales, average, max, min, etc.
    */
-  struct {
+  struct k197_cache_struct {
   public:
-    byte nsamples = 3;     ///< Number of samples to use for rolling average
+    float avg_factor = 1.0 / 3.0; ///< Factor used in average calculation
     bool tkMode = false;   ///< caches tkMode from previous measurement
     float msg_value = 0.0; ///< caches msg_value from previous measurement
     byte annunciators0 =
@@ -226,9 +329,51 @@ public:
     float average = 0.0; ///< keep track of the average
     float min = 0.0;     ///< keep track of the minimum
     float max = 0.0;     ///< keep track of the maximum
+
+    float graph[max_graph_size]; ///< stores gr_size records
+                                 ///< when gr_size = max_graph_size
+                                 ///< becomes a circular buffer
+    byte gr_index=max_graph_size-1;///< index to the most recent record
+    byte gr_size=0; ///< amount of data in graph (0-max_graph_size)
+    byte nskip = 0;  ///< Skip counter for rolling average
+    byte nsamples = 3; ///< Number of samples to use for rolling average
+
+    uint16_t nskip_graph=0;      ///< Skip counter for graph
+    uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
+    bool autosample_graph=false; ///< if true set nsamples_graph automatically 
+
+    /*!
+      @brief get the array index from logical index
+      @details the logical index is 0 for the oldest record and increases as we get towards newer records
+      The array index is the index in the circular buffer graph[] corresponding to the logical index
+      @param logic_index the logical index (range: 0 - gr_size-1)
+      @return arry index (range: 0 - gr_size-1)
+    */
+    inline uint16_t grGetArrayIdx(uint16_t logic_index) {return (logic_index+gr_index+1) % gr_size;};
+    
+    /*!
+      @brief add one sample to graph
+      @details Only one out of every nsamples is stored
+      @param nsamples number of samples
+    */
+    void add2graph(float x) {
+        if (nskip_graph == 0) { 
+            gr_index++;
+            if (gr_index >= max_graph_size) gr_index=0; 
+            graph[gr_index]=x;
+            if (gr_size < max_graph_size) gr_size++; 
+        }
+        if (++nskip_graph>=nsamples_graph) nskip_graph = 0;
+    };
+    void resetGraph();
+    void resampleGraph(uint16_t nsamples_new);
   } cache;
 
   void updateCache();
+
+public:
+  void fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt);
+  void troubleshootAutoscale(float testmin, float testmax);
   void resetStatistics();
 
   /*!
@@ -240,12 +385,54 @@ public:
 
       @param nsamples number of samples
   */
-  void setNsamples(byte nsamples) { cache.nsamples = nsamples; };
+  void setNsamples(byte nsamples) { 
+      cache.nsamples = nsamples; 
+      cache.avg_factor = 1.0 / float(nsamples);
+  };
   /*!
       @brief get the number of samples for rolling average calculation
       @return number of samples
   */
   float getNsamples() { return cache.nsamples; };
+
+  /*!
+      @brief  set the sampling period for the graph in seconds
+
+      @details the actual sapling time will approximate the requested time, depending on the actual sampling rate of the K197.
+      when set to zero, all samples received from the K197 are graphed (the data rate is about 3Hz)
+
+      @param nseconds sampling time in seconds
+  */
+  void setGraphPeriod(byte nseconds) { 
+      uint16_t nsamples_new = nseconds * 3;
+      cache.resampleGraph(nsamples_new); 
+  };
+  /*!
+      @brief get the sampling period for the graph in seconds
+      @details the actual sapling time will approximate the returned time, depending on the actual sampling rate of the K197.
+      When zero is returned, all samples received from the K197 are graphed (the data rate is about 3Hz)
+      @return number the sampling period in seconds
+  */
+  uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
+
+  /*!
+      @brief  set the autosample flag
+
+      @details when this flag is set, when the graph is full the sampling period is increased automatically
+      data already sampled are decimated, so that they match the new sampling time 
+
+      @param autosample the new value of the autosample flag
+  */
+  void setAutosample(bool autosample) { 
+      cache.autosample_graph = autosample; 
+
+  };
+  /*!
+      @brief get the autosample flag
+      @details see setAutosample()
+      @return the value of the autosample flag 
+  */
+  bool getAutosample() { return cache.autosample_graph; };
 
   /*!
       @brief  returns the average value (see also setNsamples())

@@ -18,6 +18,8 @@
   through the base class SPIdevice, and make it available to the rest of the
   sketch
 
+  Reference for math functions: https://www.nongnu.org/avr-libc/user-manual/group__avr__math.html
+
 */
 /**************************************************************************/
 #include "K197device.h"
@@ -31,6 +33,10 @@
 #include "pinout.h"
 
 K197device k197dev;
+
+// ***************************************************************************************
+//  Segment to Character conversion and handling of display message
+// ***************************************************************************************
 
 /*!
     @brief Lookup table to convert from segments to char
@@ -77,6 +83,10 @@ float getMsgValue(char *s, int len) {
   }
   return 0.0; // we consider a string of spaces as equivalent to 0.0
 }
+
+// ***************************************************************************************
+//  Read data from the voltmenter
+// ***************************************************************************************
 
 /*!
       @brief process a new reading
@@ -255,8 +265,12 @@ void K197device::setOverrange() {
   dxUtil.checkFreeStack();
 }
 
+// ***************************************************************************************
+//  Handling of mesurement units (V, A, etc.)
+// ***************************************************************************************
+
 /*!
-    @brief  return the unit text (V, mV, etc.)
+    @brief  return the unit, including SI prefix (V, mV, etc.)
     @param include_dB if true, returns "dB" as a unit when in dB mode
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
@@ -293,6 +307,68 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
 }
 
 /*!
+    @brief  return the main unit without any prefix, as text (V, A, etc.)
+    @param include_dB if true, returns "dB" as a unit when in dB mode
+    @return the unit (1 or 2 characters + terminating NUL). This is a UTF-8 string
+    because it may include Ω or °
+*/
+const __FlashStringHelper *
+K197device::getMainUnit(bool include_dB) { // Note: includes UTF-8 characters
+  if (isV()) {            // Voltage units
+    if (flags.tkMode && ismV() && isDC())
+      return F("°C");
+    else return F("V");
+      return F("V");
+  } else if (isOmega()) { // Resistence units
+      return F("Ω");
+  } else if (isA()) {     // Current units
+      return F("A");
+  } else {                // No unit found
+    if (include_dB && isdB())
+      return F("dB");
+    else
+      return F("?");
+  }
+}
+
+/*!
+    @brief returns the exponent corresponding to the SI multiplier
+    @details 10 elevated to the exponent returned gives the power of 10 corresponding to the prefix set in the annouciators
+    For example, 1KΩ means 10^3Ω ==> exponent is 3. In 1µA means 10^-6A exponent is -6. with no prefix 0 is returned (10^0=1).
+    @returns the exponent corresponding to the SI multiplier 
+*/
+int8_t K197device::getUnitPow10() {
+  if (isV()) {                         // Voltage units
+    if (flags.tkMode && ismV() && isDC())
+      return 0;
+    else if (ismV())
+      return -3;
+    else
+      return 0;
+  } else if (isOmega()) { // Resistence units
+    if (isM())
+      return 6;
+    else if (isk())
+      return 3;
+    else
+      return 0;
+  } else if (isA()) { // Current units
+    if (ismicro())
+      return -6;
+    else if (ismA())
+      return -3;
+    else
+      return 0;
+  } else { // No unit found
+      return 0;
+  }
+}
+
+// ***************************************************************************************
+//  Debug & troubleshooting
+// ***************************************************************************************
+
+/*!
     @brief  print a summary of the received message to DebugOut for
    troubleshooting purposes
 */
@@ -316,6 +392,10 @@ void K197device::debugPrint() {
   DebugOut.println();
 }
 
+// ***************************************************************************************
+//  Cache handling
+// ***************************************************************************************
+
 /*!
     @brief  utility function, used to compare two set of annunciator0, ignoring
    the minus sign in the comparison
@@ -332,15 +412,16 @@ static inline bool change0(byte b1, byte b2) {
     @details average, max and min are calculated here
  */
 void K197device::updateCache() {
+  if (!isNumeric()) return; // No point updating statistics now
   if (cache.tkMode != flags.tkMode ||
       change0(cache.annunciators0, annunciators0) ||
       cache.annunciators7 != annunciators7 ||
       cache.annunciators8 != annunciators8) { // Something changed, reset stats
     resetStatistics();
   } else {
-    cache.average += (msg_value - cache.average) /
-                     float(cache.nsamples); // This not perfect but good enough
-                                            // in most practical cases.
+    cache.average += (msg_value - cache.average) * 
+                     cache.avg_factor; // This not perfect but good enough
+                                 // in most practical cases.
     if (msg_value < cache.min)
       cache.min = msg_value;
     if (msg_value > cache.max)
@@ -351,6 +432,17 @@ void K197device::updateCache() {
   cache.annunciators0 = annunciators0;
   cache.annunciators7 = annunciators7;
   cache.annunciators8 = annunciators8;
+  if (getAutosample() && cache.nskip_graph == 0) { // Autosample is on and a sample is ready
+      if (cache.gr_size == max_graph_size) { // And no room left for an extra sample
+          uint16_t graphPeriod = getGraphPeriod();
+          if ( graphPeriod < max_graph_period) { //   And we have room to increase graphPeriod  
+              if (graphPeriod==0) graphPeriod=1; else graphPeriod*=2;
+              if (graphPeriod>max_graph_period) graphPeriod = max_graph_period;
+              setGraphPeriod(graphPeriod);   // Then we set the new period (this will also trigger the re-sampling)
+          }
+      }
+  }
+  cache.add2graph(msg_value);
   dxUtil.checkFreeStack();
 }
 
@@ -362,4 +454,294 @@ void K197device::resetStatistics() {
   cache.average = msg_value;
   cache.min = msg_value;
   cache.max = msg_value;
+  cache.resetGraph();
+}
+
+// ***************************************************************************************
+//  Graph & Autoscaling 
+// ***************************************************************************************
+
+/*!
+   @brief reset graph
+*/
+void K197device::k197_cache_struct::resetGraph() {
+  //DebugOut.println(F("resetGraph"));
+  gr_index = max_graph_size-1; 
+  gr_size = 0x00; 
+  nskip_graph = 0x00;
+  if (autosample_graph) { // if autosample is set then...
+      nsamples_graph = 0; // set fastest sampling period
+  }
+}
+
+// scaleFactor array saves about 500 uS execution and 830b flash vs. alternative [powf(), ceilf() & logf()] 
+// Faster execution (-150 us] could be achieved putting the array in RAM
+const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10, 1E2, 1E3, 1E4, 1E5, 1E6};
+#define sizeof_scaleFactor int(sizeof(scaleFactor)/sizeof(scaleFactor[0]))
+
+#define SCALE_VALUE_MIN 1E-6
+#define SCALE_LOG_MIN -6
+
+void k197graph_label_type::setLog10Ceiling(float x) {
+    x=fabsf(x);
+    if (x<=SCALE_VALUE_MIN) {
+      pow10 = SCALE_LOG_MIN;
+      return;
+    }
+    //return ceilf(log10f(x)); // next code is equivalent but faster
+    for (int8_t i=sizeof_scaleFactor-1; i>0; i--) {
+        if ( x * pgm_read_float(&scaleFactor[i]) <1.0) {
+             pow10=6-i;
+             return;
+        }
+    }
+    pow10=6;
+}
+
+float k197graph_label_type::getpow10(int i) {
+   //return powf(10.0, i); // next code is equivalent but faster
+   if (i<-6) i=-6;
+   else if (i>6) i=6;
+   return  pgm_read_float(&scaleFactor[i+6]);
+}
+
+void k197graph_label_type::setScaleMultiplierUp(float x) { // Look for the maximum
+  float norm=x * getpow10(-pow10); // normalized: -1<norm<1
+  //DebugOut.print(F("setScaleMultiplierUp pow10="));DebugOut.println(pow10);
+  //DebugOut.print(F("setScaleMultiplierUp norm="));DebugOut.println(norm);
+  if ( norm > 0) {
+     if (norm < 0.2) {
+        pow10--;
+        mult=2;
+     } else if (norm < 0.5) {
+        pow10--;
+        mult=5;
+     } else {
+        mult=1;
+     }
+  } else {
+     if (norm < -0.5) {
+        pow10--;
+        mult=-5;
+     } else if (norm < -0.2) {
+        pow10--;
+        mult=-2;
+     } else {
+        pow10--;
+        mult=-1;
+     }
+  }
+}
+
+void k197graph_label_type::setScaleMultiplierDown(float x) { // Look for the minimum
+  float norm=x * getpow10(-pow10); // normalized: 1>=abs(norm)>=1
+  if ( norm > 0) {
+     if (norm > 0.5) {
+        pow10--;
+        mult=5;
+     } else if (norm > 0.2) {
+        pow10--;
+        mult=2;
+     } else {
+        pow10--;
+        mult=1;
+     }
+  } else {
+     if (norm > -0.2) {
+        pow10--;
+        mult=-2;
+     } else if (norm > -0.5) {
+        pow10--;
+        mult=-5;
+     } else {
+        mult=-1;
+     }
+  }
+}
+                       
+void K197device::troubleshootAutoscale(float testmin, float testmax) {
+  PROFILE_start(DebugOut.PROFILE_MATH);
+  
+  k197graph_label_type y0;
+  y0.setLog10Ceiling(testmin);  // Find order of magnitude
+  // Then we fine tune the multiplier (1x, 5x or 2x)
+  y0.setScaleMultiplierDown(testmax);
+  float ymin = y0.getValue();
+
+  k197graph_label_type y1;
+  y1.setLog10Ceiling(testmin);  // Find order of magnitude
+  // Then we fine tune the multiplier (1x, 5x or 2x)
+  y1.setScaleMultiplierUp(testmax);
+  float ymax = y1.getValue();
+  
+  PROFILE_stop(DebugOut.PROFILE_MATH);
+  PROFILE_println(DebugOut.PROFILE_MATH,
+                    F("Time spent in troubleshootAutoscale()"));
+  
+  // Print result
+  DebugOut.print(F("testmin="));DebugOut.println(testmin);
+  DebugOut.print(F("MIN 10^")); DebugOut.print(y0.pow10); DebugOut.print(F("*")); DebugOut.print(y0.mult); 
+  DebugOut.print(F("=")); DebugOut.println(ymin); 
+  DebugOut.print(F("testmax="));DebugOut.println(testmax);
+  DebugOut.print(F("MAX 10^")); DebugOut.print(y1.pow10); DebugOut.print(F("*")); DebugOut.print(y1.mult); 
+  DebugOut.print(F("=")); DebugOut.println(ymax); 
+}
+
+void k197graph_type::setScale(float grmin, float grmax, k197graph_yscale_opt yopt) {
+  // Autoscale -  First we find the order of magnitude (power of 10)
+  y0.setLog10Ceiling(grmin);
+  y1.setLog10Ceiling(grmax);
+  // Then we fine tune the multiplier (1x, 2x, 5x, sign can be + or -)
+  y0.setScaleMultiplierDown(grmin); 
+  y1.setScaleMultiplierUp(grmax);   
+
+  if (y0 == y1) { //Safeguard from pathological cases...
+     if (y1.isPositive()) {
+       ++y1;
+       --y0;
+     } else if (y1.isNegative()) {
+        --y1;
+        ++y0;
+     } else { // y1 == y0 == 0.0
+        y1.setValue(1, SCALE_LOG_MIN);
+        y0.setValue(-1, SCALE_LOG_MIN);
+     }
+  }
+
+  // apply y scale options
+  if (yopt==k197graph_yscale_zero || yopt==k197graph_yscale_0sym) {  // Make sure the value 0 is included
+      if ( y0.isPositive()) y0.reset();
+      if ( y1.isNegative()) y1.reset();
+  }
+  if (yopt==k197graph_yscale_prefsym || yopt==k197graph_yscale_0sym) { // Make symmetric if 0 is included
+      if (y0.isNegative() && y1.isPositive() ) { // zero is included in the graph
+         if (y0.abs()>y1) y1.setValue(-y0);
+         else y0.setValue(-y1);
+      }
+  } else if (yopt==k197graph_yscale_forcesym) { // Make symmetric even if 0 not included
+      if (y1.isPositive() && y0.isPositive()) { // all values are above 0
+         y0.setValue(-y1);
+      } else if (y1.isNegative() && y0.isNegative()) { // all values are below 0
+         y1.setValue(-y0);
+      } else {
+         if (y0.abs()>y1) y1.setValue(-y0);
+         else y0.setValue(-y1);
+      }
+  }
+}
+
+void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscale_opt yopt) {
+  // find max and min in the data set
+  float grmin = cache.gr_size>0 ? cache.graph[0] : 0.0;     ///< keep track of the minimum
+  float grmax = grmin;                                      ///< keep track of the maximum
+  for (int i = 1; i<cache.gr_size; i++) {
+       if (cache.graph[i]<grmin) grmin = cache.graph[i];
+       if (cache.graph[i]>grmax) grmax = cache.graph[i];
+  }
+  
+  graphdata->setScale(grmin, grmax, yopt);
+  float ymin = graphdata->y0.getValue();
+  float ymax = graphdata->y1.getValue();
+  
+  //DebugOut.print(F("grmax="));DebugOut.print(grmax, 9);
+  //DebugOut.print(F(", ymax=")); DebugOut.println(ymax, 9); 
+  //DebugOut.print(F("grmin="));DebugOut.print(grmin, 9);
+  //DebugOut.print(F(", ymin=")); DebugOut.println(ymin, 9); 
+  
+  float scale_factor = float(graphdata->y_size)/(ymax-ymin);
+  //DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9); 
+
+
+  for (int i=0; i<cache.gr_size; i++) {
+     if (i>=graphdata->x_size) { // should be impossible but just to be safe
+         DebugOut.print(F("i=")); DebugOut.print(i);
+         DebugOut.print(F(", c=")); DebugOut.print(cache.gr_size);
+         DebugOut.print(F(", g=")); DebugOut.print(graphdata->x_size);
+         DebugOut.println(F("graph size!"));
+         break; 
+     }
+     graphdata->point[i] = (cache.graph[i]-ymin)*scale_factor+0.5;
+  }
+  if ( graphdata->y0.isNegative() && graphdata->y1.isPositive() ) { // 0 is included in the graph
+     graphdata->y_zero = 0.5-ymin*scale_factor;
+  } else {
+     graphdata->y_zero = 0;
+  }
+  //DebugOut.print(F(", yzero=")); DebugOut.println(graphdata->y_zero, 9); 
+  graphdata->current_idx = cache.gr_index; 
+  graphdata->npoints = cache.gr_size;
+}
+
+/*!
+   @brief resample the graph
+   @details resample the stored data to match the new sample rate, then set nsamples_graph to nsamples_new
+   @param nsamples_new new value of nsamples_graph
+*/
+void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
+  //DebugOut.print(F("Resample graph: "));
+  if (gr_size == 0 || nsamples_new == nsamples_graph) {
+    //DebugOut.println("not needed");
+    return;
+  }
+  //if (nsamples_new == 0) nsamples_new = 1;
+  //DebugOut.print(F("begin...")); DebugOut.flush();
+  uint16_t nsamples_old_positive = nsamples_graph == 0 ? 1 : nsamples_graph;
+  uint16_t nsamples_new_positive = nsamples_new == 0 ? 1 : nsamples_new;
+
+  unsigned long gr_size_new = long(gr_size-1) * long(nsamples_old_positive) / long(nsamples_new_positive) + 1l + nskip_graph/nsamples_new_positive;
+  if (gr_size_new>max_graph_size) gr_size_new = max_graph_size;
+  float buffer[gr_size_new];
+  //DebugOut.print(F("gr_size_new=")); DebugOut.println(gr_size_new);
+  
+  if (nsamples_new>nsamples_graph) { // Decimation to match the new sample rate 
+      //DebugOut.print(F(" > ")); DebugOut.flush();
+      // Copy the decimated data into the buffer, with correct ordering
+      unsigned int new_idx=0;
+      for (int old_idx=0; old_idx<gr_size; old_idx++) { 
+          if ( old_idx*nsamples_old_positive >= new_idx*nsamples_new_positive) {
+             if (new_idx>=gr_size_new) {
+                 DebugOut.println("Error: new_idx 1");
+                  break;
+             }
+             buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
+             new_idx++;  
+          }    
+      }
+      if (new_idx!=gr_size_new) {
+         DebugOut.println("Error: new_idx 2");
+      }
+      //Adjust cache size. Note that nskip_graph does not need to change  
+      gr_index=new_idx-1;
+      gr_size=new_idx;   
+  } else { // Add more data to match the new sample rate
+      //DebugOut.print(F(" < ")); DebugOut.flush();
+      unsigned int old_idx=gr_size-1;
+      int new_idx = gr_size_new-1;
+      
+      // Adjust nskip_graph
+      for (unsigned int n = 0; n<(nskip_graph/nsamples_new_positive); n++) {
+          buffer[new_idx] = graph[grGetArrayIdx(gr_size-1)];
+          new_idx--;
+      }
+      nskip_graph = nskip_graph % nsamples_new_positive;
+
+      //Resample with shorter period. Old data may be lost here if there is no room
+      for (; new_idx>=0; new_idx--) { 
+          if (new_idx*nsamples_new_positive < old_idx*nsamples_old_positive) {
+              if (old_idx>0) old_idx--;
+          }
+          buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
+      }
+      //Adjust cache size  
+      gr_index=gr_size_new-1;
+      gr_size=gr_size_new;
+  }
+  dxUtil.checkFreeStack(); // We may be using quite a bit of stack for the buffer
+  
+  //Copy the buffer back to the cache
+  for (int i=0; i<gr_size; i++) {
+      graph[i] = buffer[i];  
+  }
+  nsamples_graph = nsamples_new;
+  //DebugOut.println(F("...end")); DebugOut.flush();
 }

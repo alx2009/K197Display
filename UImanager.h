@@ -42,6 +42,7 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 enum K197screenMode {
   K197sc_normal = 0x01,            ///< equivalent to original K197
   K197sc_minmax = 0x02,            ///< add statistics but less annunciators
+  K197sc_graph  = 0x03,            ///< show a graph 
   K197sc_FullScreenBitMask = 0x10, ///< full screen when set
   K197sc_MenuBitMask = 0x20,       ///< show menu when set
   K197sc_ScreenModeMask = 0x0f,    ///< Mask for mode bits
@@ -76,6 +77,7 @@ private:
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();
+  void updateGraphScreen();
 
   void setupMenus();
 
@@ -85,8 +87,7 @@ private:
   void setScreenMode(K197screenMode mode);
   /*!
      @brief  get the screen mode
-     @return screen mode, it must be one of the displayXXX constants defined in
-     class UImanager
+     @return screen mode, (note that only the modes < 0x0f can be returned, the others are for internal use in class UImanager)
   */
   K197screenMode getScreenMode() {
     return (K197screenMode)(screen_mode & K197sc_ScreenModeMask);

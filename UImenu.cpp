@@ -254,11 +254,12 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
   x = x + w - checkbox_size - checkbox_margin;
   y = y + MENU_TEXT_OFFSET_Y;
   u8g2->drawFrame(x, y, checkbox_size, checkbox_size);
-  if (value) {
+  if (getValue()) {
     u8g2->drawLine(x, y, x + checkbox_size, y + checkbox_size);
     u8g2->drawLine(x, y + checkbox_size, x + checkbox_size, y);
   }
 }
+
 
 /*!
    @brief handle UI events
@@ -295,17 +296,18 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
   u8g2->setDrawColor(1);
   u8g2->setFontMode(0);
   u8g2->setCursor(x + w - value_size, y + MENU_TEXT_OFFSET_Y);
-  u8g2->print(value);
+  byte draw_value = edit_mode ? value : getValue();
+  u8g2->print(draw_value);
   if (selected) {
     x = x + slide_xmargin;
     y = y + height + slide_ymargin0;
     w = w - 2 * slide_xmargin;
     u8g2_uint_t h = height - slide_ymargin0 - slide_ymargin1;
-    if (value == 255) {
+    if (draw_value == 255) {
       u8g2->drawBox(x, y, w, h);
     } else {
       u8g2->drawFrame(x, y, w, h);
-      unsigned int m = int(value) * int(w) / int(255);
+      unsigned int m = int(draw_value) * int(w) / int(255);
       u8g2->drawBox(x, y, (u8g2_uint_t)m, h);
     }
   }
@@ -319,7 +321,7 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
      @param increment the increment
      @return the new value
 */
-byte calcIncrement(const byte val, const K197UIeventsource eventSource,
+static byte calcIncrement(const byte val, const K197UIeventsource eventSource,
                    const byte increment) {
   byte newval;
   if (eventSource == K197key_RCL) { // Increment
@@ -331,7 +333,86 @@ byte calcIncrement(const byte val, const K197UIeventsource eventSource,
     if (newval > val)
       newval = 0;
   }
+  DebugOut.print(F("New inc: ")); DebugOut.println(newval);
   return newval;
+}
+
+/*!
+     @brief utility function used to simplify handleUIEvent()
+     @details: note that this function wraps around if max<255 (this is intended)
+     @param val the current value of the MenuInputByte
+     @param eventSource (used to determine the sign of the value change)
+     @param increment the increment
+     @param max the maximum allowed value 
+     @return the new value
+*/
+static byte calcIncrementExt(const byte val, const K197UIeventsource eventSource,
+                   const byte increment, const byte max) {
+  byte newval;
+  if (eventSource == K197key_RCL) { // Increment
+    newval = val + increment;
+    if (newval < val)
+      newval = 0;
+  } else { // decrement
+    newval = val - increment;
+    if (newval > val)
+      newval = max;
+  }
+  return newval;
+}
+
+/*!
+   @brief handle UI events
+   @details increase/decrease the value when STO/RCL pressed (repeatedly when
+   hold), then invoke setValue() and change() at release
+   @param eventSource the source of the event (see K197UIeventsource)
+   @param eventType the type of event (see K197UIeventType)
+   @return true if the event has been entirely handled by this object
+*/
+bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
+                                  K197UIeventType eventType) {
+  if ((eventSource == K197key_RCL || eventSource == K197key_STO)) {
+    switch (eventType) {
+    case UIeventPress:
+      value = calcIncrement(getValue(), eventSource, 1);
+      edit_mode = true;
+      break;
+    case UIeventLongPress:
+      value = calcIncrement(value, eventSource, 10);
+      break;
+    case UIeventHold:
+      value = calcIncrement(value, eventSource, 5);
+      break;
+    case UIeventRelease:
+      setValue(value);
+      change();
+      edit_mode = false;
+      break;
+    default:
+      break;
+    }
+    return true;
+  }
+  return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
+}
+
+/*!
+     @brief draw the menu
+     @details invoke UIMenuButtonItem::draw, then print the text and the selected option to the right.
+     @param u8g2 a poimnter to the u8g2 library object
+     @param x the x coordinate of the top/left corner
+     @param y the y coordinate of the top/left corner
+     @param w the y width of the menu item
+     @param selected true if the menu item is selected
+*/
+void MenuInputOptions::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
+                         u8g2_uint_t w, bool selected) {
+  UIMenuButtonItem::draw(u8g2, x, y, w, selected);
+  if (value<options_size) {
+      u8g2->print(F(": < "));
+      u8g2->print(options[value]);
+      u8g2->print(F(" >"));
+  }
 }
 
 /*!
@@ -342,18 +423,18 @@ byte calcIncrement(const byte val, const K197UIeventsource eventSource,
    @param eventType the type of event (see K197UIeventType)
    @return true if the event has been entirely handled by this object
 */
-bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
+bool MenuInputOptions::handleUIEvent(K197UIeventsource eventSource,
                                   K197UIeventType eventType) {
   if ((eventSource == K197key_RCL || eventSource == K197key_STO)) {
     switch (eventType) {
     case UIeventPress:
-      value = calcIncrement(value, eventSource, 1);
+      setValue(calcIncrementExt(value, eventSource, 1, options_size-1));
       break;
     case UIeventLongPress:
-      value = calcIncrement(value, eventSource, 10);
+      setValue(calcIncrementExt(value, eventSource, 1, options_size-1));
       break;
     case UIeventHold:
-      value = calcIncrement(value, eventSource, 5);
+      setValue(calcIncrementExt(value, eventSource, 2, options_size-1));
       break;
     case UIeventRelease:
       change();

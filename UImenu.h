@@ -133,7 +133,7 @@ public:
     @brief  class implementing a separator button item
 
     A menu butto is a line of text that can be selected. when selected the "Ok"
-   pushbutton triggers the "change() method. By default the change() method does
+   pushbutton triggers the "change() method. By default the change() method (in the base class) does
    not do anything, but a subclass can use it to implement any action (see also
    DEF_MENU_ACTION macro)
 
@@ -282,12 +282,12 @@ public:
      @brief  set the value for this item
      @param newValue the new value that will be assigned to the item
   */
-  void setValue(bool newValue) { value = newValue; };
+  virtual void setValue(bool newValue) { value = newValue; };
   /*!
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  bool getValue() { return value; };
+  virtual bool getValue() { return value; };
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
@@ -302,7 +302,7 @@ public:
     A byte input menu item is a line of text with a number on the right
    reflecting the value of the item. When selected, When selected, the left and
    right pushbuttons decrement and increment the value respectly. Holding the
-   key result in faster increments/decrements. Relesing the key triggers the
+   key result in faster increments/decrements. Releasing the key triggers the
    "change" method. A subclass can override the method to implement any action
    (see DEF_MENU_BOOL_ACT macro).
 
@@ -321,7 +321,8 @@ protected:
   static const u8g2_uint_t slide_ymargin1 =
       4; ///< empty space at the bottom of the value area
 
-  byte value = 0; ///< the value of this item
+  bool edit_mode=false; ///< true while the value is being edited (selected + STO or RCL button is still pressed)
+  byte value = 0; ///< the value of this item. If set/getValue is overridden, this is used as a temporary storage while handling UI events.
 
 public:
   /*!
@@ -345,19 +346,63 @@ public:
      @brief  set the value for this item
      @param newValue the new value that will be assigned to the item
   */
-  void setValue(byte newValue) { value = newValue; };
+  virtual void setValue(byte newValue) { value = newValue; };
   /*!
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  byte getValue() { return value; };
+  virtual byte getValue() { return value; };
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
   virtual bool handleUIEvent(K197UIeventsource eventSource,
                              K197UIeventType eventType);
 };
+/**************************************************************************/
+/*!
+    @brief  class implementing options input
 
+    An options input menu item allows selecting between pre-defined options.
+   reflecting the value of the item. When selected, the left and
+   right pushbuttons select the option. Holding the
+   key result in faster increments/decrements. Releasing the key triggers the
+   "change" method. A subclass can override the method to implement any action
+   (see DEF_MENU_BOOL_ACT macro).
+
+    setValue and getValue are used to access the value programmatically (note
+   that this does not trigger the change method).
+*/
+/**************************************************************************/
+class MenuInputOptions : public UIMenuButtonItem {
+protected:
+  const __FlashStringHelper **options; ///<array defining the options.  
+  const byte options_size = 0; ///< the number of options in options[]
+  byte value = 0; ///< the index corresponding to the selected item in options[]
+
+public:
+  /*!
+     @brief  constructor for the object
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+  */
+  MenuInputOptions(u8g2_uint_t height, const __FlashStringHelper *text, const __FlashStringHelper *myoptions[], byte myoptions_size)
+      : UIMenuButtonItem(height, text), options(myoptions), options_size(myoptions_size) {};
+  /*!
+     @brief  set the value for this item
+     @param newValue the new value that will be assigned to the item
+  */
+  void setValue(byte newValue) { value = newValue; if (value>=options_size) value = 0;};
+  /*!
+     @brief  get the value for this item
+     @return the value assigned to the item
+  */
+  byte getValue() { return value; };  
+
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
+                    bool selected);
+  virtual bool handleUIEvent(K197UIeventsource eventSource,
+                             K197UIeventType eventType);
+};
 /**************************************************************************/
 /*!
     @brief  class implementing a menu close action
@@ -482,6 +527,87 @@ public:
   DEF_MENU_CLASS(MenuInputByte, instance_name, height, text)
 
 /*!
+     @brief  macro, used to simplify definition of menu options
+     @details creates a constant char array in PROGMEM, name 
+     and a constant symbol= value
+     intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     @param instance_name name of the option 
+     @param symbol symbolic name for the option 
+     @param value value corresponding to symbolic name (0 is the first option in DEF_MENU_OPTION_INPUT, 1 the secomnd and so on) 
+     @param text the text displayed for this option
+*/
+#define DEF_MENU_OPTION(instance_name, symbol, value, text)           \
+     static const uint8_t symbol = value;                   \
+     const char instance_name[] PROGMEM = text;
+
+/*!
+     @brief  macro, used to simplify definition of menu options
+     @details like DEF_MENU_OPTION but does not create a symbolic name
+     intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     to bind text to an existing enum
+     The enum values should always be sequential, starting from 0
+     Note that the macro does not actually bind anything, value is there only to document the binding 
+     @param instance_name name of the option 
+     @param value value corresponding to symbolic name  
+     @param text the text displayed for this option
+*/
+#define BIND_MENU_OPTION(instance_name, value, text)           \
+     const char instance_name[] PROGMEM = text;
+
+/*!
+     @brief  macro, used to simplify definition of menu options
+     @details convert a const char array allocated in progmem to const __FlashStringHelper *
+         intended to use together with OPT() and DEF_MENU_OPTION_INPUT
+     @param PROGMEM_char_array name of the option 
+*/
+#define OPT(PROGMEM_char_array) \
+    reinterpret_cast<const __FlashStringHelper *>(PROGMEM_char_array)
+
+/*!
+     @brief  macro, used to simplify definition of menu options inputs
+     @details defines a menu item used to enter a number of pre-defined options
+      Each option must be defined with a unique name in DEF_MENU_OPTION
+      All the instance_names defined by DEF_MENU_OPTION must then be passed 
+      as OPT(instance_name). The value of the first option must be 0, the second 1 and so on,
+      otherwise getValue() will not return a value corresponding to the option
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param options_array a pointer to an array defining the options  
+*/
+#define DEF_MENU_OPTION_INPUT(instance_name, height, text, options...)         \
+  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
+  const char __txt_##instance_name[] PROGMEM = text;                           \
+  MenuInputOptions instance_name(                                              \
+      height,                                                                  \
+      reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name),    \
+      __optarr_##instance_name,                                                           \
+      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0]));
+
+/*!
+     @brief  macro, used to simplify definition of menu options inputs
+     @details like DEF_MENU_OPTION_INPUT, but it also redefines getValue and setValue
+     so that they return an enum type rather than a byte
+     @param enum_type enum that must be returned by setValue and getValue
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param options_array a pointer to an array defining the options  
+*/
+#define DEF_MENU_ENUM_INPUT(enum_type, instance_name, height, text, options...)\
+  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
+  class __class_##instance_name : public MenuInputOptions {                    \
+  public:                                                                      \
+    __class_##instance_name() : MenuInputOptions(height, F(text),              \
+      __optarr_##instance_name,                                                \
+      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0])){}; \
+      void setValue(enum_type newValue) {                                      \
+             MenuInputOptions::setValue((byte)newValue);};                     \
+      enum_type getValue() { return  (enum_type) MenuInputOptions::getValue(); \
+              };                                                               \
+  } instance_name
+      
+/*!
      @brief  macro, used to simplify definition of menu close actions
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
@@ -557,5 +683,49 @@ public:
 #define DEF_MENU_BYTE_ACT(instance_name, height, text, action_code)            \
   DEF_MENU_ACTION_SUBCLASS(MenuInputByte, instance_name, height, text,         \
                            action_code)
+
+/*!
+     @brief  macro, used used to simplify class creation overriding the setValue(newValue) and getValue() methods
+     @param parent_class name of the parent class. instance_name will be an
+   object of a new class derived from parent_class
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param value_type the type returned by getValue() and passed in setValue(newValue)
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_SETGET_SUBCLASS(parent_class, instance_name, height, text,    \
+                                 value_type, set_code, get_code)               \
+  /*! define a new class derived from parent_class */                          \
+  class __class_##instance_name : public parent_class {                        \
+  public:                                                                      \
+    __class_##instance_name() : parent_class(height, F(text)){};               \
+    virtual void setValue(value_type newValue){set_code};                      \
+    virtual value_type getValue(){get_code};                                   \
+  } instance_name
+
+/*!
+     @brief  macro, used to simplify definition of a menu bool input overriding the setValue(newValue) and getValue() methods
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_BOOL_SETGET(instance_name, height, text, set_code, get_code)  \
+  DEF_MENU_SETGET_SUBCLASS(MenuInputBool, instance_name, height, text,         \
+                           bool, set_code, get_code)
+/*!
+     @brief  macro, used to simplify definition of a menu byte input overriding the setValue(newValue) and getValue() methods
+     @param instance_name name of the object instance defined by the macro
+     @param height the height of this item in pixels
+     @param text the text displayed for this item
+     @param set_code code to be executed inside the setValue(newValue) method. 
+     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+*/
+#define DEF_MENU_BYTE_SETGET(instance_name, height, text, set_code, get_code)  \
+  DEF_MENU_SETGET_SUBCLASS(MenuInputByte, instance_name, height, text,         \
+                           byte, set_code, get_code)
 
 #endif // UIMENU_H__
