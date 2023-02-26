@@ -272,7 +272,7 @@ void UImanager::updateSplitScreen() {
     u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
     u8g2.drawLog(0, 0, u8g2log);    // draw the terminal window on the display
   } else { // For all other modes we show the settings menu when in split mode
-    UImenu::getCurrentMenu()->draw(&u8g2, 0, 10);
+    UIwindow::getcurrentWindow()->draw(&u8g2, 0, 10);
   }
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
@@ -584,6 +584,14 @@ void UImanager::clearScreen() {
   dxUtil.checkFreeStack();
 }
 
+// ***************************************************************************************
+//  Message box definitions
+// ***************************************************************************************
+
+DEF_MESSAGE_BOX(EEPROM_save_msg_box, 100, "config saved");
+DEF_MESSAGE_BOX(EEPROM_reload_msg_box, 100, "config reloaded");
+DEF_MESSAGE_BOX(ERROR_msg_box, 100, "Error (see log)");
+
 
 // ***************************************************************************************
 //  Menu definition/handling
@@ -605,10 +613,18 @@ DEF_MENU_BUTTON(bluetoothMenu, 15,
 DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast",
                   u8g2.setContrast(getValue());); ///< set contrast
 DEF_MENU_ACTION(saveSettings, 15, "Save settings",
-                permadata::store_to_EEPROM();); ///< save config to EEPROM
+      if (permadata::store_to_EEPROM()) {
+          EEPROM_save_msg_box.show();
+      } else {
+          ERROR_msg_box.show();
+      } ); ///< save config to EEPROM and show result
 DEF_MENU_ACTION(
-    reloadSettings, 15, "Reload settings",
-    permadata::retrieve_from_EEPROM();); ///< load config from EEPROM
+      reloadSettings, 15, "Reload settings",
+      if (permadata::retrieve_from_EEPROM()) {
+          EEPROM_reload_msg_box.show();
+      } else {
+          ERROR_msg_box.show();
+      } ); ///< load config from EEPROM and show result
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
@@ -998,7 +1014,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     return true;
   }
   if (isMenuVisible()) {
-    if (UImenu::getCurrentMenu()->handleUIEvent(eventSource, eventType))
+    if (UIwindow::getcurrentWindow()->handleUIEvent(eventSource, eventType))
       return true;
   } else if (isSplitScreen()) { // Split screen with no menu visible
     if (eventType == UIeventClick || eventType == UIeventLongPress) {
@@ -1109,47 +1125,51 @@ void permadata::copyToUI() {
 /*!
     @brief  store all configuration options from the EEPROM
     @details a confirmation or error message is sent to DebugOut
+    @return true if the operation is succesful
 */
-void permadata::store_to_EEPROM() {
+bool permadata::store_to_EEPROM() {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
     DebugOut.print(F(" Data size "));
     DebugOut.print(sizeof(permadata));
     DebugOut.print(F(" exceed EEPROM len: "));
     DebugOut.print(EEPROM.length());
-    return;
+    return false;
   }
   permadata pdata;
   pdata.copyFromUI();
   EEPROM.put(EEPROM_BASE_ADDRESS, pdata);
   DebugOut.println(F("EEPROM: store ok"));
+  return true;
 }
 
 /*!
     @brief  retrieve all configuration options to the EEPROM
     @details if successful, the new options take affect immediately.
     A confirmation or error message is sent to DebugOut
+    @return true if the operation is succesful
 */
-void permadata::retrieve_from_EEPROM() {
+bool permadata::retrieve_from_EEPROM() {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
     DebugOut.print(F("EEPROM: Data size="));
     DebugOut.print(sizeof(permadata));
     DebugOut.print(F(" exceed "));
     DebugOut.println(EEPROM.length());
-    return;
+    return false;
   }
   permadata pdata;
   EEPROM.get(EEPROM_BASE_ADDRESS, pdata);
   if (pdata.magicNumber != magicNumberExpected) {
     DebugOut.println(F("EEPROM: no data"));
-    return;
+    return false;
   }
   if (pdata.revision != revisionExpected) {
     DebugOut.print(F("EEPROM: rev. "));
     DebugOut.print(pdata.revision, HEX);
     DebugOut.print(F(", expected "));
     DebugOut.println(revisionExpected, HEX);
-    return;
+    return false;
   }
   pdata.copyToUI();
   DebugOut.println(F("EEPROM: restore ok"));
+  return true;
 }

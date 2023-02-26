@@ -28,7 +28,16 @@
   2 ///< the y offset where the text should be written (relative to the upper
     ///< left corner of a menu item)
 
-UImenu *UImenu::currentMenu = NULL;
+UIwindow *UIwindow::currentWindow = NULL;
+
+size_t strlen(const __FlashStringHelper *ifsh, size_t max=100) {
+  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+  size_t n;
+  for (n=0; n<=max; n++) {
+    if ( pgm_read_byte(p++) == 0 ) break;
+  }
+  return n;
+}
 
 /*!
    @brief draw a frame when the menu item is selected
@@ -446,3 +455,60 @@ bool MenuInputOptions::handleUIEvent(K197UIeventsource eventSource,
   }
   return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
 }
+
+void UImessageBox::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
+    // draw parent and acquire its height
+    u8g2_uint_t parent_width;
+    if (parent!=NULL) {
+        parent->draw(u8g2, x, y);
+        parent_width=parent->getWidth();
+    } else {
+        parent_width=u8g2->getDisplayWidth();
+    }
+    // Calc x and y for this window
+    x = x + (parent_width-width)/2;
+    y = (u8g2->getDisplayHeight()+y-height)/2;
+
+    // Clear the window area
+    u8g2->setFont(u8g2_font_6x12_mr);
+    u8g2->setCursor(x, y);
+    u8g2->setFontMode(0);
+    u8g2->setDrawColor(0);
+    u8g2->drawBox(x, y, width, height);
+    u8g2->setDrawColor(1);
+
+    // Draw window frames
+    u8g2->setDrawColor(1);
+    u8g2->setFontMode(0);
+    u8g2->drawFrame(x, y, width, height);
+    u8g2->drawFrame(x+(width-btn_width)/2, y+btn_Offset, btn_width, btn_height);
+
+    // Set required text attributes 
+    u8g2->setFontPosTop();
+    u8g2->setFontRefHeightExtendedText();
+    u8g2->setFontDirection(0);
+    
+    // print message
+    u8g2_uint_t text_width = u8g2->getMaxCharWidth()*strlen(text); // monospace font
+    if (text_width>width) text_width = width;
+    u8g2->setCursor(x+(width-text_width)/2, y+text_offset_y);
+    u8g2->print(text);
+
+    // print "Ok" text
+    u8g2->setCursor(x+width/2-u8g2->getMaxCharWidth(), y+btn_Offset+(btn_height-u8g2->getMaxCharHeight())/2);
+    u8g2->print(F("Ok"));
+}
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored                                                 \
+    "-Wunused-parameter" // A derived class may eturn a different valuse
+                         // depending on being selected
+bool UImessageBox::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
+    // Click any button to dismiss this message box. Any other event is ignored.
+    if (eventType == UIeventClick) {
+        closeWindow();
+    }
+    return true;
+}
+ #pragma GCC diagnostic pop

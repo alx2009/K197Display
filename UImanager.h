@@ -220,8 +220,8 @@ private:
   void copyToUI();
 
 public:
-  static void store_to_EEPROM();
-  static void retrieve_from_EEPROM();
+  static bool store_to_EEPROM();
+  static bool retrieve_from_EEPROM();
 };
 extern UImanager uiman;
 

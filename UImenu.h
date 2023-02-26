@@ -161,20 +161,95 @@ public:
 
 /**************************************************************************/
 /*!
+    @brief  base class for all windows in the UI
+    
+    Only the class UImanager
+   (declared as friend) can create a working UIwindow.
+*/
+/**************************************************************************/
+class UIwindow {
+  protected:
+      friend class UImanager;    ///< Windows are managed by UImanager 
+      u8g2_uint_t width = 100;   ///< display width of the menu in pixels
+      UIwindow *parent = NULL; ///< the parent menu, can only be set via openWindow().
+      static UIwindow *currentWindow; ///< Keeps track of the current menu
+
+  public:
+      /*!
+         @brief  constructor of the object
+         @param width width of the menu window
+         @param isRoot true if this is the root window (it will be set as default)
+      */
+      UIwindow(u8g2_uint_t width, bool isRoot = false) {
+          this->width = width;  
+          if (isRoot) currentWindow = this;
+      };
+
+      /*!
+         @brief  get width
+         @return width of the window
+      */
+      u8g2_uint_t getWidth() { return width;};
+  
+  #   pragma GCC diagnostic push
+  #   pragma GCC diagnostic ignored                                                 \
+        "-Wunused-parameter" // A derived class may eturn a different valuse
+                         // depending on being selected
+      virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};  ///< virtual function, see derived classes
+      virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){
+          return false;  
+      }; ///< virtual function, see derived classes
+  #   pragma GCC diagnostic pop
+  
+      /*!
+          @brief  open a child menu
+          @details when a menu is opened in this way, this menu becomes the parent
+          menu of the child, then the child becomes the current menu, that is the
+          object returned by getcurrentWindow().
+          @param child pointer to an object of type UImenu, it will become the
+          current menu
+      */
+      void openWindow(UIwindow *child) {
+          child->parent = this;
+          currentWindow = child;
+      };
+
+      /*!
+         @brief  close a menu
+         @details when a menu is closed in this way, its parent menu becomes the
+         current menu, that is the object returned by getcurrentWindow(). trying to
+         close the root menu has no effect (the root menu has the parent set to
+         NULL).
+      */
+      void closeWindow() {
+          if (parent == NULL) return;
+          currentWindow = parent;
+          parent = NULL;
+      };
+
+      /*!
+         @brief  get the currrent menu
+        @return pointer to UImenu object representing the current menu
+      */
+      static UIwindow *getcurrentWindow() { return currentWindow; };
+};
+
+/**************************************************************************/
+/*!
     @brief  class implementing a menu
 
-    A menu is a collection of object of type MenuItem. Only the class UImanager
+    A menu is a window consisting in a collection of object of type MenuItem. Only the class UImanager
    (declared as friend) can create a working UImenu.
 
     Scrolling up and down is controlled by the up and down pushbutto source.
 
     A tree of submenus is suppported, as long as there is only one root.
     Moving within the hyerarchy is done using UIMenuActionOpen and
-   UIMenuActionClose, alternatively methods openMenu() and closeMenu()
+   UIMenuActionClose, alternatively methods openWindow() and closeMenu()
 
 */
 /**************************************************************************/
-class UImenu {
+class UImenu : public UIwindow {
 protected:
   UImenuItem *
       *items; ///< point to an array, storing all menu items in this menu
@@ -182,15 +257,10 @@ protected:
 
   byte firstVisibleItem = 0; ///< keep track of the first visible item
   byte selectedItem = 0;     ///< keep track of the selected item
-  u8g2_uint_t width = 100;   ///< display width of the menu in pixels
-  friend class UImanager;    ///< Menus are managed by UImanager and no other
-                             ///< object
+  friend class UImanager;    ///< Menus are managed by UImanager 
 
   bool selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
   void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
-
-  UImenu *parent = NULL; ///< the parent menu, can only be set via openMenu().
-  static UImenu *currentMenu; ///< Keeps track of the current menu
 
 public:
   /*!
@@ -199,13 +269,9 @@ public:
      @param isRoot true if this is the root menu (it will be set as default
      menu)
   */
-  UImenu(u8g2_uint_t width, bool isRoot = false) {
-    this->width = width;
-    if (isRoot)
-      currentMenu = this;
-  };
-  void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
-  bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot) {};
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
+  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
 
   /*!
      @brief  get the currently selected item
@@ -214,38 +280,6 @@ public:
   const UImenuItem *getSelectedItem() { return items[selectedItem]; };
   void selectFirstItem();
 
-  /*!
-     @brief  open a child menu
-     @details when a menu is opened in this way, this menu becomes the parent
-     menu of the child, then the child becomes the current menu, that is the
-     object returned by getCurrentMenu().
-     @param child pointer to an object of type UImenu, it will become the
-     current menu
-  */
-  void openMenu(UImenu *child) {
-    child->parent = this;
-    currentMenu = child;
-  };
-
-  /*!
-     @brief  close a menu
-     @details when a menu is closed in this way, its parent menu becomes the
-     current menu, that is the object returned by getCurrentMenu(). trying to
-     close the root menu has no effect (the root menu has the parent set to
-     NULL).
-  */
-  void closeMenu() {
-    if (parent == NULL)
-      return;
-    currentMenu = parent;
-    parent = NULL;
-  };
-
-  /*!
-     @brief  get the currrent menu
-     @return pointer to UImenu object representing the current menu
-  */
-  static UImenu *getCurrentMenu() { return currentMenu; };
 };
 
 /**************************************************************************/
@@ -426,7 +460,7 @@ public:
      or the item is asked to perform its default action
      @details for this element this method closes the current menu
   */
-  virtual void change() { UImenu::getCurrentMenu()->closeMenu(); };
+  virtual void change() { UIwindow::getcurrentWindow()->closeWindow(); };
 };
 
 /**************************************************************************/
@@ -461,7 +495,42 @@ public:
      @details for this element this method asks the current menu to opens the
      child menu passed at contruction
   */
-  virtual void change() { UImenu::getCurrentMenu()->openMenu(child); };
+  virtual void change() { UIwindow::getcurrentWindow()->openWindow(child); };
+};
+
+/**************************************************************************/
+/*!
+    @brief  class implementing a message box
+
+    A message box is a window that display a message and a "Ok" button
+    
+    pressing the button will dismiss the message
+
+*/
+/**************************************************************************/
+class UImessageBox : public UIwindow {
+protected:
+  const __FlashStringHelper *text; ///< the message to be displayed
+  static const u8g2_uint_t height=42;
+  static const u8g2_uint_t text_offset_y=3;
+  static const u8g2_uint_t btn_Offset=20;
+  static const u8g2_uint_t btn_height=17;
+  static const u8g2_uint_t btn_width=35;
+
+public:
+  /*!
+     @brief  constructor of the object
+     @param width width of the box
+     @param text the message to be displayed (must fit on one line)
+  */
+  UImessageBox(u8g2_uint_t width, const __FlashStringHelper *text) : UIwindow(width, false) {
+      this->text = text;
+  };
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
+  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  void show() {
+      UIwindow *current=getcurrentWindow();
+      if (current!=NULL && current != this) current->openWindow(this);};
 };
 
 // *********************************************************************************
@@ -480,7 +549,6 @@ public:
      @param height the height of this item in pixels
      @param text the text displayed for this item
 */
-
 #define DEF_MENU_CLASS(class_name, instance_name, height, text)                \
   const char __txt_##instance_name[] PROGMEM = text;                           \
   class_name instance_name(                                                    \
@@ -727,5 +795,15 @@ public:
 #define DEF_MENU_BYTE_SETGET(instance_name, height, text, set_code, get_code)  \
   DEF_MENU_SETGET_SUBCLASS(MenuInputByte, instance_name, height, text,         \
                            byte, set_code, get_code)
+/*!
+   \def DEF_MESSAGE_BOX(instance_name, width, text)
+
+     @brief  macro, used to simplify definition of message boxes
+     @param instance_name name of the object instance defined by the macro
+     @param width the width of the window
+     @param text the message to be displayed (make sure it fits in the window, no check)
+*/
+#define DEF_MESSAGE_BOX(instance_name, width, text)                        \
+  DEF_MENU_CLASS(UImessageBox, instance_name, width, text); // reuse macro DEF_MENU_CLASS
 
 #endif // UIMENU_H__
