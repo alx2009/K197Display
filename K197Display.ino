@@ -52,8 +52,6 @@ moving to inline assembler and naked interrupt handlers
 //  Add message box after save/restore menu command
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
-// Position of x axis along vertical (y) direction is sometimes wrong
-// Graph is plot at wrong y coordinate (e.g. when the scale is +-100uV)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+

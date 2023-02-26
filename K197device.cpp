@@ -643,14 +643,15 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
   float ymin = graphdata->y0.getValue();
   float ymax = graphdata->y1.getValue();
   
-  //DebugOut.print(F("grmax="));DebugOut.println(grmax);
-  //DebugOut.print(F("MAX 10^")); DebugOut.print(max_pow10); DebugOut.print(F("*")); DebugOut.print(max_mult); 
-  //DebugOut.print(F("=")); DebugOut.println(ymax); 
-  //DebugOut.print(F("cache.in="));DebugOut.println(grmin);
-  //DebugOut.print(F("MIN 10^")); DebugOut.print(min_pow10); DebugOut.print(F("*")); DebugOut.print(min_mult); 
-  //DebugOut.print(F("=")); DebugOut.println(ymin); 
+  //DebugOut.print(F("grmax="));DebugOut.print(grmax, 9);
+  //DebugOut.print(F(", ymax=")); DebugOut.println(ymax, 9); 
+  //DebugOut.print(F("grmin="));DebugOut.print(grmin, 9);
+  //DebugOut.print(F(", ymin=")); DebugOut.println(ymin, 9); 
   
-  float scale_factor = float(graphdata->y_size)/round(ymax-ymin);
+  float scale_factor = float(graphdata->y_size)/(ymax-ymin);
+  //DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9); 
+
+
   for (int i=0; i<cache.gr_size; i++) {
      if (i>=graphdata->x_size) { // should be impossible but just to be safe
          DebugOut.print(F("i=")); DebugOut.print(i);
@@ -662,10 +663,11 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
      graphdata->point[i] = (cache.graph[i]-ymin)*scale_factor+0.5;
   }
   if ( graphdata->y0.isNegative() && graphdata->y1.isPositive() ) { // 0 is included in the graph
-     graphdata->y_zero = -ymin*scale_factor+0.5;
+     graphdata->y_zero = 0.5-ymin*scale_factor;
   } else {
      graphdata->y_zero = 0;
   }
+  //DebugOut.print(F(", yzero=")); DebugOut.println(graphdata->y_zero, 9); 
   graphdata->current_idx = cache.gr_index; 
   graphdata->npoints = cache.gr_size;
 }
