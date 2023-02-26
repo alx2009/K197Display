@@ -48,7 +48,7 @@ The current SW is implementing the same functions available in the 197/197A (wit
 
 Holding the "REL" button for 0.5 s will show a Options menu to enable an additional measurement mode and other options, as well as data logging to bluetooth serial.
 
-clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode is only available in "normal" and "statistics" display mode. Changing display mode cancel the holding. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
+clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode can be entered while in graph mode, but it has no effect (currently, this may change in future revisions). Changing display mode cancel the holding. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
 
 Some commands can be entered via Serial connection (connect via Serial/bluetooth Serial and send "?" for a list)
 
