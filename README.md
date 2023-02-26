@@ -41,16 +41,38 @@ The definition of the pins in pinout.h can be changed to support the OLED in 4 w
 Functionality:
 -------------
 The current SW is implementing the same functions available in the 197/197A (with minor differences due to the different display technology used), plus the following additional functions:
-- The module tries to detemine if the BT module is powered on. If it is, BT is displayed.
-- The BT module state is also monitored continuosly. When low, "<->" is displayed next to "BT" to indicate an active bluetooth connection
-- Some commands can be entered via Serial connection (press ? for a list)
-- Holding the "REL" button for 0.5 s will show a Options menu to enable an additional measurement mode and other options, as well as data logging to bluetooth serial.
-- The additional measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
-- in temperature mode the temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
-- At the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
-- Two menu items enable storing and retrieving the configuration to the EEPROM. At startup and after reset the retrieve happens automatically.
-- An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example range switch, REL state, AC button, etc.).
-- clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode is only available in "normal" and "statistics" display mode. Changing display mode cancel the holding. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
+- Bluetooth interface
+- Statistics
+- Graph
+- Additional temperature measurement (with K type thermocouple)
+
+Holding the "REL" button for 0.5 s will show a Options menu to enable an additional measurement mode and other options, as well as data logging to bluetooth serial.
+
+clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode is only available in "normal" and "statistics" display mode. Changing display mode cancel the holding. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
+
+Some commands can be entered via Serial connection (connect via Serial/bluetooth Serial and send "?" for a list)
+
+Bluetooth support:
+-------------
+The SW tries to detemine if the BT module is powered on. If it is, BT is displayed. The BT module pin state is also monitored continuosly. When the pin is low, "<->" is displayed next to "BT" to indicate an active bluetooth connection. 
+
+Logging to bluetooth can be activated via the options menu
+
+Temperature measurement:
+-------------
+The additional temperature measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
+
+The temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
+
+Options menu:
+-------------
+At the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
+
+Two menu items enable storing and retrieving the configuration to the EEPROM. At startup and after reset the retrieve happens automatically.
+
+Statistics display mode
+-------------
+An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example range switch, REL state, AC button, etc.).
 
 Keyboard: 
 ---------
@@ -59,7 +81,8 @@ compared to the original K197, the use of the the pushbuttons on the front panel
 - double click of the REL button resets the statistics (but otherwise does not affect the reference value)
 - Normal STO and RCL functions can be disabled from the options menu. When disabled, the buttons are repurposed as follows:
   - clicking the STO button once hold the currently displayed measurement when in normal or statistics mode. A second click returns to continuos updates.
-  - Holding the STO button alternates between "normal" and "statistics" display (when repurposing of STO and RCL is enabled)
+  - Holding the STO button alternates between "normal" and "statistics" display mode (when repurposing of STO and RCL is enabled)
+  - Double clicking the STO button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
 
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
 REL = up (hold to exit the menu)
