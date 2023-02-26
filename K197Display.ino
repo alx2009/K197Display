@@ -56,8 +56,6 @@ moving to inline assembler and naked interrupt handlers
 //  Add message box after save/restore menu command
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
-// Graph scale wraps around from 180s to 32s, sample rate remains at 2
-//         Correct problem with new size, but now I get a Error: new_idx 2 when resampling 0==>1
 // Position of x axis along vertical (y) direction is sometimes wrong
 // Graph is plot at wrong y coordinate (e.g. when the scale is +-100uV)
 //

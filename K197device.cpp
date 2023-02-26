@@ -686,17 +686,10 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
   uint16_t nsamples_old_positive = nsamples_graph == 0 ? 1 : nsamples_graph;
   uint16_t nsamples_new_positive = nsamples_new == 0 ? 1 : nsamples_new;
 
-  DebugOut.print(F("old+ ")); DebugOut.println(nsamples_old_positive);
-  DebugOut.print(F("new+ ")); DebugOut.println(nsamples_new_positive);
-  DebugOut.print(long(gr_size-1));  DebugOut.print(F(" * ")); DebugOut.print(long(nsamples_old_positive)); 
-      DebugOut.print(F(" / ")); DebugOut.print(long(nsamples_new_positive)); 
-  DebugOut.print(F(" + ")); DebugOut.print(1l);  DebugOut.print(F(" + ")); DebugOut.print(nskip_graph/nsamples_new_positive);
-  DebugOut.println();
-  
   unsigned long gr_size_new = long(gr_size-1) * long(nsamples_old_positive) / long(nsamples_new_positive) + 1l + nskip_graph/nsamples_new_positive;
   if (gr_size_new>max_graph_size) gr_size_new = max_graph_size;
   float buffer[gr_size_new];
-  DebugOut.print(F("gr_size_new=")); DebugOut.println(gr_size_new);
+  //DebugOut.print(F("gr_size_new=")); DebugOut.println(gr_size_new);
   
   if (nsamples_new>nsamples_graph) { // Decimation to match the new sample rate 
       //DebugOut.print(F(" > ")); DebugOut.flush();
@@ -711,15 +704,13 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
              buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
              new_idx++;  
           }    
-          if (new_idx!=gr_size_new) {
-             DebugOut.println("Error: new_idx 2");
-             break;
-          }
-
-          //Adjust cache size. Note that nskip_graph does not need to change  
-          gr_index=new_idx-1;
-          gr_size=new_idx;   
       }
+      if (new_idx!=gr_size_new) {
+         DebugOut.println("Error: new_idx 2");
+      }
+      //Adjust cache size. Note that nskip_graph does not need to change  
+      gr_index=new_idx-1;
+      gr_size=new_idx;   
   } else { // Add more data to match the new sample rate
       //DebugOut.print(F(" < ")); DebugOut.flush();
       unsigned int old_idx=gr_size-1;
