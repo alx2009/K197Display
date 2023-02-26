@@ -56,7 +56,7 @@ Bluetooth support:
 -------------
 The SW tries to detemine if the BT module is powered on. If it is, BT is displayed. The BT module pin state is also monitored continuosly. When the pin is low, "<->" is displayed next to "BT" to indicate an active bluetooth connection. 
 
-Logging to bluetooth can be activated via the options menu. A time stamp can be selected in the options menu. Note that this time stamp is based on the "millis() function, which is only as precise as the Arduino clock.
+Logging to bluetooth can be activated via the options menu. A time stamp can be selected in the options menu. Note that this time stamp is based on the millis() function, which is only as precise as the Arduino clock.
 
 Temperature measurement:
 -------------
