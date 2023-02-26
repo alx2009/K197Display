@@ -28,7 +28,7 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 - PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
 - PA2 used to detect when the Bluetooth Module is powered on (if used)
 - PA3, PA4, PA6 used to interface the OLED (3 wire SPI mode)
-- PA5 is connected to the BT module BT_STATE
+- PA5 is connected to the BT module BT_STATE (if used)
 - PA7 is connected to a LED (optional, default LED_BUILTIN for dxCore) 
 - PC0-PC3 used to interface the 197/197A main board (4-wire SPI)
 - PD1-PD4 connected to the pushbutton cluster on the front panel
