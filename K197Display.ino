@@ -49,7 +49,6 @@ moving to inline assembler and naked interrupt handlers
 //  Save new options to EEPROM
 //  Improved statistics ?
 //  Save & restore current screen mode in settings
-//  Add message box after save/restore menu command
 //  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 //
