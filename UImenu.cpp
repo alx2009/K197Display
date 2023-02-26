@@ -490,7 +490,7 @@ void UImessageBox::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     u8g2->print(text);
 
     // print "Ok" text
-    u8g2->setCursor(x+(width+btn_width)/2-u8g2->getMaxCharWidth(), y+btn_Offset+(btn_height-u8g2->getMaxCharHeight())/2);
+    u8g2->setCursor(x+width/2-u8g2->getMaxCharWidth(), y+btn_Offset+(btn_height-u8g2->getMaxCharHeight())/2);
     u8g2->print(F("Ok"));
 }
 
@@ -507,4 +507,3 @@ bool UImessageBox::handleUIEvent(K197UIeventsource eventSource, K197UIeventType 
     return true;
 }
  #pragma GCC diagnostic pop
-

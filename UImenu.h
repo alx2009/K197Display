@@ -510,10 +510,10 @@ public:
 class UImessageBox : public UIwindow {
 protected:
   const __FlashStringHelper *text; ///< the message to be displayed
-  static const u8g2_uint_t height=40;
+  static const u8g2_uint_t height=42;
   static const u8g2_uint_t text_offset_y=3;
   static const u8g2_uint_t btn_Offset=20;
-  static const u8g2_uint_t btn_height=15;
+  static const u8g2_uint_t btn_height=17;
   static const u8g2_uint_t btn_width=35;
 
 public:

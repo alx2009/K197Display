@@ -588,9 +588,9 @@ void UImanager::clearScreen() {
 //  Message box definitions
 // ***************************************************************************************
 
-DEF_MESSAGE_BOX(EEPROM_save_msg_box, 64, "config saved");
-DEF_MESSAGE_BOX(EEPROM_reload_msg_box, 64, "config reloaded");
-DEF_MESSAGE_BOX(ERROR_msg_box, 64, "Error (see log)");
+DEF_MESSAGE_BOX(EEPROM_save_msg_box, 100, "config saved");
+DEF_MESSAGE_BOX(EEPROM_reload_msg_box, 100, "config reloaded");
+DEF_MESSAGE_BOX(ERROR_msg_box, 100, "Error (see log)");
 
 
 // ***************************************************************************************
