@@ -62,7 +62,7 @@ Temperature measurement:
 -------------
 The additional temperature measurement mode - when enabled in the Options menu - supports connecting a K type thermocouple to measure temperature. To enter this mode the K197 must be in the mV DC range, then the "dB" button is clicked. Clicking the "dB" button once more will enter dB mode as normal.
 
-The temperature of the cold joint is also shown (this is measwured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
+The temperature of the cold joint is also shown (this is measured with the AVR internal temperature sensor). The accuracy is limited by the accuracy of the AVR temperature sensor, around 3C according to the data sheet.
 
 Options menu:
 -------------
