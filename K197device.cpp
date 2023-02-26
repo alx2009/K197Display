@@ -465,7 +465,7 @@ void K197device::resetStatistics() {
    @brief reset graph
 */
 void K197device::k197_cache_struct::resetGraph() {
-  DebugOut.println(F("resetGraph"));
+  //DebugOut.println(F("resetGraph"));
   gr_index = max_graph_size-1; 
   gr_size = 0x00; 
   nskip_graph = 0x00;
