@@ -41,9 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  test ==> Dotted line for x axis
-//  test ==> Graph more menu options (x scaling)
-//  test ==> autosample
 // remove x axis autoscale option
 // add marker for current measurement
 // Add option for rolling
@@ -51,7 +48,6 @@ moving to inline assembler and naked interrupt handlers
 //  Review menu structure
 //  Save new options to EEPROM
 //  Improved statistics ?
-//  Manual scaling ?
 //  Save & restore current screen mode in settings
 //  Add message box after save/restore menu command
 //  Analog bar
