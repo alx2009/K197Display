@@ -293,7 +293,7 @@ static inline byte fifo_pull() {
    port, potentially optimizing the interrupt handler further.
 */
 void CCL_interrupt_handler() {
-  // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
+  //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
   //  rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
@@ -430,7 +430,6 @@ void k197ButtonCluster::setup() {
   UI_RCL_Event.start();
   UI_REL_Event.start();
   UI_DB_Event.start();
-  Logic::start();
 
   // attach the CCL interrupts (note: this should be replaced with direct access
   // to CCL.INTCTRL0 when dxCore Logic library supports this method
@@ -438,6 +437,8 @@ void k197ButtonCluster::setup() {
   Logic1.attachInterrupt(CCL_interrupt_handler, CHANGE);
   Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
   Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
+
+  Logic::start();
 
   // CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
   //  will be released... DebugOut.print(F("CCL.LUT0CTRLA="));
