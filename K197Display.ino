@@ -41,7 +41,7 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// add marker for current measurement
+// Test marker for current measurement
 // Add option for rolling
 // remove x axis autoscale option
 //  Graph cursor
@@ -49,7 +49,6 @@ moving to inline assembler and naked interrupt handlers
 //  Save new options to EEPROM
 //  Improved statistics ?
 //  Save & restore current screen mode in settings
-//  Analog bar
 // Bug2fix: Enable scrolling menu backward even if the item is not selectable
 //
 // Latest benchmark:
