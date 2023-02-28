@@ -41,9 +41,9 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// remove x axis autoscale option
 // add marker for current measurement
 // Add option for rolling
+// remove x axis autoscale option
 //  Graph cursor
 //  Review menu structure
 //  Save new options to EEPROM
