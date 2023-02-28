@@ -888,6 +888,18 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
+static void printMarker(u8g2_uint_t x, u8g2_uint_t y) {
+  static const u8g2_uint_t marker_size = 7;
+  //k197graph_type::x_size
+  u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
+  u8g2_uint_t x1 = x > k197graph_type::x_size-marker_size ? k197graph_type::x_size : k197graph_type::x_size+marker_size;
+  u8g2_uint_t y0 = y < marker_size ? 0 : y -  marker_size;
+  u8g2_uint_t y1 = y > k197graph_type::y_size-marker_size ? k197graph_type::x_size : k197graph_type::y_size+marker_size;
+
+  u8g2.drawLine(x0, y, x1, y);
+  u8g2.drawLine(x, y0, x, y1);
+}
+
 /*!
     @brief  update the display, used when in graph mode
    screen.
@@ -980,6 +992,7 @@ void UImanager::updateGraphScreen() {
           u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
       }
   }
+  printMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
