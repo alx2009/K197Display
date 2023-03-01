@@ -892,10 +892,10 @@ static void printMarker(u8g2_uint_t x, u8g2_uint_t y) {
   static const u8g2_uint_t marker_size = 7;
   //k197graph_type::x_size
   u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
-  u8g2_uint_t x1 = x > k197graph_type::x_size-marker_size ? k197graph_type::x_size : k197graph_type::x_size+marker_size;
+  u8g2_uint_t x1 = k197graph_type::x_size<(x+marker_size) ? k197graph_type::x_size : x+marker_size;
   u8g2_uint_t y0 = y < marker_size ? 0 : y -  marker_size;
-  u8g2_uint_t y1 = y > k197graph_type::y_size-marker_size ? k197graph_type::x_size : k197graph_type::y_size+marker_size;
-
+  u8g2_uint_t y1 = k197graph_type::y_size<(y+marker_size) ? k197graph_type::y_size : y+marker_size;
+  
   u8g2.drawLine(x0, y, x1, y);
   u8g2.drawLine(x, y0, x, y1);
 }
