@@ -41,8 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Add option for rolling
-// remove x axis autoscale option
 //  Graph cursor
 //  Review menu structure
 //  Save new options to EEPROM
