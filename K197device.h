@@ -146,6 +146,8 @@ struct k197graph_type {
      byte y_zero=0x00; ///< the point value for 0, if included in the graph
 
      void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+
+     inline uint16_t idx(uint16_t logic_index) {return (logic_index+current_idx+1) % x_size;};
 };
 
 /**************************************************************************/

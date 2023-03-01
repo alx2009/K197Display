@@ -667,7 +667,7 @@ DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis", OPT(opt_g
 DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show y=0");
 
 DEF_MENU_SEPARATOR(graphSeparator2, 15, "< X axis >"); ///< Menu separator
-DEF_MENU_BOOL(gr_xscale_autoscale, 15, "Autoscale X");       ///< Menu input
+DEF_MENU_BOOL(gr_xscale_roll_mode, 15, "Roll mode");       ///< Menu input
 DEF_MENU_BOOL_ACT(gr_xscale_autosample, 15, "Auto sample",
                   k197dev.setAutosample(getValue()););       ///< Menu input
 DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
@@ -677,7 +677,7 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
 UImenuItem *graphMenuItems[] = {
     &graphSeparator0, &opt_gr_type, 
     &graphSeparator1, &opt_gr_yscale, &gr_yscale_show0, 
-    &graphSeparator2, &gr_xscale_autoscale, &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu};
+    &graphSeparator2, &gr_xscale_roll_mode, &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu};
 
 /*!
       @brief set the display contrast
@@ -718,6 +718,7 @@ void UImanager::setupMenus() {
   UIgraphMenu.selectFirstItem();
 
   //gr_sample_time.setValue(k197dev.getGraphPeriod());
+  gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
   permadata::retrieve_from_EEPROM();
@@ -982,17 +983,29 @@ void UImanager::updateGraphScreen() {
   else
     u8g2.print(F("     ")); 
     
-  // Draw the graph
-  if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
-      for (int i=0; i<k197graph.npoints; i++) {
-          u8g2.drawPixel(xscale*i, k197graph.y_size-k197graph.point[i]);
-      }
-  } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
-      for (int i=0; i<(k197graph.npoints-1); i++) {
-          u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
-      }
+  if ( xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue() ) {  // Draw the graph in roll mode
+      if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
+          for (int i=0; i<k197graph.npoints; i++) {
+              u8g2.drawPixel(i, k197graph.y_size-k197graph.point[k197graph.idx(i)]);
+          }
+      } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
+          for (int i=0; i<(k197graph.npoints-1); i++) {
+              u8g2.drawLine(i, k197graph.y_size-k197graph.point[k197graph.idx(i)], i+1, k197graph.y_size-k197graph.point[k197graph.idx(i+1)]);
+          }
+      }    
+      //printMarker(k197graph.x_size, k197graph.y_size-k197graph.point[k197graph.current_idx]);
+  } else { // Draw the graph in overwrite mode
+      if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
+          for (int i=0; i<k197graph.npoints; i++) {
+              u8g2.drawPixel(xscale*i, k197graph.y_size-k197graph.point[i]);
+          }
+      } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
+          for (int i=0; i<(k197graph.npoints-1); i++) {
+              u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
+          }
+      }    
+      printMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   }
-  printMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
