@@ -955,7 +955,7 @@ void UImanager::updateGraphScreen() {
   u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
-      drawDottedHLine(0, k197graph.y_zero, k197graph.x_size); // zero axis
+      drawDottedHLine(0, k197graph.y_size-k197graph.y_zero, k197graph.x_size); // zero axis
 
   //Draw axis labels  
   u8g2.setFont(u8g2_font_6x12_mr);
