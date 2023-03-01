@@ -41,7 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Test marker for current measurement
 // Add option for rolling
 // remove x axis autoscale option
 //  Graph cursor
