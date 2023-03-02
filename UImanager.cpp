@@ -1070,11 +1070,16 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       }
       break;
     case K197key_RCL:
-      if (reassignStoRcl.getValue() && eventType == UIeventPress) {
-        DebugOut.print(F("Max loop (us): "));
-        DebugOut.println(looptimerMax);
-        looptimerMax = 0UL;
-        return true;
+      if (!reassignStoRcl.getValue()) break;
+      if (eventType == UIeventClick) {
+         if (isGraphMode() && areCursorsVisible()) toggleActiveCursor();
+      } else if (eventType == UIeventLongPress) {
+         if (isGraphMode()) toggleCursorsVisibility();
+      } else if (eventType == UIeventDoubleClick) {
+         DebugOut.print(F("Max loop (us): "));
+         DebugOut.println(looptimerMax);
+         looptimerMax = 0UL;
+         return true;        
       }
       break;
     case K197key_REL:
