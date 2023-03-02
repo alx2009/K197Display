@@ -71,6 +71,9 @@ public:
 private:
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
+  byte cursor_a = 60;
+  byte cursor_b = 120;
+  
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
   K197screenMode screen_mode =
@@ -143,6 +146,25 @@ public:
     if ( (screen_mode & K197sc_activeCursorBitMask) == 0x00) return CURSOR_A;
     else return CURSOR_B;
   };
+  /*!
+     @brief  increment the active cursor position
+     @details the cursor position will not be incremented past the maximum value (k197graph_type::x_size-1) or less than zero
+     @param increment the number to be added to the current position (use a negative increment to decrement)
+  */
+  void incrementCursor(int increment=1) {
+    bool isA = getActiveCursor() == CURSOR_A;
+    byte oldvalue = isA ? cursor_a : cursor_b;
+    byte newvalue = oldvalue+increment;
+    if (increment>0) { // make sure we increment within boundary
+      if ( (newvalue < oldvalue) || (newvalue>=k197graph_type::x_size) ) newvalue = k197graph_type::x_size-1;
+    } else { // make sure we decrement
+      if (newvalue > oldvalue) newvalue = 0;
+    }
+    if (isA) cursor_a = newvalue; 
+    else cursor_b = newvalue; 
+  };
+
+  
   /*!
      @brief  set full screen mode
      @details also clears the other attributes

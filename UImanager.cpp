@@ -1083,7 +1083,15 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       }
       break;
     case K197key_REL:
-      if (eventType == UIeventDoubleClick) {
+      if ( isGraphMode() && areCursorsVisible() ) {
+          if (eventType == UIeventPress) {
+              incrementCursor(1);
+          } else if (eventType == UIeventLongPress) {
+              incrementCursor(10);
+          } else if (eventType == UIeventHold) {
+              incrementCursor(5);
+          }
+      } else if (eventType == UIeventDoubleClick) {
         pushbuttons.cancelClickREL();
         k197dev.resetStatistics();
         // DebugOut.print('x');
@@ -1091,7 +1099,15 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       }
       break;
     case K197key_DB:
-      if (additionalModes.getValue()) {
+      if ( isGraphMode() && areCursorsVisible() ) {
+          if (eventType == UIeventPress) {
+              incrementCursor(-1);
+          } else if (eventType == UIeventLongPress) {
+              incrementCursor(-10);
+          } else if (eventType == UIeventHold) {
+              incrementCursor(-5);
+          }
+      } else if (additionalModes.getValue()) {
         if (eventType == UIeventPress) {
           if (k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
             if (!k197dev.getTKMode()) { // TK mode is not yet enabled
