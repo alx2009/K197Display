@@ -889,16 +889,30 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
-static void printMarker(u8g2_uint_t x, u8g2_uint_t y) {
+static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=MARKER) {
   static const u8g2_uint_t marker_size = 7;
   //k197graph_type::x_size
   u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
   u8g2_uint_t x1 = k197graph_type::x_size<(x+marker_size) ? k197graph_type::x_size : x+marker_size;
   u8g2_uint_t y0 = y < marker_size ? 0 : y -  marker_size;
   u8g2_uint_t y1 = k197graph_type::y_size<(y+marker_size) ? k197graph_type::y_size : y+marker_size;
-  
-  u8g2.drawLine(x0, y, x1, y);
-  u8g2.drawLine(x, y0, x, y1);
+  switch(marker_type) {
+     case MARKER:
+         u8g2.drawLine(x0, y, x1, y);
+         u8g2.drawLine(x, y0, x, y1);
+         break;
+     case CURSOR_A:
+         u8g2.drawLine(x0, y0, x, y);
+         u8g2.drawLine(x, y, x1, y1);
+         u8g2.drawLine(x0, y1, x, y);
+         u8g2.drawLine(x, y, x1, y0);
+         break;
+     case CURSOR_B:
+         u8g2.drawLine(x0, y, x1, y);
+         u8g2.drawLine(x, y0, x, y1);
+         u8g2.drawBox(x0, y0, x1-x0, y1-y0);
+         break;
+  }
 }
 
 /*!
