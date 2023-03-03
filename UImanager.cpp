@@ -889,7 +889,7 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
-static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=MARKER) {
+static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER) {
   static const u8g2_uint_t marker_size = 7;
   //k197graph_type::x_size
   u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
@@ -897,20 +897,20 @@ static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=MARKER) {
   u8g2_uint_t y0 = y < marker_size ? 0 : y -  marker_size;
   u8g2_uint_t y1 = k197graph_type::y_size<(y+marker_size) ? k197graph_type::y_size : y+marker_size;
   switch(marker_type) {
-     case MARKER:
+     case UImanager::MARKER:
          u8g2.drawLine(x0, y, x1, y);
          u8g2.drawLine(x, y0, x, y1);
          break;
-     case CURSOR_A:
+     case UImanager::CURSOR_A:
          u8g2.drawLine(x0, y0, x, y);
          u8g2.drawLine(x, y, x1, y1);
          u8g2.drawLine(x0, y1, x, y);
          u8g2.drawLine(x, y, x1, y0);
          break;
-     case CURSOR_B:
+     case UImanager::CURSOR_B:
          u8g2.drawLine(x0, y, x1, y);
          u8g2.drawLine(x, y0, x, y1);
-         u8g2.drawBox(x0, y0, x1-x0, y1-y0);
+         u8g2.drawFrame(x0, y0, x1-x0, y1-y0);
          break;
   }
 }
@@ -1020,6 +1020,18 @@ void UImanager::updateGraphScreen() {
       }    
       printMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   }
+  
+  if (areCursorsVisible() && k197graph.npoints>0) {
+      u8g2_uint_t ax = cursor_a > k197graph.npoints ? k197graph.npoints-1 : cursor_a;
+      u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
+      if (xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue()) { // Draw the cursors in roll mode
+          printMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
+          printMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
+      } else { // Draw the cursors in overwrite mode
+          printMarker(xscale*ax, k197graph.y_size-k197graph.point[ax],CURSOR_A);
+          printMarker(xscale*bx, k197graph.y_size-k197graph.point[bx],CURSOR_B);        
+      }
+  }
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
@@ -1045,21 +1057,23 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
   if (k197dev.isCal())
     return false;
   if (eventSource == K197key_REL &&
-      eventType == UIeventLongPress) { // This event is handled the same in all
-                                       // screen modes
+      eventType == UIeventLongPress &&
+      ! ( isGraphMode() && areCursorsVisible() ) 
+      ) { // This event is handled the same in all
+                                       // other screen modes
     if (isFullScreen())
       showOptionsMenu();
     else
       showFullScreen();
-    return true;
+    return true; // Skip normal handling in the main sketch
   }
   if (isMenuVisible()) {
     if (UIwindow::getcurrentWindow()->handleUIEvent(eventSource, eventType))
-      return true;
+      return true; // Skip normal handling in the main sketch
   } else if (isSplitScreen()) { // Split screen with no menu visible
     if (eventType == UIeventClick || eventType == UIeventLongPress) {
       showFullScreen();
-      return true;
+      return true; // Skip normal handling in the main sketch
     }
   } else
     switch (eventSource) { // Full scren mode
@@ -1080,39 +1094,24 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           else
             uiman.setScreenMode(K197sc_normal);          
         }
-        return true;
+        return true; // Skip normal handling in the main sketch
       }
       break;
     case K197key_RCL:
-      if (!reassignStoRcl.getValue()) break;
-      if (eventType == UIeventClick) {
-         if (isGraphMode() && areCursorsVisible()) toggleActiveCursor();
-      } else if (eventType == UIeventLongPress) {
-         if (isGraphMode()) toggleCursorsVisibility();
-      } else if (eventType == UIeventDoubleClick) {
-         DebugOut.print(F("Max loop (us): "));
-         DebugOut.println(looptimerMax);
-         looptimerMax = 0UL;
-         return true;        
+      if (reassignStoRcl.getValue()) {
+          if (eventType == UIeventClick) {
+             if (isGraphMode() && areCursorsVisible()) toggleActiveCursor();
+          } else if (eventType == UIeventLongPress) {
+             if (isGraphMode()) toggleCursorsVisibility();
+          } else if (eventType == UIeventDoubleClick) {
+             DebugOut.print(F("Max loop (us): "));
+             DebugOut.println(looptimerMax);
+             looptimerMax = 0UL;
+          }
+          return true; // Skip normal handling in the main sketch       
       }
       break;
     case K197key_REL:
-      if ( isGraphMode() && areCursorsVisible() ) {
-          if (eventType == UIeventPress) {
-              incrementCursor(1);
-          } else if (eventType == UIeventLongPress) {
-              incrementCursor(10);
-          } else if (eventType == UIeventHold) {
-              incrementCursor(5);
-          }
-      } else if (eventType == UIeventDoubleClick) {
-        pushbuttons.cancelClickREL();
-        k197dev.resetStatistics();
-        // DebugOut.print('x');
-        return true;
-      }
-      break;
-    case K197key_DB:
       if ( isGraphMode() && areCursorsVisible() ) {
           if (eventType == UIeventPress) {
               incrementCursor(-1);
@@ -1121,6 +1120,24 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           } else if (eventType == UIeventHold) {
               incrementCursor(-5);
           }
+          return true; // Skip normal handling in the main sketch
+      } else if (eventType == UIeventDoubleClick) {
+          pushbuttons.cancelClickREL();
+          k197dev.resetStatistics();
+          // DebugOut.print('x');
+          return true; // Skip normal handling in the main sketch
+      }
+      break;
+    case K197key_DB:
+      if ( isGraphMode() && areCursorsVisible() ) {
+          if (eventType == UIeventPress) {
+              incrementCursor(1);
+          } else if (eventType == UIeventLongPress) {
+              incrementCursor(10);
+          } else if (eventType == UIeventHold) {
+              incrementCursor(5);
+          }
+          return true; // Skip normal handling in the main sketch
       } else if (additionalModes.getValue()) {
         if (eventType == UIeventPress) {
           if (k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
@@ -1130,6 +1147,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
             }
           } else {
             k197dev.setTKMode(false);
+            // Do NOT skip normal handling in the main sketch
           }
         }
       }
