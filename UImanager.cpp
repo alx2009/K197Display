@@ -917,7 +917,7 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
          u8g2.drawLine(x, y, x1, y1);
          u8g2.drawLine(x0, y1, x, y);
          u8g2.drawLine(x, y, x1, y0);
-         if ( y1 > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+         if ( int(y1) > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
              u8g2.setCursor(x0, y0-u8g2.getMaxCharHeight()); // Position above the marker
          } else {
              u8g2.setCursor(x0, y1); // Position below the marker          
@@ -930,7 +930,7 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
          u8g2.drawLine(x, y0, x, y1);
          u8g2.drawFrame(x0, y0, x1-x0, y1-y0);
          bool actv = getActiveCursor() == marker_type;
-         if ( y1 > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+         if ( int(y1) > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
              u8g2.setCursor(x1-u8g2.getMaxCharWidth()*(actv ? 2 : 1), y0-u8g2.getMaxCharHeight()); // Position above the marker
          } else {
              u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y1); // Position below the marker          
@@ -946,39 +946,10 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
    screen.
 */
 void UImanager::updateGraphScreen() {
-  u8g2_uint_t x = 185+10;
-  u8g2_uint_t y = 3;
-  u8g2.setFont(u8g2_font_5x7_mr);
-  y += u8g2.getMaxCharHeight();
-  u8g2.setCursor(x, y);
-
-  u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197dev.getUnit(true));
-  y += u8g2.getMaxCharHeight();
-
-  u8g2.setFont(u8g2_font_6x12_mr);
-  u8g2.setCursor(u8g2.tx, u8g2.ty + 1);
-  if (k197dev.isAC())
-    u8g2.print(F(" AC"));
-  else
-    u8g2.print(F("   "));
-  if (k197dev.isREL())
-    u8g2.print(F(" REL"));
-  else
-    u8g2.print(F("    "));
-
-  x = 185+5;
-  u8g2.setCursor(x, y);
-  u8g2.setFont(u8g2_font_8x13_mr);
-  if (k197dev.isNumeric()) {
-    char buf[K197_RAW_MSG_SIZE + 1];
-    u8g2.print(formatNumber(buf, k197dev.getValue()));
-  } else {
-    u8g2.print(k197dev.getRawMessage());
-  }
-  u8g2.setDrawColor(0);
-  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size+1);
-  u8g2.setDrawColor(1);
+  // Clear graph area
+  u8g2.setDrawColor(0); // set drawing color to background color (pixel off)
+  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size+1); 
+  u8g2.setDrawColor(1); // restore foreground color (pixel on)
 
   // Get graph data
   k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue()); 
@@ -988,7 +959,6 @@ void UImanager::updateGraphScreen() {
   while (i1<k197graph.npoints) i1*=2;    
   if (i1>k197graph.x_size) i1=k197graph.x_size;
   //DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
-
   byte xscale = k197graph.x_size / i1;
 
   // Draw the axis
@@ -997,32 +967,21 @@ void UImanager::updateGraphScreen() {
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
       drawDottedHLine(0, k197graph.y_size-k197graph.y_zero, k197graph.x_size); // zero axis
 
-  //Draw axis labels  
   u8g2.setFont(u8g2_font_6x12_mr);
+  //Clear the space normally occupied by the axis labels  
   u8g2.setDrawColor(0);
   u8g2.drawBox( k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight(), 256,  k197graph.y_size);
   u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
+  //Draw axis labels  
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
   uint16_t nseconds = gr_sample_time.getValue();
   printXYLabel(k197graph.y0, nseconds == 0 ? i1/3 : i1 * nseconds);  
+  u8g2_uint_t botln_x = u8g2.tx;
   u8g2.setCursor(k197graph.x_size+2, 0);
   printYLabel(k197graph.y1);
-
-  // Draw AUTO & HOLD at about the same height
-  u8g2.setFont(u8g2_font_5x7_mr);
-  x=u8g2.tx + 5;
-  y = 1;
-  u8g2.setCursor(x, y);
-  if (k197dev.isAuto())
-    u8g2.print(F("AUTO"));
-  else
-    u8g2.print(F("    ")); 
-  if (k197dev.getDisplayHold())
-    u8g2.print(F(" HOLD"));
-  else
-    u8g2.print(F("     ")); 
-    
+  u8g2_uint_t topln_x = u8g2.tx;
+      
   if ( xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue() ) {  // Draw the graph in roll mode
       if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
           for (int i=0; i<k197graph.npoints; i++) {
@@ -1058,23 +1017,84 @@ void UImanager::updateGraphScreen() {
           drawMarker(xscale*bx, k197graph.y_size-k197graph.point[bx],CURSOR_B);        
       }
   }
+  if (areCursorsVisible() && k197graph.npoints>0) {
+      drawGraphScreenCursorPanel(topln_x, botln_x);
+  } else {
+      drawGraphScreenNormalPanel(topln_x, botln_x);
+  }
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
 /*!
     @brief  draw a small panel showing the measurement value 
-    @details used when in graph mode screen when the cursors are hidden
+    @details this method is called from updateGraphScreen(). 
+    Used when in graph mode screen when the cursors are hidden
+    The top and bottom line include the axis labels, which have variable lenght
+    and are printed by updateGraphScreen(). The start cooordinate for those lines
+    is passed in the two arguments topln_x and botln_x
+    @param topln_x the first usable x coordinates of the top line of the panel
+    @param botln_x the first usable x coordinates of the bottom line of the panel
 */
-void drawGraphScreenNormalPanel() {
+void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x) {
+  u8g2_uint_t x = 185+10;
+  u8g2_uint_t y = 3;
+  u8g2.setFont(u8g2_font_5x7_mr);
+  y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
+
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  u8g2.print(k197dev.getUnit(true));
+  y += u8g2.getMaxCharHeight();
+
+  u8g2.setFont(u8g2_font_6x12_mr);
+  u8g2.setCursor(u8g2.tx, u8g2.ty + 1);
+  if (k197dev.isAC())
+    u8g2.print(F(" AC"));
+  else
+    u8g2.print(F("   "));
+  if (k197dev.isREL())
+    u8g2.print(F(" REL"));
+  else
+    u8g2.print(F("    "));
+
+  x = 185+5;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_8x13_mr);
+  if (k197dev.isNumeric()) {
+    char buf[K197_RAW_MSG_SIZE + 1];
+    u8g2.print(formatNumber(buf, k197dev.getValue()));
+  } else {
+    u8g2.print(k197dev.getRawMessage());
+  }
+
+  // Draw AUTO & HOLD at about the same height as the Y label
   
+  u8g2.setFont(u8g2_font_5x7_mr);
+  x=topln_x + 5;
+  y = 1;
+  u8g2.setCursor(x, y);
+  if (k197dev.isAuto())
+    u8g2.print(F("AUTO"));
+  else
+    u8g2.print(F("    ")); 
+  if (k197dev.getDisplayHold())
+    u8g2.print(F(" HOLD"));
+  else
+    u8g2.print(F("     "));   
 }
 
 /*!
     @brief  draw a small panel showing the cursor values 
-    @details used when in graph mode screen when the cursors are visible
+    @details this method is called from updateGraphScreen(). 
+    Used when in graph mode screen when the cursors are visible
+    The top and bottom line include the axis labels, which have variable lenght
+    and are printed by updateGraphScreen(). The start cooordinate for those lines
+    is passed in the two arguments topln_x and botln_x
+    @param topln_x the first usable x coordinates of the top line of the panel
+    @param botln_x the first usable x coordinates of the bottom line of the panel
 */
-void drawGraphScreenCursorPanel() {
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x) {
   
 }
 

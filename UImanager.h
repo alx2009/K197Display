@@ -86,8 +86,8 @@ private:
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
-  void drawGraphScreenNormalPanel();
-  void drawGraphScreenCursorPanel();
+  void drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
   void drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER);
 
   void setupMenus();
