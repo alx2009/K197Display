@@ -86,6 +86,8 @@ private:
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
+  void drawGraphScreenNormalPanel();
+  void drawGraphScreenCursorPanel();
 
   void setupMenus();
 

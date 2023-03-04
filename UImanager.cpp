@@ -889,6 +889,17 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
+/*!
+    @brief draw a marker at a specific point in the graph
+    @details: can print one of the following marker types:
+    - MARKER
+    - CURSOR_A
+    - CURSOR_B
+    Note that the font used to print the identity of the cursor marker (A or B) must be set before calling this function
+    @param x the x coordinate of the point where to place the mark
+    @param y the y coordinate of the point where to place the mark
+    @param marker_type market type
+*/
 static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER) {
   static const u8g2_uint_t marker_size = 7;
   //k197graph_type::x_size
@@ -906,11 +917,23 @@ static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager
          u8g2.drawLine(x, y, x1, y1);
          u8g2.drawLine(x0, y1, x, y);
          u8g2.drawLine(x, y, x1, y0);
+         if ( y1 > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+             u8g2.setCursor(x0, y0-u8g2.getMaxCharHeight()); // Position above the marker
+         } else {
+             u8g2.setCursor(x0, y1); // Position below the marker          
+         }
+         u8g2.print('A');
          break;
      case UImanager::CURSOR_B:
          u8g2.drawLine(x0, y, x1, y);
          u8g2.drawLine(x, y0, x, y1);
          u8g2.drawFrame(x0, y0, x1-x0, y1-y0);
+         if ( y1 > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+             u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y0-u8g2.getMaxCharHeight()); // Position above the marker
+         } else {
+             u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y1); // Position below the marker          
+         }
+         u8g2.print('B');
          break;
   }
 }
@@ -1035,6 +1058,23 @@ void UImanager::updateGraphScreen() {
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
+
+/*!
+    @brief  draw a small panel showing the measurement value 
+    @details used when in graph mode screen when the cursors are hidden
+*/
+void drawGraphScreenNormalPanel() {
+  
+}
+
+/*!
+    @brief  draw a small panel showing the cursor values 
+    @details used when in graph mode screen when the cursors are visible
+*/
+void drawGraphScreenCursorPanel() {
+  
+}
+
 
 // ***************************************************************************************
 //  UI event management
