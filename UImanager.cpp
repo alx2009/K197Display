@@ -664,7 +664,7 @@ BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym, "0+symm");
 BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symm.");
 DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_0sym), OPT(opt_gr_yscale_forcesym));
   
-DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show y=0");
+DEF_MENU_BOOL(gr_yscale_show0, 15, "Show y=0");
 
 DEF_MENU_SEPARATOR(graphSeparator2, 15, "< X axis >"); ///< Menu separator
 DEF_MENU_BOOL(gr_xscale_roll_mode, 15, "Roll mode");       ///< Menu input
@@ -966,7 +966,7 @@ void UImanager::updateGraphScreen() {
   byte xscale = k197graph.x_size / i1;
 
   // Draw the axis
-  u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
+  //u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
   u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
       drawDottedHLine(0, k197graph.y_size-k197graph.y_zero, k197graph.x_size); // zero axis
