@@ -974,7 +974,7 @@ void UImanager::updateGraphScreen() {
     u8g2.print(k197dev.getRawMessage());
   }
   u8g2.setDrawColor(0);
-  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size);
+  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size+1);
   u8g2.setDrawColor(1);
 
   // Get graph data
