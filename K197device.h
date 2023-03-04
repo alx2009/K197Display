@@ -418,6 +418,15 @@ public:
   uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
 
   /*!
+      @brief get graph value at point n
+      @param n the requested point
+      @param n the requested point
+      @return the value of the graph at point n
+  */
+  float getGraphValue(byte n) { return n>=cache.gr_size? 0.0 : cache.graph[n]; };
+  float getGraphAverage(byte n0, byte n1);
+
+  /*!
       @brief  set the autosample flag
 
       @details when this flag is set, when the graph is full the sampling period is increased automatically

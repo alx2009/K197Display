@@ -672,6 +672,28 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
   graphdata->npoints = cache.gr_size;
 }
 
+#define SWAP_BYTE(b0, b1) { \
+           byte b_tmp = b0; b0 = b1; b1=b_tmp; \
+        }
+/*!
+   @brief get average of the graph between two points at point n
+   @details 
+   @param n0 the start point for the calculation
+   @param n1 the end point for the calculation
+   @return the requested average value
+*/
+float K197device::getGraphAverage(byte n0, byte n1) {
+   if (cache.gr_size==0) return 0.0;
+   if (n0>=cache.gr_size) n0=cache.gr_size-1;
+   if (n1>=cache.gr_size) n1=cache.gr_size-1;
+   if (n0 > n1) SWAP_BYTE(n0, n1);
+   float acc=0.0;
+   for (byte i = n0; i <=n1; i++) {
+      acc+=cache.graph[i];   
+   }
+   return acc / float(n1-n0+1);
+}
+
 /*!
    @brief resample the graph
    @details resample the stored data to match the new sample rate, then set nsamples_graph to nsamples_new
