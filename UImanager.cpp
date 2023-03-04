@@ -900,7 +900,7 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
     @param y the y coordinate of the point where to place the mark
     @param marker_type market type
 */
-static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER) {
+void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
   static const u8g2_uint_t marker_size = 7;
   //k197graph_type::x_size
   u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
@@ -922,18 +922,21 @@ static void printMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager
          } else {
              u8g2.setCursor(x0, y1); // Position below the marker          
          }
-         u8g2.print('A');
+         u8g2.print(marker_type);
+         if (getActiveCursor() == marker_type) u8g2.print('<');
          break;
      case UImanager::CURSOR_B:
          u8g2.drawLine(x0, y, x1, y);
          u8g2.drawLine(x, y0, x, y1);
          u8g2.drawFrame(x0, y0, x1-x0, y1-y0);
+         bool actv = getActiveCursor() == marker_type;
          if ( y1 > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
-             u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y0-u8g2.getMaxCharHeight()); // Position above the marker
+             u8g2.setCursor(x1-u8g2.getMaxCharWidth()*(actv ? 2 : 1), y0-u8g2.getMaxCharHeight()); // Position above the marker
          } else {
              u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y1); // Position below the marker          
          }
-         u8g2.print('B');
+         if (actv) u8g2.print('>');
+         u8g2.print(marker_type);
          break;
   }
 }
@@ -1030,7 +1033,7 @@ void UImanager::updateGraphScreen() {
               u8g2.drawLine(i, k197graph.y_size-k197graph.point[k197graph.idx(i)], i+1, k197graph.y_size-k197graph.point[k197graph.idx(i+1)]);
           }
       }    
-      //printMarker(k197graph.x_size, k197graph.y_size-k197graph.point[k197graph.current_idx]);
+      //drawMarker(k197graph.x_size, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   } else { // Draw the graph in overwrite mode
       if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
           for (int i=0; i<k197graph.npoints; i++) {
@@ -1041,18 +1044,18 @@ void UImanager::updateGraphScreen() {
               u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
           }
       }    
-      printMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
+      drawMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   }
   
   if (areCursorsVisible() && k197graph.npoints>0) {
       u8g2_uint_t ax = cursor_a > k197graph.npoints ? k197graph.npoints-1 : cursor_a;
       u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
       if (xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue()) { // Draw the cursors in roll mode
-          printMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
-          printMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
+          drawMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
+          drawMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
       } else { // Draw the cursors in overwrite mode
-          printMarker(xscale*ax, k197graph.y_size-k197graph.point[ax],CURSOR_A);
-          printMarker(xscale*bx, k197graph.y_size-k197graph.point[bx],CURSOR_B);        
+          drawMarker(xscale*ax, k197graph.y_size-k197graph.point[ax],CURSOR_A);
+          drawMarker(xscale*bx, k197graph.y_size-k197graph.point[bx],CURSOR_B);        
       }
   }
   u8g2.sendBuffer();

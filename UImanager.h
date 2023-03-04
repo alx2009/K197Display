@@ -88,6 +88,7 @@ private:
   void updateGraphScreen();
   void drawGraphScreenNormalPanel();
   void drawGraphScreenCursorPanel();
+  void drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER);
 
   void setupMenus();
 
