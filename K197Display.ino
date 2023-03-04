@@ -42,11 +42,14 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 //  Graph cursor
+//  show average bvetween cursor A and B
+//  Keep hold when switching between display modes ?
+//  Enable scrolling menu backward even if the item is not selectable
+//  Overclock options
 //  Review menu structure
 //  Save new options to EEPROM
-//  Improved statistics ?
 //  Save & restore current screen mode in settings
-// Bug2fix: Enable scrolling menu backward even if the item is not selectable
+// Bug2fix: 
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
