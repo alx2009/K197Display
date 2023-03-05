@@ -146,6 +146,8 @@ struct k197graph_type {
      byte y_zero=0x00; ///< the point value for 0, if included in the graph
 
      void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+
+     inline uint16_t idx(uint16_t logic_index) {return (logic_index+current_idx+1) % x_size;};
 };
 
 /**************************************************************************/
@@ -414,6 +416,15 @@ public:
       @return number the sampling period in seconds
   */
   uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
+
+  /*!
+      @brief get graph value at point n
+      @param n the requested point
+      @param n the requested point
+      @return the value of the graph at point n
+  */
+  float getGraphValue(byte n) { return n>=cache.gr_size? 0.0 : cache.graph[n]; };
+  float getGraphAverage(byte n0, byte n1);
 
   /*!
       @brief  set the autosample flag

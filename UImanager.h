@@ -45,6 +45,8 @@ enum K197screenMode {
   K197sc_graph  = 0x03,            ///< show a graph 
   K197sc_FullScreenBitMask = 0x10, ///< full screen when set
   K197sc_MenuBitMask = 0x20,       ///< show menu when set
+  K197sc_CursorsVisibleBitMask = 0x40,  ///< show cursors when set + graph mode
+  K197sc_activeCursorBitMask = 0x80,    ///< select active cursor
   K197sc_ScreenModeMask = 0x0f,    ///< Mask for mode bits
   K197sc_AttributesBitMask = 0xf0  ///< Mask for attribute bits
 };
@@ -63,10 +65,16 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
+  static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
+  static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
+  static const char MARKER   = '+'; ///< constant, identifies the latest sample in the graph
   unsigned long looptimerMax =
       0UL; ///< used to keep track of the time spent in loop
 
 private:
+  byte cursor_a = 60;
+  byte cursor_b = 120;
+  
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
   K197screenMode screen_mode =
@@ -78,6 +86,9 @@ private:
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
+  void drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
+  void drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER);
 
   void setupMenus();
 
@@ -118,6 +129,47 @@ public:
     return k197dev.isNotCal() && ((screen_mode & K197sc_MenuBitMask) != 0x00);
   };
   /*!
+     @brief  chek if the screen is in graph mode
+     @return true if the screen is in graph mode
+  */
+  bool isGraphMode() {
+    return !isMenuVisible() && ((screen_mode & K197sc_graph) != 0x00);
+  };
+  /*!
+     @brief  chek if the cursors are visible
+     @return true if the cursors are visible
+  */
+  bool areCursorsVisible() {
+    return (screen_mode & K197sc_CursorsVisibleBitMask) != 0x00;
+  };
+  /*!
+     @brief  return the active cursor
+     @return returns the active cursor (CURSOR_A or CURSOR_B)
+  */
+  char getActiveCursor() {
+    if ( (screen_mode & K197sc_activeCursorBitMask) == 0x00) return CURSOR_A;
+    else return CURSOR_B;
+  };
+  /*!
+     @brief  increment the active cursor position
+     @details the cursor position will not be incremented past the maximum value (k197graph_type::x_size-1) or less than zero
+     @param increment the number to be added to the current position (use a negative increment to decrement)
+  */
+  void incrementCursor(int increment=1) {
+    bool isA = getActiveCursor() == CURSOR_A;
+    byte oldvalue = isA ? cursor_a : cursor_b;
+    byte newvalue = oldvalue+increment;
+    if (increment>0) { // make sure we increment within boundary
+      if ( (newvalue < oldvalue) || (newvalue>=k197graph_type::x_size) ) newvalue = k197graph_type::x_size-1;
+    } else { // make sure we decrement
+      if (newvalue > oldvalue) newvalue = 0;
+    }
+    if (isA) cursor_a = newvalue; 
+    else cursor_b = newvalue; 
+  };
+
+  
+  /*!
      @brief  set full screen mode
      @details also clears the other attributes
   */
@@ -136,6 +188,20 @@ public:
     screen_mode = (K197screenMode)(screen_mode & K197sc_ScreenModeMask);
     screen_mode = (K197screenMode)(screen_mode | K197sc_MenuBitMask);
     clearScreen();
+  };
+  /*!
+     @brief  toggle the cursor visibility
+  */
+  void toggleCursorsVisibility() {
+     if (areCursorsVisible()) screen_mode = (K197screenMode)(screen_mode & (~K197sc_CursorsVisibleBitMask));
+     else screen_mode = (K197screenMode)(screen_mode | K197sc_CursorsVisibleBitMask);
+  };
+  /*!
+     @brief  toggle the active cursor
+  */
+  void toggleActiveCursor() {
+     if (getActiveCursor() == CURSOR_B) screen_mode = (K197screenMode)(screen_mode & (~K197sc_activeCursorBitMask));
+     else screen_mode = (K197screenMode)(screen_mode | K197sc_activeCursorBitMask);
   };
   /*!
      @brief  show the option menu

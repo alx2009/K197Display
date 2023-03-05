@@ -664,10 +664,10 @@ BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym, "0+symm");
 BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym, "Force symm.");
 DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis", OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero), OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_0sym), OPT(opt_gr_yscale_forcesym));
   
-DEF_MENU_BOOL(gr_yscale_show0, 15, "Always show y=0");
+DEF_MENU_BOOL(gr_yscale_show0, 15, "Show y=0");
 
 DEF_MENU_SEPARATOR(graphSeparator2, 15, "< X axis >"); ///< Menu separator
-DEF_MENU_BOOL(gr_xscale_autoscale, 15, "Autoscale X");       ///< Menu input
+DEF_MENU_BOOL(gr_xscale_roll_mode, 15, "Roll mode");       ///< Menu input
 DEF_MENU_BOOL_ACT(gr_xscale_autosample, 15, "Auto sample",
                   k197dev.setAutosample(getValue()););       ///< Menu input
 DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
@@ -677,7 +677,7 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
 UImenuItem *graphMenuItems[] = {
     &graphSeparator0, &opt_gr_type, 
     &graphSeparator1, &opt_gr_yscale, &gr_yscale_show0, 
-    &graphSeparator2, &gr_xscale_autoscale, &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu};
+    &graphSeparator2, &gr_xscale_roll_mode, &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu};
 
 /*!
       @brief set the display contrast
@@ -718,6 +718,7 @@ void UImanager::setupMenus() {
   UIgraphMenu.selectFirstItem();
 
   //gr_sample_time.setValue(k197dev.getGraphPeriod());
+  gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
   permadata::retrieve_from_EEPROM();
@@ -889,10 +890,153 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
 }
 
 /*!
+    @brief draw a marker at a specific point in the graph
+    @details: can print one of the following marker types:
+    - MARKER
+    - CURSOR_A
+    - CURSOR_B
+    Note that the font used to print the identity of the cursor marker (A or B) must be set before calling this function
+    @param x the x coordinate of the point where to place the mark
+    @param y the y coordinate of the point where to place the mark
+    @param marker_type market type
+*/
+void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
+  static const u8g2_uint_t marker_size = 7;
+  //k197graph_type::x_size
+  u8g2_uint_t x0 = x < marker_size ? 0 : x -  marker_size;
+  u8g2_uint_t x1 = k197graph_type::x_size<(x+marker_size) ? k197graph_type::x_size : x+marker_size;
+  u8g2_uint_t y0 = y < marker_size ? 0 : y -  marker_size;
+  u8g2_uint_t y1 = k197graph_type::y_size<(y+marker_size) ? k197graph_type::y_size : y+marker_size;
+  switch(marker_type) {
+     case UImanager::MARKER:
+         u8g2.drawLine(x0, y, x1, y);
+         u8g2.drawLine(x, y0, x, y1);
+         break;
+     case UImanager::CURSOR_A:
+         u8g2.drawLine(x0, y0, x, y);
+         u8g2.drawLine(x, y, x1, y1);
+         u8g2.drawLine(x0, y1, x, y);
+         u8g2.drawLine(x, y, x1, y0);
+         if ( int(y1) > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+             u8g2.setCursor(x0, y0-u8g2.getMaxCharHeight()); // Position above the marker
+         } else {
+             u8g2.setCursor(x0, y1); // Position below the marker          
+         }
+         u8g2.print(marker_type);
+         if (getActiveCursor() == marker_type) u8g2.print('<');
+         break;
+     case UImanager::CURSOR_B:
+         u8g2.drawLine(x0, y, x1, y);
+         u8g2.drawLine(x, y0, x, y1);
+         u8g2.drawFrame(x0, y0, x1-x0, y1-y0);
+         bool actv = getActiveCursor() == marker_type;
+         if ( int(y1) > (k197graph_type::y_size-u8g2.getMaxCharHeight()) ) { 
+             u8g2.setCursor(x1-u8g2.getMaxCharWidth()*(actv ? 2 : 1), y0-u8g2.getMaxCharHeight()); // Position above the marker
+         } else {
+             u8g2.setCursor(x1-u8g2.getMaxCharWidth(), y1); // Position below the marker          
+         }
+         if (actv) u8g2.print('>');
+         u8g2.print(marker_type);
+         break;
+  }
+}
+
+/*!
     @brief  update the display, used when in graph mode
    screen.
 */
 void UImanager::updateGraphScreen() {
+  // Clear graph area
+  u8g2.setDrawColor(0); // set drawing color to background color (pixel off)
+  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size+1); 
+  u8g2.setDrawColor(1); // restore foreground color (pixel on)
+
+  // Get graph data
+  k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue()); 
+
+  // autoscale x axis
+  uint16_t i1 = 16;
+  while (i1<k197graph.npoints) i1*=2;    
+  if (i1>k197graph.x_size) i1=k197graph.x_size;
+  //DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
+  byte xscale = k197graph.x_size / i1;
+
+  // Draw the axis
+  //u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
+  u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
+  if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
+      drawDottedHLine(0, k197graph.y_size-k197graph.y_zero, k197graph.x_size); // zero axis
+
+  u8g2.setFont(u8g2_font_6x12_mr);
+  //Clear the space normally occupied by the axis labels  
+  u8g2.setDrawColor(0);
+  u8g2.drawBox( k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight(), 256,  k197graph.y_size);
+  u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
+  //Draw axis labels  
+  u8g2.setDrawColor(1);
+  u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
+  uint16_t nseconds = gr_sample_time.getValue();
+  printXYLabel(k197graph.y0, nseconds == 0 ? i1/3 : i1 * nseconds);  
+  u8g2_uint_t botln_x = u8g2.tx;
+  u8g2.setCursor(k197graph.x_size+2, 0);
+  printYLabel(k197graph.y1);
+  u8g2_uint_t topln_x = u8g2.tx;
+      
+  if ( xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue() ) {  // Draw the graph in roll mode
+      if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
+          for (int i=0; i<k197graph.npoints; i++) {
+              u8g2.drawPixel(i, k197graph.y_size-k197graph.point[k197graph.idx(i)]);
+          }
+      } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
+          for (int i=0; i<(k197graph.npoints-1); i++) {
+              u8g2.drawLine(i, k197graph.y_size-k197graph.point[k197graph.idx(i)], i+1, k197graph.y_size-k197graph.point[k197graph.idx(i+1)]);
+          }
+      }    
+      //drawMarker(k197graph.x_size, k197graph.y_size-k197graph.point[k197graph.current_idx]);
+  } else { // Draw the graph in overwrite mode
+      if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
+          for (int i=0; i<k197graph.npoints; i++) {
+              u8g2.drawPixel(xscale*i, k197graph.y_size-k197graph.point[i]);
+          }
+      } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
+          for (int i=0; i<(k197graph.npoints-1); i++) {
+              u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
+          }
+      }    
+      drawMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
+  }
+  
+  if (areCursorsVisible() && k197graph.npoints>0) {
+      u8g2_uint_t ax = cursor_a > k197graph.npoints ? k197graph.npoints-1 : cursor_a;
+      u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
+      if (xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue()) { // Draw the cursors in roll mode
+          drawMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
+          drawMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
+      } else { // Draw the cursors in overwrite mode
+          drawMarker(xscale*ax, k197graph.y_size-k197graph.point[ax],CURSOR_A);
+          drawMarker(xscale*bx, k197graph.y_size-k197graph.point[bx],CURSOR_B);        
+      }
+  }
+  if (areCursorsVisible() && k197graph.npoints>0) {
+      drawGraphScreenCursorPanel(topln_x, botln_x);
+  } else {
+      drawGraphScreenNormalPanel(topln_x, botln_x);
+  }
+  u8g2.sendBuffer();
+  dxUtil.checkFreeStack();
+}
+
+/*!
+    @brief  draw a small panel showing the measurement value 
+    @details this method is called from updateGraphScreen(). 
+    Used when in graph mode screen when the cursors are hidden
+    The top and bottom line include the axis labels, which have variable lenght
+    and are printed by updateGraphScreen(). The start cooordinate for those lines
+    is passed in the two arguments topln_x and botln_x
+    @param topln_x the first usable x coordinates of the top line of the panel
+    @param botln_x the first usable x coordinates of the bottom line of the panel
+*/
+void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x) {
   u8g2_uint_t x = 185+10;
   u8g2_uint_t y = 3;
   u8g2.setFont(u8g2_font_5x7_mr);
@@ -920,45 +1064,14 @@ void UImanager::updateGraphScreen() {
   if (k197dev.isNumeric()) {
     char buf[K197_RAW_MSG_SIZE + 1];
     u8g2.print(formatNumber(buf, k197dev.getValue()));
-  } else
+  } else {
     u8g2.print(k197dev.getRawMessage());
+  }
 
-  u8g2.setDrawColor(0);
-  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size);
-  u8g2.setDrawColor(1);
-
-  // Get graph data
-  k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue()); 
-
-  // autoscale x axis
-  uint16_t i1 = 16;
-  while (i1<k197graph.npoints) i1*=2;    
-  if (i1>k197graph.x_size) i1=k197graph.x_size;
-  //DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints ")); DebugOut.println(k197graph.npoints);
-
-  byte xscale = k197graph.x_size / i1;
-
-  // Draw the axis
-  u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); // X axis
-  u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0); // Y axis
-  if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() && k197graph.y1.isPositive())
-      drawDottedHLine(0, k197graph.y_zero, k197graph.x_size); // zero axis
-
-  //Draw axis labels  
-  u8g2.setFont(u8g2_font_6x12_mr);
-  u8g2.setDrawColor(0);
-  u8g2.drawBox( k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight(), 256,  k197graph.y_size);
-  u8g2.drawBox( k197graph.x_size+2, 0, 256, u8g2.getMaxCharHeight());
-  u8g2.setDrawColor(1);
-  u8g2.setCursor(k197graph.x_size+2, k197graph.y_size-u8g2.getMaxCharHeight());
-  uint16_t nseconds = gr_sample_time.getValue();
-  printXYLabel(k197graph.y0, nseconds == 0 ? i1/3 : i1 * nseconds);  
-  u8g2.setCursor(k197graph.x_size+2, 0);
-  printYLabel(k197graph.y1);
-
-  // Draw AUTO & HOLD at about the same height
+  // Draw AUTO & HOLD at about the same height as the Y label
+  
   u8g2.setFont(u8g2_font_5x7_mr);
-  x=u8g2.tx + 5;
+  x=topln_x + 5;
   y = 1;
   u8g2.setCursor(x, y);
   if (k197dev.isAuto())
@@ -968,20 +1081,21 @@ void UImanager::updateGraphScreen() {
   if (k197dev.getDisplayHold())
     u8g2.print(F(" HOLD"));
   else
-    u8g2.print(F("     ")); 
-    
-  // Draw the graph
-  if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
-      for (int i=0; i<k197graph.npoints; i++) {
-          u8g2.drawPixel(xscale*i, k197graph.y_size-k197graph.point[i]);
-      }
-  } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2  
-      for (int i=0; i<(k197graph.npoints-1); i++) {
-          u8g2.drawLine(xscale*i, k197graph.y_size-k197graph.point[i], xscale*(i+1), k197graph.y_size-k197graph.point[i+1]);
-      }
-  }
-  u8g2.sendBuffer();
-  dxUtil.checkFreeStack();
+    u8g2.print(F("     "));   
+}
+
+/*!
+    @brief  draw a small panel showing the cursor values 
+    @details this method is called from updateGraphScreen(). 
+    Used when in graph mode screen when the cursors are visible
+    The top and bottom line include the axis labels, which have variable lenght
+    and are printed by updateGraphScreen(). The start cooordinate for those lines
+    is passed in the two arguments topln_x and botln_x
+    @param topln_x the first usable x coordinates of the top line of the panel
+    @param botln_x the first usable x coordinates of the bottom line of the panel
+*/
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x) {
+  
 }
 
 // ***************************************************************************************
@@ -1005,21 +1119,23 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
   if (k197dev.isCal())
     return false;
   if (eventSource == K197key_REL &&
-      eventType == UIeventLongPress) { // This event is handled the same in all
-                                       // screen modes
+      eventType == UIeventLongPress &&
+      ! ( isGraphMode() && areCursorsVisible() ) 
+      ) { // This event is handled the same in all
+                                       // other screen modes
     if (isFullScreen())
       showOptionsMenu();
     else
       showFullScreen();
-    return true;
+    return true; // Skip normal handling in the main sketch
   }
   if (isMenuVisible()) {
     if (UIwindow::getcurrentWindow()->handleUIEvent(eventSource, eventType))
-      return true;
+      return true; // Skip normal handling in the main sketch
   } else if (isSplitScreen()) { // Split screen with no menu visible
     if (eventType == UIeventClick || eventType == UIeventLongPress) {
       showFullScreen();
-      return true;
+      return true; // Skip normal handling in the main sketch
     }
   } else
     switch (eventSource) { // Full scren mode
@@ -1040,27 +1156,51 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           else
             uiman.setScreenMode(K197sc_normal);          
         }
-        return true;
+        return true; // Skip normal handling in the main sketch
       }
       break;
     case K197key_RCL:
-      if (reassignStoRcl.getValue() && eventType == UIeventPress) {
-        DebugOut.print(F("Max loop (us): "));
-        DebugOut.println(looptimerMax);
-        looptimerMax = 0UL;
-        return true;
+      if (reassignStoRcl.getValue()) {
+          if (eventType == UIeventClick) {
+             if (isGraphMode() && areCursorsVisible()) toggleActiveCursor();
+          } else if (eventType == UIeventLongPress) {
+             if (isGraphMode()) toggleCursorsVisibility();
+          } else if (eventType == UIeventDoubleClick) {
+             DebugOut.print(F("Max loop (us): "));
+             DebugOut.println(looptimerMax);
+             looptimerMax = 0UL;
+          }
+          return true; // Skip normal handling in the main sketch       
       }
       break;
     case K197key_REL:
-      if (eventType == UIeventDoubleClick) {
-        pushbuttons.cancelClickREL();
-        k197dev.resetStatistics();
-        // DebugOut.print('x');
-        return true;
+      if ( isGraphMode() && areCursorsVisible() ) {
+          if (eventType == UIeventPress) {
+              incrementCursor(-1);
+          } else if (eventType == UIeventLongPress) {
+              incrementCursor(-10);
+          } else if (eventType == UIeventHold) {
+              incrementCursor(-5);
+          }
+          return true; // Skip normal handling in the main sketch
+      } else if (eventType == UIeventDoubleClick) {
+          pushbuttons.cancelClickREL();
+          k197dev.resetStatistics();
+          // DebugOut.print('x');
+          return true; // Skip normal handling in the main sketch
       }
       break;
     case K197key_DB:
-      if (additionalModes.getValue()) {
+      if ( isGraphMode() && areCursorsVisible() ) {
+          if (eventType == UIeventPress) {
+              incrementCursor(1);
+          } else if (eventType == UIeventLongPress) {
+              incrementCursor(10);
+          } else if (eventType == UIeventHold) {
+              incrementCursor(5);
+          }
+          return true; // Skip normal handling in the main sketch
+      } else if (additionalModes.getValue()) {
         if (eventType == UIeventPress) {
           if (k197dev.isV() && k197dev.ismV() && k197dev.isDC()) {
             if (!k197dev.getTKMode()) { // TK mode is not yet enabled
@@ -1069,6 +1209,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
             }
           } else {
             k197dev.setTKMode(false);
+            // Do NOT skip normal handling in the main sketch
           }
         }
       }
