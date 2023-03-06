@@ -159,18 +159,52 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define fifo_NO_DATA                                                           \
   0xff ///< value returned when the fifo is empty (see fifo_pull())
 volatile static byte fifo_records[]{
-    0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff}; ///< array implementing the FIFO queue, see fifo_pull()
+    fifo_NO_DATA, fifo_NO_DATA, fifo_NO_DATA, fifo_NO_DATA, fifo_NO_DATA,
+    fifo_NO_DATA, fifo_NO_DATA, fifo_NO_DATA}; ///< array implementing the FIFO queue, see fifo_pull()
 #define fifo_MAX_RECORDS                                                       \
   (sizeof(fifo_records) /                                                      \
    sizeof(fifo_records[0])) ///< max number of records in the FIFO queue, see
                             ///< fifo_pull()
 
+volatile int8_t fifo_size=0;
 volatile static int8_t fifo_front =
     0; // index to the front of the queue, see fifo_pull()
 // We use rear in the interrupt handler, hence the use of GPIO3
 // Initialized inside k197ButtonCluster::setup()
 #define fifo_rear GPIOR3 ///< index to the rear of the queue, see fifo_pull()
+///volatile int8_t fifo_rear=0;
+
+void clearFifo() {
+    for(unsigned int i=0; i<fifo_MAX_RECORDS; i++) {
+        fifo_records[i]=fifo_NO_DATA;
+    }
+        fifo_size=0;
+        fifo_front=0;
+        fifo_rear = fifo_MAX_RECORDS-1; //(uint8_t)-1;
+}
+void dumpFifoStatus(const char *msg) {
+    DebugOut.print(msg); DebugOut.print(F(": "));
+    for(unsigned int i=0; i<fifo_MAX_RECORDS; i++) {
+        if (i!=0) DebugOut.print(',');
+        DebugOut.print(F(" 0x"));DebugOut.print(fifo_records[i], HEX);
+    }
+    DebugOut.println();
+    DebugOut.print(F("   fifo_size=")); DebugOut.print(fifo_size);
+    DebugOut.print(F(", fifo_front=")); DebugOut.print(fifo_front);
+    DebugOut.print(F(", fifo_rear=")); DebugOut.print(fifo_rear);
+    DebugOut.println();
+}
+
+void k197ButtonCluster::checkFifoChanges() {
+    static int oldsize=0;
+    cli();
+    if (fifo_size!=oldsize) {
+        dumpFifoStatus("Fifo changed:");
+        oldsize=fifo_size;
+    }
+    sei();
+}
+
 
 /*!
     @brief  get the number of records actually stored in the FIFO queue (see
@@ -185,7 +219,10 @@ static inline int fifo_getSize() {
     if (fifo_records[i] != fifo_NO_DATA)
       size++;
   }
-  return size;
+  if (size!=fifo_size) {
+      DebugOut.println(F("fifo_getSize: size mismatch"));
+  }
+  return fifo_size;
 }
 
 /*!
@@ -195,7 +232,11 @@ static inline int fifo_getSize() {
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isEmpty() {
-  return fifo_records[fifo_front] == fifo_NO_DATA; // self-explaining :-)
+   bool isempty = fifo_records[fifo_front] == fifo_NO_DATA; // self-explaining :-)
+   if (isempty && (fifo_size != 0) ) {
+      DebugOut.println(F("fifo_isEmpty: size mismatch"));    
+   }
+   return isempty;
 }
 
 /*!
@@ -206,7 +247,11 @@ static inline bool fifo_isEmpty() {
 */
 static inline bool fifo_isFull() {
   // If we do not have free space than the queue must be full
-  return fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS] != fifo_NO_DATA;
+  bool isFull = fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS] != fifo_NO_DATA;
+  if (isFull && (fifo_size != fifo_MAX_RECORDS) ) {
+      DebugOut.println(F("fifo_isFull: size mismatch"));    
+  }
+  return isFull;
 }
 
 /*!
@@ -229,8 +274,12 @@ static inline bool fifo_isFull() {
     @param b the record that should be pushed at the rear of the FIFO queue
 */
 static inline void fifo_push(byte b) {
+  if (fifo_isFull()) {
+      return;
+  }
   fifo_rear = (fifo_rear + 1) % fifo_MAX_RECORDS;
   fifo_records[fifo_rear] = b;
+  fifo_size++;
 }
 
 /*!
@@ -265,6 +314,7 @@ static inline byte fifo_pull() {
       fifo_NO_DATA; // here we risk a race condition with push(), but only if
                     // the FIFO is full
   fifo_front = (fifo_front + 1) % fifo_MAX_RECORDS;
+  fifo_size--;
   return x;
 }
 
@@ -293,10 +343,13 @@ static inline byte fifo_pull() {
    port, potentially optimizing the interrupt handler further.
 */
 void CCL_interrupt_handler() {
+  digitalWriteFast(PIN_PE0, HIGH);
   //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
   //  rather than missing an event
+  cli();
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
+  digitalWriteFast(PIN_PE0, LOW); 
 }
 
 /*!
@@ -356,7 +409,7 @@ static void initButton(uint8_t i, uint8_t btnow, unsigned long now) {
     The relative sequence of events is always maintained, and no button click
    should be missed.
 */
-void k197ButtonCluster::setup() {
+void k197ButtonCluster::setupButtonCluster() {
   pinConfigure(UI_STO, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                         PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
   pinConfigure(UI_RCL, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
@@ -366,7 +419,17 @@ void k197ButtonCluster::setup() {
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
 
-  fifo_rear = (uint8_t)-1; // Initialize register
+  // Monitor pins (only >28 pin micros)
+  pinConfigure(PIN_PE0, (PIN_DIR_OUTPUT | PIN_INVERT_OFF));
+  digitalWriteFast(PIN_PE0, LOW);
+
+  cli();
+  GPIOR3 = 0x07;//(uint8_t)-1; // Initialize register
+  DebugOut.print("1:");DebugOut.println(GPIOR3);
+  //dumpFifoStatus("Init0");
+  //delay(1);
+  DebugOut.print("2:=");DebugOut.println(GPIOR3);
+  sei();
 
   // Route pins for pushbuttons to Logic blocks 0-3
   UI_STO_Event.set_generator(UI_STO);
@@ -404,6 +467,10 @@ void k197ButtonCluster::setup() {
   Logic2.enable = true; // Enable logic block 0
   Logic2.input0 =
       in::event_a; // Connect input 0 to ccl2_event_a (REL pin via UI_REL_Event)
+
+  //Logic2.output = Logic::out::enable;
+
+      
   Logic2.clocksource = clocksource::osc1k; // 1024Hz clock
   Logic2.filter =
       filter::filter; // Debounce (must be stable for 4 clock cycles)
@@ -450,7 +517,9 @@ void k197ButtonCluster::setup() {
   cli();
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
+  dumpFifoStatus("Init1");
   byte x = fifo_pull();
+  dumpFifoStatus("Init2");
   sei();
   initButton(0, getButtonState(x & UI_STO_bm), now);
   initButton(1, getButtonState(x & UI_RCL_bm), now);
@@ -490,7 +559,12 @@ void k197ButtonCluster::checkNew() {
   sei();
   if (b) {
     DebugOut.println(F("FIFO Full"));
+    cli();
+    dumpFifoStatus("checkNew");
     DebugOut.print(n);
+    clearFifo();
+    dumpFifoStatus("checkNew");
+    sei();
   }
   if (x != fifo_NO_DATA) { // We have a new raw event
     now = micros();
@@ -679,8 +753,8 @@ void k197ButtonCluster::cancelClickREL() { GPIOR2 = 0x00; }
 ISR(TCA_OVF_vect) {                                 // __vector_9
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Clear flag
   if (GPIOR2 > 0) {                // At least one more click to generate
-    MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
-    MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
+    //MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
+    //MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
     // VPORTA.OUT |= 0x80;  // Turn on builtin LED
     GPIOR2--;
   } else {                              // We stop here
@@ -700,7 +774,7 @@ ISR(TCA_OVF_vect) {                                 // __vector_9
 */
 ISR(TCA_CMP0_vect) {                                 //__vector_11
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_CMP0_bm; // Clear flag
-  MB_REL_VPORT.DIR &= (~MB_REL_bm);                  // Set REL pin to input
-  MB_REL_VPORT.OUT &= (~MB_REL_bm);                  // Set REL pin to low
+  //MB_REL_VPORT.DIR &= (~MB_REL_bm);                  // Set REL pin to input
+  //MB_REL_VPORT.OUT &= (~MB_REL_bm);                  // Set REL pin to low
   // VPORTA.OUT &= (~0x80);  // Turn off builtin LED
 }

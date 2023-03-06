@@ -78,7 +78,7 @@ moving to inline assembler and naked interrupt handlers
 const char CH_SPACE = ' '; ///< using a global constant saves some RAM
 
 #ifndef DB_28_PINS
-#error AVR32DB28 or AVR64DB28 or AVR128DB28 microcontroller required, using dxCore
+//#error AVR32DB28 or AVR64DB28 or AVR128DB28 microcontroller required, using dxCore
 #endif
 
 bool msg_printout = false; ///< if true prints raw messages to DebugOut
@@ -254,13 +254,20 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 */
 void myButtonCallback(K197UIeventsource eventSource,
                       K197UIeventType eventType) {
-  dxUtil.checkFreeStack();
+    DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    DebugOut.print(F(" "));
+    DebugOut.print(F(" "));
+    k197ButtonCluster::DebugOut_printEventName(eventType);
+    DebugOut.println();
+
+                        /*
+  //dxUtil.checkFreeStack();
+  k197ButtonCluster::DebugOut_printEventName(eventType);
   if (uiman.handleUIEvent(eventSource,
                           eventType)) { // UI related event, no need to do more
-    // DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
-    // DebugOut.print(F(" "));
-    // k197ButtonCluster::DebugOut_printEventName(eventType);
-    // DebugOut.println(F("Btn handled by UI"));
+    DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    DebugOut.print(F(" "));
+    DebugOut.println(F("Btn handled by UI"));
     return;
   }
   if (k197dev.isNotCal() && uiman.isSplitScreen())
@@ -270,7 +277,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   // mode)
   if ((eventSource == K197key_REL || eventSource == K197key_DB) &&
       pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
-    // DebugOut.print(F("REL+DB"));
+    DebugOut.print(F("REL+DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
@@ -281,10 +288,10 @@ void myButtonCallback(K197UIeventsource eventSource,
     return;
   }
 
-  // DebugOut.print(F("Btn "));
+  DebugOut.print(F("Btn "));
   switch (eventSource) {
   case K197key_STO:
-    // DebugOut.print(F("STO"));
+    DebugOut.print(F("STO"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -292,7 +299,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_RCL:
-    // DebugOut.print(F("RCL"));
+    DebugOut.print(F("RCL"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -302,7 +309,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long
     // press from a (short) click
-    // DebugOut.print(F("REL"));
+    DebugOut.print(F("REL"));
     if (k197dev.isNotCal() && eventType == UIeventClick) {
       pushbuttons.clickREL();
     }
@@ -313,7 +320,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_DB:
-    // DebugOut.print(F("DB"));
+    DebugOut.print(F("DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -321,9 +328,10 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   }
-  // DebugOut.print(F(" "));
-  // k197ButtonCluster::DebugOut_printEventName(eventType);
-  // DebugOut.println();
+  DebugOut.print(F(" "));
+  k197ButtonCluster::DebugOut_printEventName(eventType);
+  DebugOut.println();
+  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -334,6 +342,11 @@ void myButtonCallback(K197UIeventsource eventSource,
       @brief Arduino setup function
 */
 void setup() {
+  DebugOut.begin();
+
+  dxUtil.begin();
+  BTman.setup();
+
   // Enable slew rate limiting on all ports
   // Note: simple assignment ok on DA, DB, and DD-series parts, no other bits of
   // PORTCTRL are used
@@ -341,20 +354,16 @@ void setup() {
   PORTC.PORTCTRL = PORT_SRL_bm;
   PORTD.PORTCTRL = PORT_SRL_bm;
   PORTF.PORTCTRL = PORT_SRL_bm;
-  pushbuttons.setup();
+  pushbuttons.setupButtonCluster();
   pushbuttons.setCallback(myButtonCallback);
 
   // Handle REL and DB if they were already pushed at startup
+  /*
   if (pushbuttons.isPressed(K197key_DB))
     pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
   if (pushbuttons.isPressed(K197key_REL))
     pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
-
-  DebugOut.begin();
-
-  dxUtil.begin();
-  BTman.setup();
-
+  */
   // We acquire one value and discard it, this may be needed before we can have
   // a stable value
   dxUtil.getVdd();
@@ -386,12 +395,13 @@ void setup() {
   delay(100);
 
   dxUtil.checkFreeStack();
-
+/* watchdog not needed during development of this branch...
   // Setup watchdog
   _PROTECTED_WRITE(
       WDT.CTRLA,
       WDT_WINDOW_8CLK_gc |
           WDT_PERIOD_8KCLK_gc); // enable the WDT, 8s timeout, minimum window.
+*/
 }
 byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
                          ///< the voltmeter main board
@@ -405,6 +415,7 @@ static unsigned long looptimer = 0UL;
       @brief Arduino loop function
 */
 void loop() {
+  k197ButtonCluster::checkFifoChanges();
   looptimer = micros();
   PROFILE_start(DebugOut.PROFILE_LOOP);
   if (Serial.available()) {

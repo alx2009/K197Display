@@ -211,10 +211,13 @@ void dxUtilClass::checkTemperature(bool newline) {
     @return current amount of free stack space in bytes
 */
 int dxUtilClass::checkFreeStack() {
+  /*
   int freeStackNow = FreeStack();
   if (freeStackNow < minStack)
     minStack = freeStackNow;
   return freeStackNow;
+  */
+  return 1000;
 }
 
 /*!
@@ -224,8 +227,8 @@ int dxUtilClass::checkFreeStack() {
     @return minimum observed free stack space in bytes
 */
 int dxUtilClass::minFreeStack() {
-  if (minStack == INT_MAX)
-    checkFreeStack();
+  //if (minStack == INT_MAX)
+    //checkFreeStack();
   return minStack;
 }
 
@@ -235,7 +238,7 @@ int dxUtilClass::minFreeStack() {
     compared to last time checkFreeStack() or reportStack() was called
 */
 void dxUtilClass::reportStack(bool reportAlways) {
-  int freeStackNow = FreeStack();
+  int freeStackNow = 1000;//FreeStack();
   if (freeStackNow < minStack) {
     minStack = freeStackNow;
     reportAlways = true;

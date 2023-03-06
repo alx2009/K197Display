@@ -41,7 +41,9 @@ public:
   typedef void (*buttonCallBack)(
       K197UIeventsource eventSource,
       K197UIeventType eventType); ///< define the type of the callback function
-  void setup();
+  void setupButtonCluster();
+
+  static void checkFifoChanges();
 
 protected:
   void checkNew(uint8_t i, uint8_t btnow, unsigned long now);
