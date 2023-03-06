@@ -941,16 +941,15 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
   }
 }
 
+#define IS_DISPLAY_ROLL_MODE() (xscale==1) && (k197graph.npoints == k197graph_type::x_size) && gr_xscale_roll_mode.getValue()
+
 /*!
     @brief  update the display, used when in graph mode
    screen.
 */
 void UImanager::updateGraphScreen() {
-  // Clear graph area
-  u8g2.setDrawColor(0); // set drawing color to background color (pixel off)
-  u8g2.drawBox( 0, 0, k197graph.x_size,  k197graph.y_size+1); 
-  u8g2.setDrawColor(1); // restore foreground color (pixel on)
-
+  u8g2.clearBuffer(); // Clear display area
+  
   // Get graph data
   k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue()); 
 
@@ -1005,10 +1004,11 @@ void UImanager::updateGraphScreen() {
       }    
       drawMarker(xscale*k197graph.current_idx, k197graph.y_size-k197graph.point[k197graph.current_idx]);
   }
-  
+
+  u8g2_uint_t ax = cursor_a > k197graph.npoints ? k197graph.npoints-1 : cursor_a;
+  u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
+
   if (areCursorsVisible() && k197graph.npoints>0) {
-      u8g2_uint_t ax = cursor_a > k197graph.npoints ? k197graph.npoints-1 : cursor_a;
-      u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
       if (xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue()) { // Draw the cursors in roll mode
           drawMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
           drawMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
@@ -1018,7 +1018,11 @@ void UImanager::updateGraphScreen() {
       }
   }
   if (areCursorsVisible() && k197graph.npoints>0) {
-      drawGraphScreenCursorPanel(topln_x, botln_x);
+      if (IS_DISPLAY_ROLL_MODE()) { // Translate considering we are in roll mode
+           ax=k197graph.idx(ax); 
+           bx=k197graph.idx(bx); 
+      }
+      drawGraphScreenCursorPanel(topln_x, botln_x, ax, bx);
   } else {
       drawGraphScreenNormalPanel(topln_x, botln_x);
   }
@@ -1055,8 +1059,7 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
     u8g2.print(F("   "));
   if (k197dev.isREL())
     u8g2.print(F(" REL"));
-  else
-    u8g2.print(F("    "));
+
 
   x = 185+5;
   u8g2.setCursor(x, y);
@@ -1079,9 +1082,7 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
   else
     u8g2.print(F("    ")); 
   if (k197dev.getDisplayHold())
-    u8g2.print(F(" HOLD"));
-  else
-    u8g2.print(F("     "));   
+    u8g2.print(F(" HOLD")); 
 }
 
 /*!
@@ -1093,8 +1094,32 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
     is passed in the two arguments topln_x and botln_x
     @param topln_x the first usable x coordinates of the top line of the panel
     @param botln_x the first usable x coordinates of the bottom line of the panel
+    @param ax the graph index corresponding to cursor A 
+    @param bx the graph index corresponding to cursor B
 */
-void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x) {
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x, u8g2_uint_t ax, u8g2_uint_t bx) {
+  u8g2.setCursor(topln_x+1, 0);
+
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  u8g2.print(k197dev.getUnit(true));
+  
+  u8g2.setFont(u8g2_font_5x7_mr);
+  u8g2.setCursor(u8g2.tx+2, 3);
+  if (k197dev.isAC())
+    u8g2.print(F("AC"));
+  else
+    u8g2.print(CH_SPACE);
+  u8g2.setCursor(u8g2.tx+2, u8g2.ty);
+  if (k197dev.isREL())
+    u8g2.print(F("REL"));
+
+  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+3);
+  u8g2.print(CURSOR_A); u8g2.print(CH_SPACE); 
+  u8g2.print(k197dev.getGraphValue(ax), 6); u8g2.print(F("    "));   
+
+  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
+  u8g2.print(CURSOR_B); u8g2.print(CH_SPACE); 
+  u8g2.print(k197dev.getGraphValue(bx), 6); u8g2.print(F("    "));   
   
 }
 
