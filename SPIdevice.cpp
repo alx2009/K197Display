@@ -52,9 +52,9 @@
 #include "pinout.h"
 
 #define nbyte GPIOR1 ///< keep track of characters received from the SPI client
-#define SPIflags GPIOR0 ///< Various flags used in interupt handlers
+#define SPIflags GPIOR3 ///< Various flags used in interupt handlers
 #define SPIdone                                                                \
-  0x01 ///< flag used to signal that all SPI data have been received
+  0x02 ///< flag used to signal that all SPI data have been received
 
 volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
 

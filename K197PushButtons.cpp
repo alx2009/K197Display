@@ -170,7 +170,7 @@ volatile static int8_t fifo_front =
     0; // index to the front of the queue, see fifo_pull()
 // We use rear in the interrupt handler, hence the use of GPIO3
 // Initialized inside k197ButtonCluster::setup()
-#define fifo_rear GPIOR3 ///< index to the rear of the queue, see fifo_pull()
+#define fifo_rear GPIOR0 ///< index to the rear of the queue, see fifo_pull()
 
 /*!
     @brief  get the number of records actually stored in the FIFO queue (see
