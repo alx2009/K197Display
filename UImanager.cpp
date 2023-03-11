@@ -981,7 +981,7 @@ void UImanager::updateGraphScreen() {
   printYLabel(k197graph.y1);
   u8g2_uint_t topln_x = u8g2.tx;
       
-  if ( xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue() ) {  // Draw the graph in roll mode
+  if ( IS_DISPLAY_ROLL_MODE() ) {  // Draw the graph in roll mode
       if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS || k197graph.npoints<2) {
           for (int i=0; i<k197graph.npoints; i++) {
               u8g2.drawPixel(i, k197graph.y_size-k197graph.point[k197graph.idx(i)]);
@@ -1009,7 +1009,7 @@ void UImanager::updateGraphScreen() {
   u8g2_uint_t bx = cursor_b > k197graph.npoints ? k197graph.npoints-1 : cursor_b;
 
   if (areCursorsVisible() && k197graph.npoints>0) {
-      if (xscale==1 && k197graph.npoints == k197graph_type::x_size && gr_xscale_roll_mode.getValue()) { // Draw the cursors in roll mode
+      if (IS_DISPLAY_ROLL_MODE()) { // Draw the cursors in roll mode
           drawMarker(xscale*ax, k197graph.y_size-k197graph.point[k197graph.idx(ax)],CURSOR_A);
           drawMarker(xscale*bx, k197graph.y_size-k197graph.point[k197graph.idx(bx)],CURSOR_B);                
       } else { // Draw the cursors in overwrite mode
