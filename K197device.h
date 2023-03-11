@@ -141,6 +141,7 @@ struct k197graph_type {
      byte point[x_size];
      byte current_idx=0x00;
      byte npoints=0x00;
+     uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
      k197graph_label_type y1;
      k197graph_label_type y0;
      byte y_zero=0x00; ///< the point value for 0, if included in the graph

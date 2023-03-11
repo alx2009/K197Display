@@ -670,6 +670,7 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
   //DebugOut.print(F(", yzero=")); DebugOut.println(graphdata->y_zero, 9); 
   graphdata->current_idx = cache.gr_index; 
   graphdata->npoints = cache.gr_size;
+  graphdata->nsamples_graph = cache.nsamples_graph;
 }
 
 #define SWAP_BYTE(b0, b1) { \
