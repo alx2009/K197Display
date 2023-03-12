@@ -187,24 +187,6 @@ void UImanager::setup() {
 // ***************************************************************************************
 
 /*!
-    @brief  display & update a small animation 
-    @details This function is used to display a small animation at the selected coordinate
-    It should be called any time the display is updated due to a new messdurement being taken. 
-    In this way the user see that the voltmeter SW is running, even if the UI is not updated (e.g. in hold mode).
-    Any stuttering would instead indicate that the display card is skipping measurements 
-    (e.g. when it's busy updating a slow bluetooth connection)
-    Note that this function changes the active font, however it does not change the cursor coordinates
-    @param x the x coordinate where to display the animation (upper-left corner)
-    @param y the y coordinate where to display the animation (upper-left corner)
-*/
-void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
-    static byte phase=0;
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    u8g2.drawGlyph(x, y, ((u8g2_uint_t) 0x25f4)+phase);
-    if (--phase>3) phase=3;
-}
-
-/*!
     @brief  update the display. The information comes from the pointer to
    K197device passed when the object was constructed
 
@@ -226,7 +208,7 @@ void UImanager::updateDisplay() {
     updateMinMaxScreen();
   else updateGraphScreen();
 
-  displayDoodle(256-7, 64-13);
+  displayDoodle(256-8, 64-12);
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
@@ -859,6 +841,29 @@ void UImanager::logData() {
   }
   Serial.println();
   dxUtil.checkFreeStack();
+}
+
+// ***************************************************************************************
+// Display functions that have dependencies on menu options
+// ***************************************************************************************
+
+/*!
+    @brief  display & update a small animation 
+    @details This function is used to display a small animation at the selected coordinate
+    It should be called any time the display is updated due to a new messdurement being taken. 
+    In this way the user see that the voltmeter SW is running, even if the UI is not updated (e.g. in hold mode).
+    Any stuttering would instead indicate that the display card is skipping measurements 
+    (e.g. when it's busy updating a slow bluetooth connection)
+    Note that this function changes the active font, however it does not change the cursor coordinates
+    @param x the x coordinate where to display the animation (upper-left corner)
+    @param y the y coordinate where to display the animation (upper-left corner)
+*/
+void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
+    static byte phase=0;
+    if (!showDoodle.getValue()) return;
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    u8g2.drawGlyph(x, y, ((u8g2_uint_t) 0x25f4)+phase);
+    if (--phase>3) phase=3;
 }
 
 // ***************************************************************************************
