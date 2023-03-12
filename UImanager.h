@@ -82,6 +82,7 @@ private:
                        K197sc_FullScreenBitMask); ///< Keep track of how to
                                                   ///< display stuff...
 
+  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y);
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();

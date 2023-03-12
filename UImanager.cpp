@@ -197,7 +197,7 @@ void UImanager::setup() {
     @param x the x coordinate where to display the animation (upper-left corner)
     @param y the y coordinate where to display the animation (upper-left corner)
 */
-void displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
+void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
     static byte phase=0;
     u8g2.setFont(u8g2_font_9x15_m_symbols);
     u8g2.drawGlyph(x, y, ((u8g2_uint_t) 0x25f4)+phase);
