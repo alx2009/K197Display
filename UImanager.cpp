@@ -32,8 +32,9 @@
     u8g2_font_5x7_mr  ==> terminal window, local T, Bluetooth status
     u8g2_font_6x12_mr ==> BAT, all menus
     u8g2_font_8x13_mr ==> AUTO, REL, dB, STO, RCL, Cal, RMT, most annunciators
-  in split screen u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen:
-  message, AC u8g2_font_inr30_mr ==> main message u8g2_font_inr16_mr ==> main
+  in split screen 
+    u8g2_font_9x15_m_symbols ==> meas. unit, AC, Split screen: 
+    AC u8g2_font_inr30_mr ==> main message u8g2_font_inr16_mr ==> main
   message in minmax mode
 
     mr ==> monospace restricted
