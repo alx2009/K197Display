@@ -21,7 +21,7 @@
   https://github.com/olikraus/u8g2/blob/master/doc/faq.txt and search for
   U8G2_16BIT
 
-  If 16 mode is not active we will trigger a compilation error as otherwise it
+  If 16 bit mode is not active we will trigger a compilation error as otherwise it
   would be rather difficult to figure out why it does not diplay correctly...
 
 */
