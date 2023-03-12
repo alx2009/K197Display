@@ -41,7 +41,7 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Animation showing the voltmeter is measuring (for when the value is stable)
+//  Make the animation optional
 //  improve number format for cursor A and B
 //  Keep hold when switching between display modes ?
 //  Enable scrolling menu backward even if the item is not selectable
