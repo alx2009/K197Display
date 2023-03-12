@@ -760,7 +760,7 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
       gr_size=gr_size_new;
   }
   dxUtil.checkFreeStack(); // We may be using quite a bit of stack for the buffer
-  
+
   //Copy the buffer back to the cache
   for (int i=0; i<gr_size; i++) {
       graph[i] = buffer[i];  
