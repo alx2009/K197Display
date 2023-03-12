@@ -1137,7 +1137,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
   if (k197dev.isREL())
     u8g2.print(F("REL"));
 
-  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+3);
+  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+4);
   u8g2.print(CURSOR_A); u8g2.print(CH_SPACE); 
   u8g2.print(k197dev.getGraphValue(ax), 6);   
 
