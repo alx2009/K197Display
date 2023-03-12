@@ -187,6 +187,24 @@ void UImanager::setup() {
 // ***************************************************************************************
 
 /*!
+    @brief  display & update a small animation 
+    @details This function is used to display a small animation at the selected coordinate
+    It should be called any time the display is updated due to a new messdurement being taken. 
+    In this way the user see that the voltmeter SW is running, even if the UI is not updated (e.g. in hold mode).
+    Any stuttering would instead indicate that the display card is skipping measurements 
+    (e.g. when it's busy updating a slow bluetooth connection)
+    Note that this function changes the active font, however it does not change the cursor coordinates
+    @param x the x coordinate where to display the animation (upper-left corner)
+    @param y the y coordinate where to display the animation (upper-left corner)
+*/
+void displayAnimation(u8g2_uint_t x, u8g2_uint_t y) {
+    static byte phase=0;
+    u8g2.setFont(u8g2_font_9x15_m_symbols);
+    u8g2.drawGlyph(x, y, ((u8g2_uint_t) 0x25f4)+phase);
+    if (--phase>3) phase=3;
+}
+
+/*!
     @brief  update the display. The information comes from the pointer to
    K197device passed when the object was constructed
 
@@ -207,6 +225,9 @@ void UImanager::updateDisplay() {
   else if (getScreenMode() == K197sc_minmax)
     updateMinMaxScreen();
   else updateGraphScreen();
+
+  displayAnimation(256-8, 64-14);
+  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -275,7 +296,6 @@ void UImanager::updateSplitScreen() {
   } else { // For all other modes we show the settings menu when in split mode
     UIwindow::getcurrentWindow()->draw(&u8g2, 0, 10);
   }
-  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -402,7 +422,6 @@ void UImanager::updateNormalScreen() {
     u8g2.print(F("          "));
   }
 
-  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -505,7 +524,6 @@ void UImanager::updateMinMaxScreen() {
     u8g2.print(F("HOLD"));
   else
     u8g2.print(F("    "));
-  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -1027,7 +1045,6 @@ void UImanager::updateGraphScreen() {
   } else {
       drawGraphScreenNormalPanel(topln_x, botln_x);
   }
-  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
