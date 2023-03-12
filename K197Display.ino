@@ -41,11 +41,10 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  show delta t + average between cursor A and B
+//  Animation showing the voltmeter is measuring (for when the value is stable)
 //  improve number format for cursor A and B
 //  Keep hold when switching between display modes ?
 //  Enable scrolling menu backward even if the item is not selectable
-//  Animation showing the voltmeter is measuring (for when the value is stable)
 //  Overclock options
 //  Review menu structure
 //  Save new options to EEPROM
