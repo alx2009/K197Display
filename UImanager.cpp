@@ -1115,11 +1115,42 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+3);
   u8g2.print(CURSOR_A); u8g2.print(CH_SPACE); 
-  u8g2.print(k197dev.getGraphValue(ax), 6); u8g2.print(F("    "));   
+  u8g2.print(k197dev.getGraphValue(ax), 6);   
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
   u8g2.print(CURSOR_B); u8g2.print(CH_SPACE); 
-  u8g2.print(k197dev.getGraphValue(bx), 6); u8g2.print(F("    "));   
+  u8g2.print(k197dev.getGraphValue(bx), 6);    
+
+  /*if (GPIOR3 & 0x10) {   // debug flag is set
+      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints); DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
+      DebugOut.print(F(", s=")); DebugOut.println(k197graph.nsamples_graph);
+      DebugOut.print(F("A =")); DebugOut.print(cursor_a); DebugOut.print(F(", B =")); DebugOut.println(cursor_b);
+      DebugOut.print(F("OLD ax=")); DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
+  }*/
+  
+  // for the next calculations, we need to convert to logical index, regardless how the graph is plot
+  ax=k197graph.logic_index(ax);
+  bx=k197graph.logic_index(bx); 
+  uint16_t deltax = ax > bx ? ax - bx : bx - ax;
+
+  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
+  u8g2.print(F("Avg")); u8g2.print(CH_SPACE); 
+  u8g2.print(0.0, 6);    
+
+  /*if (GPIOR3 & 0x10) {   // debug flag is set
+      GPIOR3 &= (~0x10); // reset flag: we print only once
+      DebugOut.print(F("NEW ax=")); DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.print(bx);
+      DebugOut.print(F(", deltax=")); DebugOut.println(deltax);
+  }*/
+  
+  u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
+  u8g2.print(F("Dt")); u8g2.print(CH_SPACE); 
+  if (k197graph.nsamples_graph==0) {
+     u8g2.print(float(deltax)/3.0, 2);
+  } else {
+     u8g2.print(deltax*k197graph.nsamples_graph); 
+  }  
+  u8g2.print(CH_SPACE); u8g2.print('s');
   
 }
 
@@ -1168,6 +1199,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       if (reassignStoRcl.getValue()) {
         if (eventType == UIeventPress) {
           k197dev.setDisplayHold(!k197dev.getDisplayHold());
+          //GPIOR3 |= 0x10; // set debug flag
         } else if (eventType == UIeventLongPress) {
           K197screenMode screen_mode = uiman.getScreenMode();
           if (screen_mode != K197sc_minmax)
