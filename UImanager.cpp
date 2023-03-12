@@ -627,6 +627,7 @@ DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");     ///< Menu input
 DEF_MENU_BOOL(reassignStoRcl, 15, "Reassign STO/RCL"); ///< Menu input
 DEF_MENU_OPEN(btDatalog, 15, "Data logging >>>", &UIlogMenu); ///< Open submenu
 DEF_MENU_OPEN(btGraphOpt, 15, "Graph options >>>", &UIgraphMenu); ///< Open submenu
+DEF_MENU_BOOL(showDoodle, 15, "Doodle");     ///< Menu input
 DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast",
                   u8g2.setContrast(getValue());); ///< set contrast
 DEF_MENU_ACTION(saveSettings, 15, "Save settings",
@@ -648,7 +649,7 @@ DEF_MENU_ACTION(openLog, 15, "Show log",
 
 UImenuItem *mainMenuItems[] = {
     &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog, &btGraphOpt,
-    &contrastCtrl,    &exitMenu,       &saveSettings,
+    &showDoodle, &contrastCtrl,    &exitMenu,       &saveSettings,
     &reloadSettings, &openLog}; ///< Root menu items
 
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
