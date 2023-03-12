@@ -148,7 +148,26 @@ struct k197graph_type {
 
      void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
 
-     inline uint16_t idx(uint16_t logic_index) {return (logic_index+current_idx+1) % x_size;};
+     /*!
+       @brief get the array index from the logical index
+       @details the logical index is 0 for the oldest record and increases as we get towards newer records
+       The array index is the index in the circular buffer graph[] corresponding to the logical index
+       This function should not be called if the graph is empty (npoints=0);
+       @param logic_index the logical index (range: 0 - npoints-1)
+       @return arry index (range: 0 - npoints-1)
+     */
+     inline uint16_t idx(uint16_t logic_index) {return (logic_index+int(current_idx)+1) % npoints;};
+     /*!
+       @brief get the logical index from the array index
+       @details the logical index is 0 for the oldest record and increases as we get towards newer records
+       The array index is the index in the circular buffer graph[] corresponding to the logical index
+       This function should not be called if the graph is empty (npoints=0);
+       @param idx the logical index (range: 0 - npoints-1)
+       @return the logical index (range: 0 - npoints-1)
+     */
+     inline uint16_t logic_index(uint16_t idx) {
+         return (int(npoints)+idx-int(current_idx)-1) % npoints;
+      };
 };
 
 /**************************************************************************/
@@ -349,6 +368,7 @@ private:
       @brief get the array index from logical index
       @details the logical index is 0 for the oldest record and increases as we get towards newer records
       The array index is the index in the circular buffer graph[] corresponding to the logical index
+      This function should not be called if the graph is empty (gr_size=0);
       @param logic_index the logical index (range: 0 - gr_size-1)
       @return arry index (range: 0 - gr_size-1)
     */
