@@ -1128,10 +1128,10 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
       DebugOut.print(F("OLD ax=")); DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
   }*/
   
-  // for the next calculations, we need to convert to logical index, regardless how the graph is plot
-  ax=k197graph.logic_index(ax);
-  bx=k197graph.logic_index(bx); 
-  uint16_t deltax = ax > bx ? ax - bx : bx - ax;
+  // for the next calculations, we need the logical index, regardless how the graph is plot
+  u8g2_uint_t logic_ax=k197graph.logic_index(ax);
+  u8g2_uint_t logic_bx=k197graph.logic_index(bx); 
+  uint16_t deltax = logic_ax > logic_bx ? logic_ax - logic_bx : logic_bx - logic_ax;
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
   u8g2.print(F("Avg")); u8g2.print(CH_SPACE); 
