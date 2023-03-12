@@ -677,22 +677,22 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata, k197graph_yscal
            byte b_tmp = b0; b0 = b1; b1=b_tmp; \
         }
 /*!
-   @brief get average of the graph between two points at point n
-   @details 
-   @param n0 the start point for the calculation
-   @param n1 the end point for the calculation
-   @return the requested average value
+   @brief get average of the graph 
+   @details note: the starting point must be an array index   
+   @param idx the array index to use as a starting point 
+   @param num_pts the number of points to average [range: 0 - gr_size-1]
+   @return the requested average value (or 0.0 if num_pts==0 or gr_size==0)
 */
-float K197device::getGraphAverage(byte n0, byte n1) {
+float K197device::getGraphAverage(byte idx, byte num_pts) {
+  
    if (cache.gr_size==0) return 0.0;
-   if (n0>=cache.gr_size) n0=cache.gr_size-1;
-   if (n1>=cache.gr_size) n1=cache.gr_size-1;
-   if (n0 > n1) SWAP_BYTE(n0, n1);
    float acc=0.0;
-   for (byte i = n0; i <=n1; i++) {
-      acc+=cache.graph[i];   
+   for (byte i = 0; i <num_pts; i++) {
+      if (idx>=cache.gr_size) idx = 0;
+      acc+=cache.graph[ idx ];   
+      idx++;
    }
-   return acc / float(n1-n0+1);
+   return num_pts==0 ? acc : acc/num_pts ;
 }
 
 /*!
