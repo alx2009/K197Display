@@ -719,6 +719,7 @@ void UImanager::setContrast(uint8_t value) {
 void UImanager::setupMenus() {
   additionalModes.setValue(true);
   reassignStoRcl.setValue(true);
+  showDoodle.setValue(true);
   UImainMenu.items = mainMenuItems;
   UImainMenu.num_items = sizeof(mainMenuItems) / sizeof(UImenuItem *);
   UImainMenu.selectFirstItem();
