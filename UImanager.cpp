@@ -208,7 +208,7 @@ void UImanager::updateDisplay() {
     updateMinMaxScreen();
   else updateGraphScreen();
 
-  displayDoodle(256-8, 64-12);
+  displayDoodle(doodle_x_coord, doodle_y_coord);
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
@@ -609,7 +609,8 @@ DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");     ///< Menu input
 DEF_MENU_BOOL(reassignStoRcl, 15, "Reassign STO/RCL"); ///< Menu input
 DEF_MENU_OPEN(btDatalog, 15, "Data logging >>>", &UIlogMenu); ///< Open submenu
 DEF_MENU_OPEN(btGraphOpt, 15, "Graph options >>>", &UIgraphMenu); ///< Open submenu
-DEF_MENU_BOOL(showDoodle, 15, "Doodle");     ///< Menu input
+DEF_MENU_BOOL_ACT(showDoodle, 15, "Doodle", 
+                  if (!getValue()) u8g2.drawGlyph(UImanager::doodle_x_coord, UImanager::doodle_y_coord, CH_SPACE););     ///< Menu input
 DEF_MENU_BYTE_ACT(contrastCtrl, 15, "Contrast",
                   u8g2.setContrast(getValue());); ///< set contrast
 DEF_MENU_ACTION(saveSettings, 15, "Save settings",

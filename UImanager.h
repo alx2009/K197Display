@@ -65,6 +65,9 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
+  static const u8g2_uint_t doodle_x_coord = 256-8;
+  static const u8g2_uint_t doodle_y_coord = 64-12;
+  
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
   static const char MARKER   = '+'; ///< constant, identifies the latest sample in the graph
