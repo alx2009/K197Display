@@ -243,6 +243,11 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource,
     }
     //If we end up here, we could not find any selectable item
     if (firstVisibleItem>0) firstVisibleItem--;
+    return true;
+  } else if (eventSource == K197key_REL && eventType == UIeventDoubleClick) { // top
+    firstVisibleItem=0;
+    selectFirstItem();
+    return true;
   }
   return false;
 }
