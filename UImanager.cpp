@@ -1122,6 +1122,7 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
     @param bx the graph index corresponding to cursor B
 */
 void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x, u8g2_uint_t ax, u8g2_uint_t bx) {
+  char buf[K197_RAW_MSG_SIZE + 1];  
   u8g2.setCursor(topln_x+1, 0);
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
@@ -1138,12 +1139,14 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
     u8g2.print(F("REL"));
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+4);
-  u8g2.print(CURSOR_A); u8g2.print(CH_SPACE); 
-  u8g2.print(k197dev.getGraphValue(ax), 6);   
+  u8g2.print(F("<A>")); u8g2.print(CH_SPACE); 
+  //u8g2.print(k197dev.getGraphValue(ax), 6); 
+  u8g2.print(formatNumber(buf, k197dev.getGraphValue(ax)));  
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
-  u8g2.print(CURSOR_B); u8g2.print(CH_SPACE); 
-  u8g2.print(k197dev.getGraphValue(bx), 6);    
+  u8g2.print(F("<B>")); u8g2.print(CH_SPACE); 
+  //u8g2.print(k197dev.getGraphValue(bx), 6);    
+  u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx)));  
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints); DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
@@ -1158,8 +1161,9 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botl
   uint16_t deltax = logic_ax > logic_bx ? logic_ax - logic_bx : logic_bx - logic_ax;
 
   u8g2.setCursor(183, u8g2.ty+u8g2.getMaxCharHeight()+2);
-  u8g2.print(F("Avg")); u8g2.print(CH_SPACE); 
-  u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax), 6);    
+  u8g2.print(F("Avg")); u8g2.print(CH_SPACE);
+  //u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax), 6);    
+  u8g2.print(formatNumber(buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax)));  
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       GPIOR3 &= (~0x10); // reset flag: we print only once
