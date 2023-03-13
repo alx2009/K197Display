@@ -41,9 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  test Save new options to EEPROM
-//  test Save & restore current cursor position in settings
-//  Save & restore current screen mode in settings
 //  Keep hold when switching between display modes ?
 // Bug2fix: 
 //
