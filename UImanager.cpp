@@ -722,7 +722,7 @@ void UImanager::setupMenus() {
   gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
-  permadata::retrieve_from_EEPROM();
+  permadata::retrieve_from_EEPROM(true);
 }
 
 // ***************************************************************************************
@@ -1332,6 +1332,7 @@ void permadata::copyFromUI() {
   byte_options.opt_gr_type = opt_gr_type.getValue();
   byte_options.opt_gr_yscale = (byte) opt_gr_yscale.getValue();
   byte_options.gr_sample_time = gr_sample_time.getValue();
+  screenMode=uiman.getScreenMode();
   byte_options.cursor_a = uiman.getCursorPosition(UImanager::CURSOR_A);
   byte_options.cursor_b = uiman.getCursorPosition(UImanager::CURSOR_B);
 }
@@ -1341,7 +1342,7 @@ void permadata::copyFromUI() {
     @details the new options take affect immediately.
     This function is used inside retrieve_from_EEPROM
 */
-void permadata::copyToUI() {
+void permadata::copyToUI(bool restore_screen_mode) {
   dxUtil.checkFreeStack();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
@@ -1362,6 +1363,7 @@ void permadata::copyToUI() {
   if (!bool_options.gr_xscale_autosample) { //Do not mess sample rate if autosamplig mode 
       opt_gr_yscale.setValue( (k197graph_yscale_opt) byte_options.opt_gr_yscale);
   } 
+  if (restore_screen_mode) uiman.setScreenMode(screenMode);
   uiman.setCursorPosition(UImanager::CURSOR_A, byte_options.cursor_a);
   uiman.setCursorPosition(UImanager::CURSOR_B, byte_options.cursor_b);
 }
@@ -1392,7 +1394,7 @@ bool permadata::store_to_EEPROM() {
     A confirmation or error message is sent to DebugOut
     @return true if the operation is succesful
 */
-bool permadata::retrieve_from_EEPROM() {
+bool permadata::retrieve_from_EEPROM(bool restore_screen_mode) {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
     DebugOut.print(F("EEPROM: Data size="));
     DebugOut.print(sizeof(permadata));
@@ -1413,7 +1415,7 @@ bool permadata::retrieve_from_EEPROM() {
     DebugOut.println(revisionExpected, HEX);
     return false;
   }
-  pdata.copyToUI();
+  pdata.copyToUI(restore_screen_mode);
   DebugOut.println(F("EEPROM: restore ok"));
   return true;
 }

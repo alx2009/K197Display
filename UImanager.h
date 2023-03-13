@@ -99,6 +99,11 @@ private:
   byte logskip_counter = 0; ///< counter used when data logging, counts how
                             ///< many measurements are skipped
   void clearScreen();
+  
+public:
+  UImanager(){}; ///< default constructor for the class
+  void setup();
+
   void setScreenMode(K197screenMode mode);
   /*!
      @brief  get the screen mode
@@ -107,10 +112,6 @@ private:
   K197screenMode getScreenMode() {
     return (K197screenMode)(screen_mode & K197sc_ScreenModeMask);
   };
-
-public:
-  UImanager(){}; ///< default constructor for the class
-  void setup();
 
   /*!
      @brief  check if display is in full screen mode
@@ -316,13 +317,14 @@ private:
 
   bool_options_struct bool_options; ///< store all bool options
   byte_options_struct byte_options; ///< store all byte options
+  K197screenMode screenMode; ///<store screen mode
 
   void copyFromUI();
-  void copyToUI();
+  void copyToUI(bool restore_screen_mode=false);
 
 public:
   static bool store_to_EEPROM();
-  static bool retrieve_from_EEPROM();
+  static bool retrieve_from_EEPROM(bool restore_screen_mode=false);
 };
 extern UImanager uiman;
 
