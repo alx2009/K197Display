@@ -41,13 +41,12 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  improve number format for cursor A and B
-//  Keep hold when switching between display modes ?
 //  Enable scrolling menu backward even if the item is not selectable
 //  Review menu structure
 //  Save new options to EEPROM
 //  Save & restore current screen mode in settings
 //  Save & restore current cursor position in settings
+//  Keep hold when switching between display modes ?
 // Bug2fix: 
 //
 // Latest benchmark:
