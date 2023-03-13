@@ -41,7 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Enable scrolling menu backward even if the item is not selectable
 //  Review menu structure
 //  Save new options to EEPROM
 //  Save & restore current screen mode in settings
