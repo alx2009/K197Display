@@ -241,6 +241,8 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource,
         return true;
       }
     }
+    //If we end up here, we could not find any selectable item
+    if (firstVisibleItem>0) firstVisibleItem--;
   }
   return false;
 }
