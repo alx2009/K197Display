@@ -75,8 +75,8 @@ public:
       0UL; ///< used to keep track of the time spent in loop
 
 private:
-  byte cursor_a = 60;
-  byte cursor_b = 120;
+  byte cursor_a = 60;   // Stores cursor A position
+  byte cursor_b = 120;  // Stores cursor B position
   
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
@@ -154,6 +154,28 @@ public:
     if ( (screen_mode & K197sc_activeCursorBitMask) == 0x00) return CURSOR_A;
     else return CURSOR_B;
   };
+
+  /*!
+     @brief  return the cursor position
+     @param  which_cursor the requested cursor (CURSOR_A or CURSOR_B)
+     @return returns the requested cursor position
+  */
+  byte getCursorPosition(char which_cursor) { return which_cursor == CURSOR_A ? cursor_a : cursor_b; };
+  /*!
+     @brief  set the cursor position
+     @details: enforce the range 0 - k197graph_type::x_size
+     @param  which_cursor the cursor whose position shall be set (CURSOR_A or CURSOR_B)
+     @param  new_position position shall be set
+  */
+  void setCursorPosition(char which_cursor, byte new_position) {
+     if (new_position>=k197graph_type::x_size) new_position = k197graph_type::x_size-1;
+     if (which_cursor == CURSOR_A) {
+         cursor_a = new_position;
+     } else {
+         cursor_b = new_position;
+     } 
+  };
+  
   /*!
      @brief  increment the active cursor position
      @details the cursor position will not be incremented past the maximum value (k197graph_type::x_size-1) or less than zero
@@ -246,7 +268,7 @@ private:
       0x1a2b3c4dul; ///< This is the magic number telling us if the EEPROM
                     ///< contains data
   static const unsigned long revisionExpected =
-      0x01ul; ///< the revision of this structure. Increment whenever the
+      0x02ul; ///< the revision of this structure. Increment whenever the
               ///< structure is modified
 
   // structure identity
@@ -263,24 +285,33 @@ private:
        @return Not really a return type, this attribute will save some RAM
     */
     union {
-      unsigned char value = 0x00; ///< allows access to all the flags in the
-                                  ///< union as one unsigned char
+      uint16_t value = 0x00; ///< allows access to all the flags in the
+                             ///< union as one 16 bit unsigned integer
       struct {
-        bool additionalModes : 1; ///< store menu option value
-        bool reassignStoRcl : 1;  ///< store menu option value
-        bool logEnable : 1;       ///< store menu option value
-        bool logSplitUnit : 1;    ///< store menu option value
-        bool logTimestamp : 1;    ///< store menu option value
-        bool logTamb : 1;         ///< store menu option value
-        bool logStat : 1;         ///< store menu option value
+        bool additionalModes : 1;     ///< store menu option value
+        bool reassignStoRcl : 1;      ///< store menu option value
+        bool showDoodle : 1;          ///< store menu option value
+        bool logEnable : 1;           ///< store menu option value
+        bool logSplitUnit : 1;        ///< store menu option value
+        bool logTimestamp : 1;        ///< store menu option value
+        bool logTamb : 1;             ///< store menu option value
+        bool logStat : 1;             ///< store menu option value
+        bool gr_yscale_show0 : 1;     ///< store menu option value
+        bool gr_xscale_roll_mode : 1; ///< store menu option value
+        bool gr_xscale_autosample: 1; ///< store menu option value
       };
     } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
 
   struct byte_options_struct {
-    byte contrastCtrl;   ///< store menu option value
-    byte logSkip;        ///< store menu option value
-    byte logStatSamples; ///< store menu option value
+    byte contrastCtrl;    ///< store menu option value
+    byte logSkip;         ///< store menu option value
+    byte logStatSamples;  ///< store menu option value
+    byte opt_gr_type;     ///< store menu option value
+    byte opt_gr_yscale;   ///< store menu option value
+    byte gr_sample_time;  ///< store menu option value
+    byte cursor_a;        ///< store cursor A position
+    byte cursor_b;        ///< store cursor B position
   }; ///< Structure designed to collect all byte optipons together
 
   bool_options_struct bool_options; ///< store all bool options

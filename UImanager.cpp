@@ -1318,14 +1318,23 @@ void permadata::copyFromUI() {
   dxUtil.checkFreeStack();
   bool_options.additionalModes = additionalModes.getValue();
   bool_options.reassignStoRcl = reassignStoRcl.getValue();
+  bool_options.showDoodle = showDoodle.getValue();
   bool_options.logEnable = logEnable.getValue();
   bool_options.logSplitUnit = logSplitUnit.getValue();
   bool_options.logTimestamp = logTimestamp.getValue();
   bool_options.logTamb = logTamb.getValue();
   bool_options.logStat = logStat.getValue();
+  bool_options.gr_yscale_show0 = gr_yscale_show0.getValue();
+  bool_options.gr_xscale_roll_mode = gr_xscale_roll_mode.getValue();
+  bool_options.gr_xscale_autosample = gr_xscale_autosample.getValue();
   byte_options.contrastCtrl = contrastCtrl.getValue();
   byte_options.logSkip = logSkip.getValue();
   byte_options.logStatSamples = logStatSamples.getValue();
+  byte_options.opt_gr_type = opt_gr_type.getValue();
+  byte_options.opt_gr_yscale = (byte) opt_gr_yscale.getValue();
+  byte_options.gr_sample_time = gr_sample_time.getValue();
+  byte_options.cursor_a = uiman.getCursorPosition(UImanager::CURSOR_A);
+  byte_options.cursor_b = uiman.getCursorPosition(UImanager::CURSOR_B);
 }
 
 /*!
@@ -1337,15 +1346,25 @@ void permadata::copyToUI() {
   dxUtil.checkFreeStack();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
+  showDoodle.setValue(bool_options.showDoodle);
   logEnable.setValue(bool_options.logEnable);
   logSplitUnit.setValue(bool_options.logSplitUnit);
   logTimestamp.setValue(bool_options.logTimestamp);
   logTamb.setValue(bool_options.logTamb);
   logStat.setValue(bool_options.logStat);
+  gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
+  gr_xscale_roll_mode.setValue(bool_options.gr_xscale_roll_mode);
+  gr_xscale_autosample.setValue(bool_options.gr_xscale_autosample);
   uiman.setContrast(byte_options.contrastCtrl);
   logSkip.setValue(byte_options.logSkip);
   logStatSamples.setValue(byte_options.logStatSamples);
   k197dev.setNsamples(byte_options.logStatSamples);
+  opt_gr_type.setValue(byte_options.opt_gr_type);
+  if (!bool_options.gr_xscale_autosample) { //Do not mess sample rate if autosamplig mode 
+      opt_gr_yscale.setValue( (k197graph_yscale_opt) byte_options.opt_gr_yscale);
+  } 
+  uiman.setCursorPosition(UImanager::CURSOR_A, byte_options.cursor_a);
+  uiman.setCursorPosition(UImanager::CURSOR_B, byte_options.cursor_b);
 }
 
 /*!
