@@ -41,7 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Review menu structure
 //  Save new options to EEPROM
 //  Save & restore current screen mode in settings
 //  Save & restore current cursor position in settings
