@@ -42,17 +42,29 @@
 /**************************************************************************/
 
 #define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
-//sections of code
+// sections of code
 
+/**************************************************************************/
+/*!
+   @brief class implementing an object used as debug output
+
+   @details This class implements the usual Print interface and can send the output to two parallel streams:
+   - Serial
+   - a u8g2log object of type U8G2LOG, it can be used to show the log in the oled screen via the u8g2 library
+    
+    PREREQUISITES: Serial.begin() and u8g2log.begin() must be called before
+   enabling the Serial and the Oled output respectively.
+*/
+/**************************************************************************/
 class debugUtil : public Print {
   bool use_serial = false; ///< enable Serial output if true
   bool use_oled = false;   ///< enable Oled output if true
 
 #ifdef PROFILE_TIMER
-  unsigned long proftimer[PROFILE_TIMER];
+  unsigned long proftimer[PROFILE_TIMER]; ///< store the profile timers(s)
 
 public:
-  static const byte PROFILE_MATH = 0; ///< profiler time slot for math stuff
+  static const byte PROFILE_MATH = 0;    ///< profiler time slot for math stuff
   static const byte PROFILE_LOOP = 1;    ///< profiler time slot for loop()
   static const byte PROFILE_DEVICE = 2;  ///< profiler time slot for K197dev
   static const byte PROFILE_DISPLAY = 3; ///< profiler time slot for uiman

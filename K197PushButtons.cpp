@@ -294,8 +294,8 @@ static inline byte fifo_pull() {
    port, potentially optimizing the interrupt handler further.
 */
 void CCL_interrupt_handler() {
-  //CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
-  //  rather than missing an event
+  // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
+  //   rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
 }

@@ -133,9 +133,9 @@ public:
     @brief  class implementing a separator button item
 
     A menu butto is a line of text that can be selected. when selected the "Ok"
-   pushbutton triggers the "change() method. By default the change() method (in the base class) does
-   not do anything, but a subclass can use it to implement any action (see also
-   DEF_MENU_ACTION macro)
+   pushbutton triggers the "change() method. By default the change() method (in
+   the base class) does not do anything, but a subclass can use it to implement
+   any action (see also DEF_MENU_ACTION macro)
 
 */
 /**************************************************************************/
@@ -162,84 +162,105 @@ public:
 /**************************************************************************/
 /*!
     @brief  base class for all windows in the UI
-    
+
     Only the class UImanager
    (declared as friend) can create a working UIwindow.
 */
 /**************************************************************************/
 class UIwindow {
-  protected:
-      friend class UImanager;    ///< Windows are managed by UImanager 
-      u8g2_uint_t width = 100;   ///< display width of the menu in pixels
-      UIwindow *parent = NULL; ///< the parent menu, can only be set via openWindow().
-      static UIwindow *currentWindow; ///< Keeps track of the current menu
+protected:
+  friend class UImanager;  ///< Windows are managed by UImanager
+  u8g2_uint_t width = 100; ///< display width of the menu in pixels
+  UIwindow *parent =
+      NULL; ///< the parent menu, can only be set via openWindow().
+  static UIwindow *currentWindow; ///< Keeps track of the current menu
 
-  public:
-      /*!
-         @brief  constructor of the object
-         @param width width of the menu window
-         @param isRoot true if this is the root window (it will be set as default)
-      */
-      UIwindow(u8g2_uint_t width, bool isRoot = false) {
-          this->width = width;  
-          if (isRoot) currentWindow = this;
-      };
+public:
+  /*!
+     @brief  constructor of the object
+     @param width width of the menu window
+     @param isRoot true if this is the root window (it will be set as default)
+  */
+  UIwindow(u8g2_uint_t width, bool isRoot = false) {
+    this->width = width;
+    if (isRoot)
+      currentWindow = this;
+  };
 
-      /*!
-         @brief  get width
-         @return width of the window
-      */
-      u8g2_uint_t getWidth() { return width;};
-  
-  #   pragma GCC diagnostic push
-  #   pragma GCC diagnostic ignored                                                 \
-        "-Wunused-parameter" // A derived class may eturn a different valuse
-                         // depending on being selected
-      virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};  ///< virtual function, see derived classes
-      virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType){
-          return false;  
-      }; ///< virtual function, see derived classes
-  #   pragma GCC diagnostic pop
-  
-      /*!
-          @brief  open a child menu
-          @details when a menu is opened in this way, this menu becomes the parent
-          menu of the child, then the child becomes the current menu, that is the
-          object returned by getcurrentWindow().
-          @param child pointer to an object of type UImenu, it will become the
-          current menu
-      */
-      void openWindow(UIwindow *child) {
-          child->parent = this;
-          currentWindow = child;
-      };
+  /*!
+     @brief  get width
+     @return width of the window
+  */
+  u8g2_uint_t getWidth() { return width; };
 
-      /*!
-         @brief  close a menu
-         @details when a menu is closed in this way, its parent menu becomes the
-         current menu, that is the object returned by getcurrentWindow(). trying to
-         close the root menu has no effect (the root menu has the parent set to
-         NULL).
-      */
-      void closeWindow() {
-          if (parent == NULL) return;
-          currentWindow = parent;
-          parent = NULL;
-      };
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored                                                 \
+    "-Wunused-parameter" // A derived class may use the parameters
+                         
+  /*!
+      @brief  draw the function
+      @param u8g2 a pointer to the u8g2 library object
+      @param x the x coordinate of the top/left corner of the window
+      @param y the y coordinate of the top/left corner of the window
+      @details the implementation in the base class does nothing, it is meant to be overridden in a derived class
+  */
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x,
+                    u8g2_uint_t y){};
 
-      /*!
-         @brief  get the currrent menu
-        @return pointer to UImenu object representing the current menu
-      */
-      static UIwindow *getcurrentWindow() { return currentWindow; };
+                    
+  /*!
+      @brief  handle UI events
+      @details the implementation in the base class does nothing, it is meant to be overridden in a derived class
+      @param eventSource the source of the event
+      @param eventType the event type
+      @return true if the event is handled (this base class always returns false, but it can be overridden in aderived class) 
+  */
+  virtual bool handleUIEvent(K197UIeventsource eventSource,
+                             K197UIeventType eventType) {
+    return false;
+  };
+#pragma GCC diagnostic pop
+
+  /*!
+      @brief  open a child menu
+      @details when a menu is opened in this way, this menu becomes the parent
+      menu of the child, then the child becomes the current menu, that is the
+      object returned by getcurrentWindow().
+      @param child pointer to an object of type UImenu, it will become the
+      current menu
+  */
+  void openWindow(UIwindow *child) {
+    child->parent = this;
+    currentWindow = child;
+  };
+
+  /*!
+     @brief  close a menu
+     @details when a menu is closed in this way, its parent menu becomes the
+     current menu, that is the object returned by getcurrentWindow(). trying to
+     close the root menu has no effect (the root menu has the parent set to
+     NULL).
+  */
+  void closeWindow() {
+    if (parent == NULL)
+      return;
+    currentWindow = parent;
+    parent = NULL;
+  };
+
+  /*!
+     @brief  get the currrent menu
+    @return pointer to UImenu object representing the current menu
+  */
+  static UIwindow *getcurrentWindow() { return currentWindow; };
 };
 
 /**************************************************************************/
 /*!
     @brief  class implementing a menu
 
-    A menu is a window consisting in a collection of object of type MenuItem. Only the class UImanager
-   (declared as friend) can create a working UImenu.
+    A menu is a window consisting in a collection of object of type MenuItem.
+   Only the class UImanager (declared as friend) can create a working UImenu.
 
     Scrolling up and down is controlled by the up and down pushbutto source.
 
@@ -257,7 +278,7 @@ protected:
 
   byte firstVisibleItem = 0; ///< keep track of the first visible item
   byte selectedItem = 0;     ///< keep track of the selected item
-  friend class UImanager;    ///< Menus are managed by UImanager 
+  friend class UImanager;    ///< Menus are managed by UImanager
 
   bool selectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
   void makeSelectedItemVisible(u8g2_uint_t y0, u8g2_uint_t y1);
@@ -269,9 +290,10 @@ public:
      @param isRoot true if this is the root menu (it will be set as default
      menu)
   */
-  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot) {};
+  UImenu(u8g2_uint_t width, bool isRoot = false) : UIwindow(width, isRoot){};
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
-  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  virtual bool handleUIEvent(K197UIeventsource eventSource,
+                             K197UIeventType eventType);
 
   /*!
      @brief  get the currently selected item
@@ -279,7 +301,6 @@ public:
   */
   const UImenuItem *getSelectedItem() { return items[selectedItem]; };
   void selectFirstItem();
-
 };
 
 /**************************************************************************/
@@ -355,8 +376,11 @@ protected:
   static const u8g2_uint_t slide_ymargin1 =
       4; ///< empty space at the bottom of the value area
 
-  bool edit_mode=false; ///< true while the value is being edited (selected + STO or RCL button is still pressed)
-  byte value = 0; ///< the value of this item. If set/getValue is overridden, this is used as a temporary storage while handling UI events.
+  bool edit_mode = false; ///< true while the value is being edited (selected +
+                          ///< STO or RCL button is still pressed)
+  byte value =
+      0; ///< the value of this item. If set/getValue is overridden, this is
+         ///< used as a temporary storage while handling UI events.
 
 public:
   /*!
@@ -409,8 +433,8 @@ public:
 /**************************************************************************/
 class MenuInputOptions : public UIMenuButtonItem {
 protected:
-  const __FlashStringHelper **options; ///<array defining the options.  
-  const byte options_size = 0; ///< the number of options in options[]
+  const __FlashStringHelper **options; ///< array defining the options.
+  const byte options_size = 0;         ///< the number of options in options[]
   byte value = 0; ///< the index corresponding to the selected item in options[]
 
 public:
@@ -418,19 +442,27 @@ public:
      @brief  constructor for the object
      @param height the height of this item in pixels
      @param text the text displayed for this item
+     @param myoptions pointer to a PROGMEM array with all the options 
+     @param myoptions_size number of elements in the myoptions array
   */
-  MenuInputOptions(u8g2_uint_t height, const __FlashStringHelper *text, const __FlashStringHelper *myoptions[], byte myoptions_size)
-      : UIMenuButtonItem(height, text), options(myoptions), options_size(myoptions_size) {};
+  MenuInputOptions(u8g2_uint_t height, const __FlashStringHelper *text,
+                   const __FlashStringHelper *myoptions[], byte myoptions_size)
+      : UIMenuButtonItem(height, text), options(myoptions),
+        options_size(myoptions_size){};
   /*!
      @brief  set the value for this item
      @param newValue the new value that will be assigned to the item
   */
-  void setValue(byte newValue) { value = newValue; if (value>=options_size) value = 0;};
+  void setValue(byte newValue) {
+    value = newValue;
+    if (value >= options_size)
+      value = 0;
+  };
   /*!
      @brief  get the value for this item
      @return the value assigned to the item
   */
-  byte getValue() { return value; };  
+  byte getValue() { return value; };
 
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
                     bool selected);
@@ -503,7 +535,7 @@ public:
     @brief  class implementing a message box
 
     A message box is a window that display a message and a "Ok" button
-    
+
     pressing the button will dismiss the message
 
 */
@@ -511,11 +543,11 @@ public:
 class UImessageBox : public UIwindow {
 protected:
   const __FlashStringHelper *text; ///< the message to be displayed
-  static const u8g2_uint_t height=42;
-  static const u8g2_uint_t text_offset_y=3;
-  static const u8g2_uint_t btn_Offset=20;
-  static const u8g2_uint_t btn_height=17;
-  static const u8g2_uint_t btn_width=35;
+  static const u8g2_uint_t height = 42; ///<  the height of a message box
+  static const u8g2_uint_t text_offset_y = 3; ///< y offset for printing the message
+  static const u8g2_uint_t btn_Offset = 20; ///< offset for the button
+  static const u8g2_uint_t btn_height = 17; ///< height of the button
+  static const u8g2_uint_t btn_width = 35; ///< width of the button
 
 public:
   /*!
@@ -523,14 +555,23 @@ public:
      @param width width of the box
      @param text the message to be displayed (must fit on one line)
   */
-  UImessageBox(u8g2_uint_t width, const __FlashStringHelper *text) : UIwindow(width, false) {
-      this->text = text;
+  UImessageBox(u8g2_uint_t width, const __FlashStringHelper *text)
+      : UIwindow(width, false) {
+    this->text = text;
   };
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
-  virtual bool handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType);
+  virtual bool handleUIEvent(K197UIeventsource eventSource,
+                             K197UIeventType eventType);
+                             
+  /*!
+     @brief  show this object 
+     @details when this method is called, this object becomes the active window
+  */
   void show() {
-      UIwindow *current=getcurrentWindow();
-      if (current!=NULL && current != this) current->openWindow(this);};
+    UIwindow *current = getcurrentWindow();
+    if (current != NULL && current != this)
+      current->openWindow(this);
+  };
 };
 
 // *********************************************************************************
@@ -596,17 +637,18 @@ public:
 
 /*!
      @brief  macro, used to simplify definition of menu options
-     @details creates a constant char array in PROGMEM, name 
+     @details creates a constant char array in PROGMEM, name
      and a constant symbol= value
      intended to use together with OPT() and DEF_MENU_OPTION_INPUT
-     @param instance_name name of the option 
-     @param symbol symbolic name for the option 
-     @param value value corresponding to symbolic name (0 is the first option in DEF_MENU_OPTION_INPUT, 1 the secomnd and so on) 
+     @param instance_name name of the option
+     @param symbol symbolic name for the option
+     @param value value corresponding to symbolic name (0 is the first option in
+   DEF_MENU_OPTION_INPUT, 1 the secomnd and so on)
      @param text the text displayed for this option
 */
-#define DEF_MENU_OPTION(instance_name, symbol, value, text)           \
-     static const uint8_t symbol = value;                   \
-     const char instance_name[] PROGMEM = text;
+#define DEF_MENU_OPTION(instance_name, symbol, value, text)                    \
+  static const uint8_t symbol = value;                                         \
+  const char instance_name[] PROGMEM = text;
 
 /*!
      @brief  macro, used to simplify definition of menu options
@@ -614,67 +656,72 @@ public:
      intended to use together with OPT() and DEF_MENU_OPTION_INPUT
      to bind text to an existing enum
      The enum values should always be sequential, starting from 0
-     Note that the macro does not actually bind anything, value is there only to document the binding 
-     @param instance_name name of the option 
-     @param value value corresponding to symbolic name  
+     Note that the macro does not actually bind anything, value is there only to
+   document the binding
+     @param instance_name name of the option
+     @param value value corresponding to symbolic name
      @param text the text displayed for this option
 */
-#define BIND_MENU_OPTION(instance_name, value, text)           \
-     const char instance_name[] PROGMEM = text;
+#define BIND_MENU_OPTION(instance_name, value, text)                           \
+  const char instance_name[] PROGMEM = text;
 
 /*!
      @brief  macro, used to simplify definition of menu options
-     @details convert a const char array allocated in progmem to const __FlashStringHelper *
-         intended to use together with OPT() and DEF_MENU_OPTION_INPUT
-     @param PROGMEM_char_array name of the option 
+     @details convert a const char array allocated in progmem to const
+   __FlashStringHelper * intended to use together with OPT() and
+   DEF_MENU_OPTION_INPUT
+     @param PROGMEM_char_array name of the option
 */
-#define OPT(PROGMEM_char_array) \
-    reinterpret_cast<const __FlashStringHelper *>(PROGMEM_char_array)
+#define OPT(PROGMEM_char_array)                                                \
+  reinterpret_cast<const __FlashStringHelper *>(PROGMEM_char_array)
 
 /*!
      @brief  macro, used to simplify definition of menu options inputs
      @details defines a menu item used to enter a number of pre-defined options
       Each option must be defined with a unique name in DEF_MENU_OPTION
-      All the instance_names defined by DEF_MENU_OPTION must then be passed 
-      as OPT(instance_name). The value of the first option must be 0, the second 1 and so on,
-      otherwise getValue() will not return a value corresponding to the option
+      All the instance_names defined by DEF_MENU_OPTION must then be passed
+      as OPT(instance_name). The value of the first option must be 0, the second
+   1 and so on, otherwise getValue() will not return a value corresponding to
+   the option
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param options_array a pointer to an array defining the options  
+     @param options one of more options (see DEF_MENU_OPTION and OPT)
 */
 #define DEF_MENU_OPTION_INPUT(instance_name, height, text, options...)         \
-  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
+  const __FlashStringHelper *__optarr_##instance_name[] = {options};           \
   const char __txt_##instance_name[] PROGMEM = text;                           \
   MenuInputOptions instance_name(                                              \
       height,                                                                  \
       reinterpret_cast<const __FlashStringHelper *>(__txt_##instance_name),    \
-      __optarr_##instance_name,                                                           \
-      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0]));
+      __optarr_##instance_name,                                                \
+      sizeof(__optarr_##instance_name) / sizeof(__optarr_##instance_name[0]));
 
 /*!
      @brief  macro, used to simplify definition of menu options inputs
-     @details like DEF_MENU_OPTION_INPUT, but it also redefines getValue and setValue
-     so that they return an enum type rather than a byte
+     @details like DEF_MENU_OPTION_INPUT, but it also redefines getValue and
+   setValue so that they return an enum type rather than a byte
      @param enum_type enum that must be returned by setValue and getValue
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param options_array a pointer to an array defining the options  
+     @param options one of more options (see DEF_MENU_OPTION and OPT)
 */
-#define DEF_MENU_ENUM_INPUT(enum_type, instance_name, height, text, options...)\
-  const __FlashStringHelper *__optarr_##instance_name[] = { options };         \
+#define DEF_MENU_ENUM_INPUT(enum_type, instance_name, height, text,            \
+                            options...)                                        \
+  const __FlashStringHelper *__optarr_##instance_name[] = {options};           \
   class __class_##instance_name : public MenuInputOptions {                    \
   public:                                                                      \
-    __class_##instance_name() : MenuInputOptions(height, F(text),              \
-      __optarr_##instance_name,                                                \
-      sizeof(__optarr_##instance_name)/sizeof(__optarr_##instance_name[0])){}; \
-      void setValue(enum_type newValue) {                                      \
-             MenuInputOptions::setValue((byte)newValue);};                     \
-      enum_type getValue() { return  (enum_type) MenuInputOptions::getValue(); \
-              };                                                               \
+    __class_##instance_name()                                                  \
+        : MenuInputOptions(height, F(text), __optarr_##instance_name,          \
+                           sizeof(__optarr_##instance_name) /                  \
+                               sizeof(__optarr_##instance_name[0])){};         \
+    void setValue(enum_type newValue) {                                        \
+      MenuInputOptions::setValue((byte)newValue);                              \
+    };                                                                         \
+    enum_type getValue() { return (enum_type)MenuInputOptions::getValue(); };  \
   } instance_name
-      
+
 /*!
      @brief  macro, used to simplify definition of menu close actions
      @param instance_name name of the object instance defined by the macro
@@ -685,6 +732,7 @@ public:
   DEF_MENU_CLASS(UIMenuActionClose, instance_name, height, text)
 
 /*!
+ \def DEF_MENU_OPEN(instance_name, height, text, menuptr)
      @brief  macro, used to simplify definition of a menu button to open a
    submenu
      @param instance_name name of the object instance defined by the macro
@@ -753,15 +801,18 @@ public:
                            action_code)
 
 /*!
-     @brief  macro, used used to simplify class creation overriding the setValue(newValue) and getValue() methods
+     @brief  macro, used used to simplify class creation overriding the
+   setValue(newValue) and getValue() methods
      @param parent_class name of the parent class. instance_name will be an
    object of a new class derived from parent_class
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param value_type the type returned by getValue() and passed in setValue(newValue)
-     @param set_code code to be executed inside the setValue(newValue) method. 
-     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+     @param value_type the type returned by getValue() and passed in
+   setValue(newValue)
+     @param set_code code to be executed inside the setValue(newValue) method.
+     @param get_code code to be executed inside the getValue() method. It should
+   end with a return statement.
 */
 #define DEF_MENU_SETGET_SUBCLASS(parent_class, instance_name, height, text,    \
                                  value_type, set_code, get_code)               \
@@ -774,36 +825,42 @@ public:
   } instance_name
 
 /*!
-     @brief  macro, used to simplify definition of a menu bool input overriding the setValue(newValue) and getValue() methods
+     @brief  macro, used to simplify definition of a menu bool input overriding
+   the setValue(newValue) and getValue() methods
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param set_code code to be executed inside the setValue(newValue) method. 
-     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+     @param set_code code to be executed inside the setValue(newValue) method.
+     @param get_code code to be executed inside the getValue() method. It should
+   end with a return statement.
 */
 #define DEF_MENU_BOOL_SETGET(instance_name, height, text, set_code, get_code)  \
-  DEF_MENU_SETGET_SUBCLASS(MenuInputBool, instance_name, height, text,         \
-                           bool, set_code, get_code)
+  DEF_MENU_SETGET_SUBCLASS(MenuInputBool, instance_name, height, text, bool,   \
+                           set_code, get_code)
 /*!
-     @brief  macro, used to simplify definition of a menu byte input overriding the setValue(newValue) and getValue() methods
+     @brief  macro, used to simplify definition of a menu byte input overriding
+   the setValue(newValue) and getValue() methods
      @param instance_name name of the object instance defined by the macro
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param set_code code to be executed inside the setValue(newValue) method. 
-     @param get_code code to be executed inside the getValue() method. It should end with a return statement.
+     @param set_code code to be executed inside the setValue(newValue) method.
+     @param get_code code to be executed inside the getValue() method. It should
+   end with a return statement.
 */
 #define DEF_MENU_BYTE_SETGET(instance_name, height, text, set_code, get_code)  \
-  DEF_MENU_SETGET_SUBCLASS(MenuInputByte, instance_name, height, text,         \
-                           byte, set_code, get_code)
+  DEF_MENU_SETGET_SUBCLASS(MenuInputByte, instance_name, height, text, byte,   \
+                           set_code, get_code)
 /*!
    \def DEF_MESSAGE_BOX(instance_name, width, text)
 
      @brief  macro, used to simplify definition of message boxes
      @param instance_name name of the object instance defined by the macro
      @param width the width of the window
-     @param text the message to be displayed (make sure it fits in the window, no check)
+     @param text the message to be displayed (make sure it fits in the window,
+   no check)
 */
-#define DEF_MESSAGE_BOX(instance_name, width, text)                        \
-  DEF_MENU_CLASS(UImessageBox, instance_name, width, text); // reuse macro DEF_MENU_CLASS
+#define DEF_MESSAGE_BOX(instance_name, width, text)                            \
+  DEF_MENU_CLASS(UImessageBox, instance_name, width,                           \
+                 text); // reuse macro DEF_MENU_CLASS
 
 #endif // UIMENU_H__

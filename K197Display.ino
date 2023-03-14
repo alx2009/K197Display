@@ -42,7 +42,7 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 //  Keep hold when switching between display modes ?
-// Bug2fix: 
+// Bug2fix:
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
@@ -158,11 +158,11 @@ void cmdTmpScaling() {
   Serial.print(F("X="));
   Serial.println(value);
   Serial.flush();
-  //PROFILE_start(DebugOut.PROFILE_MATH);
+  // PROFILE_start(DebugOut.PROFILE_MATH);
   k197dev.troubleshootAutoscale(value, value);
-  //PROFILE_stop(DebugOut.PROFILE_MATH);
-  //PROFILE_println(DebugOut.PROFILE_MATH,
-  //                  F("Time spent in troubleshootAutoscale()"));
+  // PROFILE_stop(DebugOut.PROFILE_MATH);
+  // PROFILE_println(DebugOut.PROFILE_MATH,
+  //                   F("Time spent in troubleshootAutoscale()"));
 }
 
 /*!
@@ -223,7 +223,7 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     cmdLog();
   } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
     cmdContrast();
-  }  else if ((strcasecmp_P(buf, PSTR("x")) == 0)) {
+  } else if ((strcasecmp_P(buf, PSTR("x")) == 0)) {
     cmdTmpScaling();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;

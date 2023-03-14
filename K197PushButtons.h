@@ -91,6 +91,6 @@ public:
   void cancelClickREL();
 };
 
-extern k197ButtonCluster pushbuttons; 
+extern k197ButtonCluster pushbuttons;
 
 #endif //__ABUTTON_H
