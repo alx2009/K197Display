@@ -461,16 +461,24 @@ void K197device::k197_cache_struct::resetGraph() {
   }
 }
 
-const float scaleFactor[] PROGMEM = {1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1, 10,   1E2,  1E3,  1E4,  1E5,  1E6}; ///< helper array
+const float scaleFactor[] PROGMEM = {
+    1E-6, 1E-5, 1E-4, 1E-3, 1E-2, 0.1, 1,
+    10,   1E2,  1E3,  1E4,  1E5,  1E6}; ///< helper array
 
-#define sizeof_scaleFactor int(sizeof(scaleFactor) / sizeof(scaleFactor[0])) ///< number of elements in the scaleFactor array
+#define sizeof_scaleFactor                                                     \
+  int(sizeof(scaleFactor) /                                                    \
+      sizeof(scaleFactor[0])) ///< number of elements in the scaleFactor array
 
-#define SCALE_VALUE_MIN 1E-6  ///< minimum scale factor that we can calculate via scaleFactor array
-#define SCALE_LOG_MIN -6      ///< maximum scale factor that we can calculate via scaleFactor array
+#define SCALE_VALUE_MIN                                                        \
+  1E-6 ///< minimum scale factor that we can calculate via scaleFactor array
+#define SCALE_LOG_MIN                                                          \
+  -6 ///< maximum scale factor that we can calculate via scaleFactor array
 
 /*!
- @brief calculates the ceiling of the log (base 10) of the absolute value of a floating point number.
- @details: fast implementation using the scaleFactor array. In this application is used to calculate the scale of a graph.
+ @brief calculates the ceiling of the log (base 10) of the absolute value of a
+ floating point number.
+ @details: fast implementation using the scaleFactor array. In this application
+ is used to calculate the scale of a graph.
  @param x the input value
 */
 void k197graph_label_type::setLog10Ceiling(float x) {
@@ -493,7 +501,8 @@ void k197graph_label_type::setLog10Ceiling(float x) {
  @brief calculates a power of 10.
  @details: fast implementation using the scaleFactor array.
  @param i the exponent of the power of 10 (10^i)
- @returns the value that would be returned by powf(10.0, i) within the range covered by the scaleFactor array
+ @returns the value that would be returned by powf(10.0, i) within the range
+ covered by the scaleFactor array
 */
 float k197graph_label_type::getpow10(int i) {
   // return powf(10.0, i); // next code is equivalent but faster
@@ -505,9 +514,10 @@ float k197graph_label_type::getpow10(int i) {
 }
 
 /*!
- @brief set the multiplier and pow10 of the scale (label) corrresponding to a given value
- @details: A multiplier is 1, 2 or 5. The multiplier mult is chosen so that mult * pow10 is the minimum 
- possible that is above (up) the value
+ @brief set the multiplier and pow10 of the scale (label) corrresponding to a
+ given value
+ @details: A multiplier is 1, 2 or 5. The multiplier mult is chosen so that mult
+ * pow10 is the minimum possible that is above (up) the value
  @param x the input value
 */
 void k197graph_label_type::setScaleMultiplierUp(
@@ -540,9 +550,10 @@ void k197graph_label_type::setScaleMultiplierUp(
 }
 
 /*!
- @brief set the multiplier and pow10 of the scale (label) corresponding to a given value
- @details: A multiplier is 1, 2 or 5. The multiplier mult is chosen so that mult * pow10 is the maximum 
- possible that is below (down) the value
+ @brief set the multiplier and pow10 of the scale (label) corresponding to a
+ given value
+ @details: A multiplier is 1, 2 or 5. The multiplier mult is chosen so that mult
+ * pow10 is the maximum possible that is below (down) the value
  @param x the input value
 */
 void k197graph_label_type::setScaleMultiplierDown(
@@ -617,10 +628,11 @@ void K197device::troubleshootAutoscale(float testmin, float testmax) {
 
 /*!
  @brief select the scale for the Y axis of a graph (autoscaling)
- @details The scale is set so that the graph can be displayed with the best possible resolution
+ @details The scale is set so that the graph can be displayed with the best
+ possible resolution
  @param grmin the minimum y value in the graph
  @param grmax the maximum y value in the graph
- @param yopt the required options for the scale 
+ @param yopt the required options for the scale
 */
 void k197graph_type::setScale(float grmin, float grmax,
                               k197graph_yscale_opt yopt) {
@@ -676,13 +688,15 @@ void k197graph_type::setScale(float grmin, float grmax,
 }
 
 /*!
- @brief fills a k197graph_type data structure with the values currently stored in the cache
- @details The scale k197graph_type data structure is used to display the graph on a oled
- The function concverts the high resolution floating point numbers from the voltmeter stored in the cache 
- into integer values representing the coordinates of the pixels in the olde display, together with other 
- information that is needed to display the graph (e.g. the axis labels)
+ @brief fills a k197graph_type data structure with the values currently stored
+ in the cache
+ @details The scale k197graph_type data structure is used to display the graph
+ on a oled The function concverts the high resolution floating point numbers
+ from the voltmeter stored in the cache into integer values representing the
+ coordinates of the pixels in the olde display, together with other information
+ that is needed to display the graph (e.g. the axis labels)
  @param graphdata pointer to the data structure to fill
- @param yopt the required options for the scale 
+ @param yopt the required options for the scale
 */
 void K197device::fillGraphDisplayData(k197graph_type *graphdata,
                                       k197graph_yscale_opt yopt) {
@@ -736,11 +750,11 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
 
 /*!
  \def SWAP_BYTE(b0, b1)
- 
+
  @brief utility macro used to swap the value of two byte variables
  @details After this macro is executed b0 wand b1 values will be swapped
  @param b0 the first byte to swap
- @param b1 the second byte to swap 
+ @param b1 the second byte to swap
 */
 #define SWAP_BYTE(b0, b1)                                                      \
   {                                                                            \
@@ -748,7 +762,7 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
     b0 = b1;                                                                   \
     b1 = b_tmp;                                                                \
   }
-  
+
 /*!
    @brief get average of the graph
    @details note: the starting point must be an array index

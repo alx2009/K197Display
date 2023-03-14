@@ -57,8 +57,9 @@
 /*!
    @brief auxiliary class to specify the axis labels of a graph
 
-   @details This class is used to store a float value as a multiplier and power of 10
-   This is used to perform various operations on a graph, in parrticular the axis scaling and labels
+   @details This class is used to store a float value as a multiplier and power
+   of 10 This is used to perform various operations on a graph, in parrticular
+   the axis scaling and labels
 */
 /**************************************************************************/
 struct k197graph_label_type {
@@ -77,9 +78,9 @@ struct k197graph_label_type {
   void setLog10Ceiling(float x);
   void setScaleMultiplierUp(float x);
   void setScaleMultiplierDown(float x);
-  
+
   /*!
-   @brief get the equivalent float value of the object 
+   @brief get the equivalent float value of the object
    @return the value (multiplier * power of 10)
   */
   float getValue() const {
@@ -95,7 +96,7 @@ struct k197graph_label_type {
     mult = new_mult;
     pow10 = new_pow10;
   };
-  
+
   /*!
    @brief set value from another object
    @param l the input object
@@ -103,8 +104,8 @@ struct k197graph_label_type {
   void setValue(const k197graph_label_type l) {
     mult = l.mult;
     pow10 = l.pow10;
-  }; 
-  
+  };
+
   /*!
    @brief reset the value (mult=pow10=0)
   */
@@ -112,33 +113,31 @@ struct k197graph_label_type {
     mult = 0;
     pow10 = 0;
   };
-  
+
   /*!
    @brief check if normalized (-10<mult<+10)
-   @return true if normalized 
+   @return true if normalized
   */
-  bool isNormalized() const {
-    return ::abs(mult) < 10 ? true : false;
-  };
-  
+  bool isNormalized() const { return ::abs(mult) < 10 ? true : false; };
+
   /*!
    @brief check if check if equivalent value >0
-   @return true if > 0 
+   @return true if > 0
   */
-  bool isPositive() const { return mult > 0; }; 
+  bool isPositive() const { return mult > 0; };
 
   /*!
    @brief check if check if equivalent value <0
-   @return true if < 0 
+   @return true if < 0
   */
   bool isNegative() const { return mult < 0; };
-  
+
   /*!
-   @brief returns the absolute value 
+   @brief returns the absolute value
    @return a new object with the absolute value of the original object
   */
-  k197graph_label_type abs() const { ///< 
-                                     ///< 
+  k197graph_label_type abs() const { ///<
+                                     ///<
     return k197graph_label_type(mult > 0 ? mult : mult, pow10);
   };
 
@@ -156,7 +155,7 @@ struct k197graph_label_type {
       @brief  overloading Prefix decrement (--) operator
       @return a new object with the result of the operation
   */
-  k197graph_label_type &operator--() { 
+  k197graph_label_type &operator--() {
     --pow10;
     return *this;
   };
@@ -173,16 +172,14 @@ struct k197graph_label_type {
 
 // Overloading common functions and operators useful in autoscaling
 
-
 /*!
       @brief  overloading comparison (==) operator
       @param lhs parameter at the left of the '=='
       @param rhs parameter at the right of the '=='
       @return the result of the comparison
 */
-inline bool operator==(
-    const k197graph_label_type &lhs,
-    const k197graph_label_type &rhs) { ///< overloaded 
+inline bool operator==(const k197graph_label_type &lhs,
+                       const k197graph_label_type &rhs) { ///< overloaded
   if (lhs.isNormalized() && rhs.isNormalized())
     return (lhs.mult == rhs.mult) && (lhs.pow10 == rhs.pow10);
   else
@@ -195,9 +192,8 @@ inline bool operator==(
       @param rhs parameter at the right of the '!='
       @return the result of the comparison
 */
-inline bool operator!=(
-    const k197graph_label_type &lhs,
-    const k197graph_label_type &rhs) { ///< overloaded 
+inline bool operator!=(const k197graph_label_type &lhs,
+                       const k197graph_label_type &rhs) { ///< overloaded
   if (lhs.isNormalized() && rhs.isNormalized())
     return (lhs.mult != rhs.mult) || (lhs.pow10 != rhs.pow10);
   else
@@ -210,9 +206,7 @@ inline bool operator!=(
       @param rhs parameter at the right of the '=='
       @return the result of the comparison
 */
-inline bool operator==(
-    const float &lhs,
-    const k197graph_label_type &rhs) {
+inline bool operator==(const float &lhs, const k197graph_label_type &rhs) {
   return lhs == rhs.getValue();
 };
 
@@ -222,9 +216,7 @@ inline bool operator==(
       @param rhs parameter at the right of the '!='
       @return the result of the comparison
 */
-inline bool operator!=(
-    const float &lhs,
-    const k197graph_label_type &rhs) {
+inline bool operator!=(const float &lhs, const k197graph_label_type &rhs) {
   return lhs == rhs.getValue();
 };
 
@@ -234,9 +226,8 @@ inline bool operator!=(
       @param rhs parameter at the right of the '>'
       @return the result of the comparison
 */
-inline bool operator>(
-    const k197graph_label_type &lhs,
-    const k197graph_label_type &rhs) { ///< overloaded 
+inline bool operator>(const k197graph_label_type &lhs,
+                      const k197graph_label_type &rhs) { ///< overloaded
   return lhs.getValue() > rhs.getValue();
 };
 
@@ -263,14 +254,14 @@ enum k197graph_yscale_opt {
 */
 /**************************************************************************/
 struct k197graph_type {
-  static const byte x_size = 180;  ///< x size of the graph area in pixels
-  static const byte y_size = 63;   ///< y size of the graph area in pixels
-  byte point[x_size]; ///< circular buffer, store all graph points
-  byte current_idx = 0x00; ///< index of the last point to be acquired
+  static const byte x_size = 180; ///< x size of the graph area in pixels
+  static const byte y_size = 63;  ///< y size of the graph area in pixels
+  byte point[x_size];             ///< circular buffer, store all graph points
+  byte current_idx = 0x00;        ///< index of the last point to be acquired
   byte npoints = 0x00; ///< number of points in the graph (always < x_size)
   uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
-  k197graph_label_type y1; ///< upper label y axis
-  k197graph_label_type y0; ///< lower label y axis
+  k197graph_label_type y1;     ///< upper label y axis
+  k197graph_label_type y0;     ///< lower label y axis
   byte y_zero = 0x00; ///< the point value for 0, if included in the graph
 
   void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
@@ -527,7 +518,7 @@ private:
     };
     void resetGraph();
     void resampleGraph(uint16_t nsamples_new);
-  } cache; ///< cache measured values and related status information 
+  } cache; ///< cache measured values and related status information
 
   void updateCache();
 

@@ -100,7 +100,7 @@ U8G2LOG u8g2log;                                  ///< the log window
 // Graphics utility functions
 // ***************************************************************************************
 /*!
-    @brief utility function: draw an horizontal dotted line 
+    @brief utility function: draw an horizontal dotted line
     @param x0 Coordinate x of the starting point
     @param y0 Coordinate y (only one y coord needed, line is horizontal)
     @param x1 Coordinate x of the ending point
@@ -663,16 +663,22 @@ UImenuItem *logMenuItems[] = {
 DEF_MENU_SEPARATOR(graphSeparator0, 15,
                    "< Graph options >"); ///< Menu separator
 
-DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0, "Lines"); ///< Menu input
-DEF_MENU_OPTION(opt_gr_type_dots, OPT_GRAPH_TYPE_DOTS, 1, "Dots"); ///< Menu input
+DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0,
+                "Lines"); ///< Menu input
+DEF_MENU_OPTION(opt_gr_type_dots, OPT_GRAPH_TYPE_DOTS, 1,
+                "Dots"); ///< Menu input
 DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines),
                       OPT(opt_gr_type_dots)); ///< Menu input
 
 DEF_MENU_SEPARATOR(graphSeparator1, 15, "< Y axis >"); ///< Menu separator
-BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom, "zoom"); ///< Menu input
-BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero, "Incl. 0"); ///< Menu input
-BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym, "Symmetric"); ///< Menu input
-BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym, "0+symm"); ///< Menu input
+BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom,
+                 "zoom"); ///< Menu input
+BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero,
+                 "Incl. 0"); ///< Menu input
+BIND_MENU_OPTION(opt_gr_yscale_prefsym, k197graph_yscale_prefsym,
+                 "Symmetric"); ///< Menu input
+BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym,
+                 "0+symm"); ///< Menu input
 BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym,
                  "Force symm."); ///< Menu input
 DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis",
@@ -691,17 +697,18 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
                      ,
                      return k197dev.getGraphPeriod();); ///< Menu input
 
-UImenuItem *graphMenuItems[] = {&graphSeparator0,
-                                &opt_gr_type,
-                                &graphSeparator1,
-                                &opt_gr_yscale,
-                                &gr_yscale_show0,
-                                &graphSeparator2,
-                                &gr_xscale_roll_mode,
-                                &gr_xscale_autosample,
-                                &gr_sample_time,
-                                &closeMenu,
-                                &exitMenu}; ///< Collects all items in the graph menu
+UImenuItem *graphMenuItems[] = {
+    &graphSeparator0,
+    &opt_gr_type,
+    &graphSeparator1,
+    &opt_gr_yscale,
+    &gr_yscale_show0,
+    &graphSeparator2,
+    &gr_xscale_roll_mode,
+    &gr_xscale_autosample,
+    &gr_sample_time,
+    &closeMenu,
+    &exitMenu}; ///< Collects all items in the graph menu
 
 /*!
       @brief set the display contrast

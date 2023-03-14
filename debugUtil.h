@@ -48,10 +48,12 @@
 /*!
    @brief class implementing an object used as debug output
 
-   @details This class implements the usual Print interface and can send the output to two parallel streams:
+   @details This class implements the usual Print interface and can send the
+   output to two parallel streams:
    - Serial
-   - a u8g2log object of type U8G2LOG, it can be used to show the log in the oled screen via the u8g2 library
-    
+   - a u8g2log object of type U8G2LOG, it can be used to show the log in the
+   oled screen via the u8g2 library
+
     PREREQUISITES: Serial.begin() and u8g2log.begin() must be called before
    enabling the Serial and the Oled output respectively.
 */

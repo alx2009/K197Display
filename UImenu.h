@@ -196,24 +196,25 @@ public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored                                                 \
     "-Wunused-parameter" // A derived class may use the parameters
-                         
+
   /*!
       @brief  draw the function
       @param u8g2 a pointer to the u8g2 library object
       @param x the x coordinate of the top/left corner of the window
       @param y the y coordinate of the top/left corner of the window
-      @details the implementation in the base class does nothing, it is meant to be overridden in a derived class
+      @details the implementation in the base class does nothing, it is meant to
+     be overridden in a derived class
   */
-  virtual void draw(U8G2 *u8g2, u8g2_uint_t x,
-                    u8g2_uint_t y){};
+  virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y){};
 
-                    
   /*!
       @brief  handle UI events
-      @details the implementation in the base class does nothing, it is meant to be overridden in a derived class
+      @details the implementation in the base class does nothing, it is meant to
+     be overridden in a derived class
       @param eventSource the source of the event
       @param eventType the event type
-      @return true if the event is handled (this base class always returns false, but it can be overridden in aderived class) 
+      @return true if the event is handled (this base class always returns
+     false, but it can be overridden in aderived class)
   */
   virtual bool handleUIEvent(K197UIeventsource eventSource,
                              K197UIeventType eventType) {
@@ -442,7 +443,7 @@ public:
      @brief  constructor for the object
      @param height the height of this item in pixels
      @param text the text displayed for this item
-     @param myoptions pointer to a PROGMEM array with all the options 
+     @param myoptions pointer to a PROGMEM array with all the options
      @param myoptions_size number of elements in the myoptions array
   */
   MenuInputOptions(u8g2_uint_t height, const __FlashStringHelper *text,
@@ -542,12 +543,13 @@ public:
 /**************************************************************************/
 class UImessageBox : public UIwindow {
 protected:
-  const __FlashStringHelper *text; ///< the message to be displayed
+  const __FlashStringHelper *text;      ///< the message to be displayed
   static const u8g2_uint_t height = 42; ///<  the height of a message box
-  static const u8g2_uint_t text_offset_y = 3; ///< y offset for printing the message
+  static const u8g2_uint_t text_offset_y =
+      3; ///< y offset for printing the message
   static const u8g2_uint_t btn_Offset = 20; ///< offset for the button
   static const u8g2_uint_t btn_height = 17; ///< height of the button
-  static const u8g2_uint_t btn_width = 35; ///< width of the button
+  static const u8g2_uint_t btn_width = 35;  ///< width of the button
 
 public:
   /*!
@@ -562,9 +564,9 @@ public:
   virtual void draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y);
   virtual bool handleUIEvent(K197UIeventsource eventSource,
                              K197UIeventType eventType);
-                             
+
   /*!
-     @brief  show this object 
+     @brief  show this object
      @details when this method is called, this object becomes the active window
   */
   void show() {
