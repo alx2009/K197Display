@@ -59,7 +59,7 @@ const char seg2char[128] PROGMEM = {
     '1',  '*',  '*', '*', '7', '7', '7', 'N',
     '*',  '4',  '*', 'H', '*', '9', '*', 'A', // row 6 (0x60-0x6f)
     'J',  'V',  'J', 'U', 'D', '*', '*', '0',
-    '*',  'y',  'd', '&', '3', '9', 'a', '8' // row 7 (0x70-0x7f)
+    '*',  'y',  'd', '&', '3', '9', 'a', '8' //  row 7 (0x70-0x7f)
 };
 
 /*!
@@ -110,7 +110,7 @@ bool K197device::getNewReading() {
   return n == 9 ? true : false;
 }
 
-#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add '.'
+#define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add 1 because of '.'
 
 /*!
       @brief process a new reading
@@ -303,31 +303,6 @@ K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
       return F("dB");
     else
       return F("  ");
-  }
-}
-
-/*!
-    @brief  return the main unit without any prefix, as text (V, A, etc.)
-    @param include_dB if true, returns "dB" as a unit when in dB mode
-    @return the unit (1 or 2 characters + terminating NUL). This is a UTF-8 string
-    because it may include Ω or °
-*/
-const __FlashStringHelper *
-K197device::getMainUnit(bool include_dB) { // Note: includes UTF-8 characters
-  if (isV()) {            // Voltage units
-    if (flags.tkMode && ismV() && isDC())
-      return F("°C");
-    else return F("V");
-      return F("V");
-  } else if (isOmega()) { // Resistence units
-      return F("Ω");
-  } else if (isA()) {     // Current units
-      return F("A");
-  } else {                // No unit found
-    if (include_dB && isdB())
-      return F("dB");
-    else
-      return F("?");
   }
 }
 
