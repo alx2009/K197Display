@@ -588,9 +588,9 @@ void UImanager::clearScreen() {
 //  Message box definitions
 // ***************************************************************************************
 
-DEF_MESSAGE_BOX(EEPROM_save_msg_box, 100, "config saved");
-DEF_MESSAGE_BOX(EEPROM_reload_msg_box, 100, "config reloaded");
-DEF_MESSAGE_BOX(ERROR_msg_box, 100, "Error (see log)");
+DEF_MESSAGE_BOX(EEPROM_save_msg_box, 100, "config saved"); ///< Config saved message box
+DEF_MESSAGE_BOX(EEPROM_reload_msg_box, 100, "config reloaded"); ///< Config reloaded msg. box
+DEF_MESSAGE_BOX(ERROR_msg_box, 100, "Error (see log)"); ///< Error message box
 
 
 // ***************************************************************************************
@@ -871,13 +871,27 @@ void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
 // ***************************************************************************************
 
 static k197graph_type k197graph;
-//                            0   1   2   3   4   5   6
-static const char prefix[]={'n','u','m',' ','k','M','G'};
+//                           0   1   2   3   4   5   6
+static const char prefix[]={'n','u','m',' ','k','M','G'}; ///< Lookup table for unit prefixes
+
+/*!
+    @brief  get the unit prefix corresponding to a power of 10
+    @details for example, pow in the range 6-8 (1 000 000-100 000 000) returns 'M'
+    @param pow10 the power of 10  
+    @return the unit prefix for that range of powers
+*/
 static inline char getPrefix(int8_t pow10) {
    int8_t index = pow10 >=0 ? pow10/3 + 3 : (pow10+1)/3+2;
    return prefix[index];
 }
 
+/*!
+    @brief  get the zeroes that must be added to the prefix (see also getPrefix)
+    @details for example, pow = 7 (10 000 000) returns 10. 
+    When the prefix returned by getPrefix(7) is added, we have 10M 
+    @param pow10 the power of 10  
+    @return the unit prefix for that range of powers
+*/
 static inline int8_t getZeroes(int8_t pow10) {
    //int8_t nz = pow10 >=0 ? pow10 % 3 : 2+((pow10+1)%3);
    //DebugOut.print(F("pow10="));DebugOut.println(pow10);
@@ -886,6 +900,10 @@ static inline int8_t getZeroes(int8_t pow10) {
    return pow10 >=0 ? pow10 % 3 : 2+((pow10+1)%3);
 } 
 
+/*!
+    @brief  Utility function, print the label for the Y axis
+    @param l the label to print  
+*/
 static void printYLabel(k197graph_label_type l) {
    int8_t pow10_effective = l.pow10+k197dev.getUnitPow10();
    u8g2.print(l.mult);
@@ -898,6 +916,11 @@ static void printYLabel(k197graph_label_type l) {
    u8g2.print(getPrefix(pow10_effective));
 }
 
+/*!
+    @brief  Utility function, print the label for the X and Y axis
+    @param l the label to print for the Y axis
+    @param nseconds the value in seconds to print for the X axis  
+*/
 static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
    //DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
    u8g2.print(nseconds); u8g2.print(F("s/"));
@@ -965,6 +988,11 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
   }
 }
 
+/*!
+   \def IS_DISPLAY_ROLL_MODE()
+   
+     @brief  utility macro, used to improve readibility of if statements
+*/
 #define IS_DISPLAY_ROLL_MODE() (xscale==1) && (k197graph.npoints == k197graph_type::x_size) && gr_xscale_roll_mode.getValue()
 
 /*!

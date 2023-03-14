@@ -28,8 +28,14 @@
   2 ///< the y offset where the text should be written (relative to the upper
     ///< left corner of a menu item)
 
-UIwindow *UIwindow::currentWindow = NULL;
+UIwindow *UIwindow::currentWindow = NULL; ///< keep track of current window
 
+/*!
+   @brief overloads standard strlen for PROGMEM strings passed as a __FlashStringHelper * 
+   @param ifsh the input string (must be stored in PROGMEM)
+   @param max the maximu size that can be returned (default 100)
+   @return the string lenght (without the terminating null character)
+*/
 size_t strlen(const __FlashStringHelper *ifsh, size_t max=100) {
   PGM_P p = reinterpret_cast<PGM_P>(ifsh);
   size_t n;
@@ -463,6 +469,14 @@ bool MenuInputOptions::handleUIEvent(K197UIeventsource eventSource,
   return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
 }
 
+/*!
+   @brief draw the message box
+   @details: note that differently from menu items, a message box is drawn above its parent
+   (tipically the menu that includes the action that resulted in the box being displayed)
+   @param u8g2 a poimnter to the u8g2 library object
+   @param x the x coordinate of the top/left corner
+   @param y the y coordinate of the top/left corner
+*/
 void UImessageBox::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
     // draw parent and acquire its height
     u8g2_uint_t parent_width;
@@ -509,8 +523,15 @@ void UImessageBox::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored                                                 \
-    "-Wunused-parameter" // A derived class may eturn a different valuse
-                         // depending on being selected
+    "-Wunused-parameter" // A derived class may use different parameters
+/*!
+   @brief handle UI events for a message box
+   @details clicking any button closes the message box. all other evdents are ignored 
+   (in other graphic environments we could say the message box is "modal").
+   @param eventSource the source of the event (see K197UIeventsource)
+   @param eventType the type of event (see K197UIeventType)
+   @return always return true 
+*/
 bool UImessageBox::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
     // Click any button to dismiss this message box. Any other event is ignored.
     if (eventType == UIeventClick) {

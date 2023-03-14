@@ -65,8 +65,8 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
-  static const u8g2_uint_t doodle_x_coord = 256-8;
-  static const u8g2_uint_t doodle_y_coord = 64-12;
+  static const u8g2_uint_t doodle_x_coord = 256-8; ///< constant, "doodle" x coordinate
+  static const u8g2_uint_t doodle_y_coord = 64-12; ///< constant, "doodle" y coordinate
   
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
@@ -205,6 +205,7 @@ public:
     screen_mode = (K197screenMode)(screen_mode | K197sc_FullScreenBitMask);
     clearScreen();
   };
+  
   /*!
      @brief  show the option menu
      @details also clears the other attributes
@@ -216,6 +217,7 @@ public:
     screen_mode = (K197screenMode)(screen_mode | K197sc_MenuBitMask);
     clearScreen();
   };
+  
   /*!
      @brief  toggle the cursor visibility
   */
@@ -223,6 +225,7 @@ public:
      if (areCursorsVisible()) screen_mode = (K197screenMode)(screen_mode & (~K197sc_CursorsVisibleBitMask));
      else screen_mode = (K197screenMode)(screen_mode | K197sc_CursorsVisibleBitMask);
   };
+  
   /*!
      @brief  toggle the active cursor
   */
@@ -230,6 +233,7 @@ public:
      if (getActiveCursor() == CURSOR_B) screen_mode = (K197screenMode)(screen_mode & (~K197sc_activeCursorBitMask));
      else screen_mode = (K197screenMode)(screen_mode | K197sc_activeCursorBitMask);
   };
+  
   /*!
      @brief  show the option menu
      @details also clears the other attributes

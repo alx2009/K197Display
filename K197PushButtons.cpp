@@ -220,8 +220,9 @@ static inline bool fifo_isFull() {
     - b) even if we checked, we would lose some events. This implementation will
    lose the older events.
     - c) if the hanging persists, eventually the watchdog timeout will recover
-   the situation Note that this function is not thread safe with respect to
-   other push()= instances. It is thread safe with regard to pull(), as long as
+   the situation.
+   Note that this function is not thread safe with respect to
+   other push() instances. It is thread safe with regard to pull(), as long as
    the FIFO is not full. If the FIFO is full, there is a race condition with
    fifo_pull(), wich could result in the last record pushed being lost. However,
    if this is acceptable no long term corruption to the queue should result from
@@ -249,9 +250,9 @@ smallest and fastest interrupt handler.
 to serve the other interrupts, in particular the SPI handler which need to be
 served quickly to avoid losing data from the K197.
 
-Note that this function is not thread safe with respect to other push()=
-instances. It is thread safe with regard to pull(), as long as the FIFO is not
-full. If the FIFO is full, there is a race condition with fifo_pull(), wich
+Note that this function is not thread safe with respect to other pull()
+instances. It is thread safe with regard to push(), as long as the FIFO is not
+full. If the FIFO is full, there is a race condition with fifo_push(), wich
 could result in the last record pushed being lost. However, if this is
 acceptable no long term corruption to the queue should result from this.
     @return the record just pulled from the front of the queue (or fifo_NO_DATA
@@ -270,7 +271,7 @@ static inline byte fifo_pull() {
 
 // Interrupt handler for the CCL vector. Whatever the CCL causing the event, we
 // push a copy of the pushbutton pins to the fifo queue This should work in
-// dxCore 1.5.0 when it is released...
+// dxCore 1.5.x when it is released... except it does not (investigating)
 // ISR(CCL_CCL_vect) { //__vector_7
 
 /*!
