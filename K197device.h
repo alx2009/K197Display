@@ -297,7 +297,6 @@ public:
 
   const __FlashStringHelper *
   getUnit(bool include_dB = false); // Note: includes UTF-8 characters
-  const __FlashStringHelper *
   int8_t getUnitPow10();
 
   /*!
