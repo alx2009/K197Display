@@ -40,15 +40,15 @@ extern U8G2LOG u8g2log; ///< This is used to display the debug log on the OLED
 */
 /**************************************************************************/
 enum K197screenMode {
-  K197sc_normal = 0x01,            ///< equivalent to original K197
-  K197sc_minmax = 0x02,            ///< add statistics but less annunciators
-  K197sc_graph  = 0x03,            ///< show a graph 
-  K197sc_FullScreenBitMask = 0x10, ///< full screen when set
-  K197sc_MenuBitMask = 0x20,       ///< show menu when set
-  K197sc_CursorsVisibleBitMask = 0x40,  ///< show cursors when set + graph mode
-  K197sc_activeCursorBitMask = 0x80,    ///< select active cursor
-  K197sc_ScreenModeMask = 0x0f,    ///< Mask for mode bits
-  K197sc_AttributesBitMask = 0xf0  ///< Mask for attribute bits
+  K197sc_normal = 0x01,                ///< equivalent to original K197
+  K197sc_minmax = 0x02,                ///< add statistics but less annunciators
+  K197sc_graph = 0x03,                 ///< show a graph
+  K197sc_FullScreenBitMask = 0x10,     ///< full screen when set
+  K197sc_MenuBitMask = 0x20,           ///< show menu when set
+  K197sc_CursorsVisibleBitMask = 0x40, ///< show cursors when set + graph mode
+  K197sc_activeCursorBitMask = 0x80,   ///< select active cursor
+  K197sc_ScreenModeMask = 0x0f,        ///< Mask for mode bits
+  K197sc_AttributesBitMask = 0xf0      ///< Mask for attribute bits
 };
 
 /**************************************************************************/
@@ -65,16 +65,22 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
+  static const u8g2_uint_t doodle_x_coord =
+      256 - 8; ///< constant, "doodle" x coordinate
+  static const u8g2_uint_t doodle_y_coord =
+      64 - 12; ///< constant, "doodle" y coordinate
+
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
-  static const char MARKER   = '+'; ///< constant, identifies the latest sample in the graph
+  static const char MARKER =
+      '+'; ///< constant, identifies the latest sample in the graph
   unsigned long looptimerMax =
       0UL; ///< used to keep track of the time spent in loop
 
 private:
-  byte cursor_a = 60;
-  byte cursor_b = 120;
-  
+  byte cursor_a = 60;  ///< Stores cursor A position
+  byte cursor_b = 120; ///< Stores cursor B position
+
   bool show_volt = false; ///< Show voltages if true (not currently used)
   bool show_temp = false; ///< Show temperature if true  (not currently used)
   K197screenMode screen_mode =
@@ -82,31 +88,36 @@ private:
                        K197sc_FullScreenBitMask); ///< Keep track of how to
                                                   ///< display stuff...
 
+  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y);
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
   void drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
-  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
-  void drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type=UImanager::MARKER);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x,
+                                  u8g2_uint_t ax, u8g2_uint_t bx);
+  void drawMarker(u8g2_uint_t x, u8g2_uint_t y,
+                  char marker_type = UImanager::MARKER);
 
   void setupMenus();
 
   byte logskip_counter = 0; ///< counter used when data logging, counts how
                             ///< many measurements are skipped
   void clearScreen();
-  void setScreenMode(K197screenMode mode);
-  /*!
-     @brief  get the screen mode
-     @return screen mode, (note that only the modes < 0x0f can be returned, the others are for internal use in class UImanager)
-  */
-  K197screenMode getScreenMode() {
-    return (K197screenMode)(screen_mode & K197sc_ScreenModeMask);
-  };
 
 public:
   UImanager(){}; ///< default constructor for the class
   void setup();
+
+  void setScreenMode(K197screenMode mode);
+  /*!
+     @brief  get the screen mode
+     @return screen mode, (note that only the modes < 0x0f can be returned, the
+     others are for internal use in class UImanager)
+  */
+  K197screenMode getScreenMode() {
+    return (K197screenMode)(screen_mode & K197sc_ScreenModeMask);
+  };
 
   /*!
      @brief  check if display is in full screen mode
@@ -147,28 +158,61 @@ public:
      @return returns the active cursor (CURSOR_A or CURSOR_B)
   */
   char getActiveCursor() {
-    if ( (screen_mode & K197sc_activeCursorBitMask) == 0x00) return CURSOR_A;
-    else return CURSOR_B;
-  };
-  /*!
-     @brief  increment the active cursor position
-     @details the cursor position will not be incremented past the maximum value (k197graph_type::x_size-1) or less than zero
-     @param increment the number to be added to the current position (use a negative increment to decrement)
-  */
-  void incrementCursor(int increment=1) {
-    bool isA = getActiveCursor() == CURSOR_A;
-    byte oldvalue = isA ? cursor_a : cursor_b;
-    byte newvalue = oldvalue+increment;
-    if (increment>0) { // make sure we increment within boundary
-      if ( (newvalue < oldvalue) || (newvalue>=k197graph_type::x_size) ) newvalue = k197graph_type::x_size-1;
-    } else { // make sure we decrement
-      if (newvalue > oldvalue) newvalue = 0;
-    }
-    if (isA) cursor_a = newvalue; 
-    else cursor_b = newvalue; 
+    if ((screen_mode & K197sc_activeCursorBitMask) == 0x00)
+      return CURSOR_A;
+    else
+      return CURSOR_B;
   };
 
-  
+  /*!
+     @brief  return the cursor position
+     @param  which_cursor the requested cursor (CURSOR_A or CURSOR_B)
+     @return returns the requested cursor position
+  */
+  byte getCursorPosition(char which_cursor) {
+    return which_cursor == CURSOR_A ? cursor_a : cursor_b;
+  };
+  /*!
+     @brief  set the cursor position
+     @details: enforce the range 0 - k197graph_type::x_size
+     @param  which_cursor the cursor whose position shall be set (CURSOR_A or
+     CURSOR_B)
+     @param  new_position position shall be set
+  */
+  void setCursorPosition(char which_cursor, byte new_position) {
+    if (new_position >= k197graph_type::x_size)
+      new_position = k197graph_type::x_size - 1;
+    if (which_cursor == CURSOR_A) {
+      cursor_a = new_position;
+    } else {
+      cursor_b = new_position;
+    }
+  };
+
+  /*!
+     @brief  increment the active cursor position
+     @details the cursor position will not be incremented past the maximum value
+     (k197graph_type::x_size-1) or less than zero
+     @param increment the number to be added to the current position (use a
+     negative increment to decrement)
+  */
+  void incrementCursor(int increment = 1) {
+    bool isA = getActiveCursor() == CURSOR_A;
+    byte oldvalue = isA ? cursor_a : cursor_b;
+    byte newvalue = oldvalue + increment;
+    if (increment > 0) { // make sure we increment within boundary
+      if ((newvalue < oldvalue) || (newvalue >= k197graph_type::x_size))
+        newvalue = k197graph_type::x_size - 1;
+    } else { // make sure we decrement
+      if (newvalue > oldvalue)
+        newvalue = 0;
+    }
+    if (isA)
+      cursor_a = newvalue;
+    else
+      cursor_b = newvalue;
+  };
+
   /*!
      @brief  set full screen mode
      @details also clears the other attributes
@@ -178,6 +222,7 @@ public:
     screen_mode = (K197screenMode)(screen_mode | K197sc_FullScreenBitMask);
     clearScreen();
   };
+
   /*!
      @brief  show the option menu
      @details also clears the other attributes
@@ -189,20 +234,30 @@ public:
     screen_mode = (K197screenMode)(screen_mode | K197sc_MenuBitMask);
     clearScreen();
   };
+
   /*!
      @brief  toggle the cursor visibility
   */
   void toggleCursorsVisibility() {
-     if (areCursorsVisible()) screen_mode = (K197screenMode)(screen_mode & (~K197sc_CursorsVisibleBitMask));
-     else screen_mode = (K197screenMode)(screen_mode | K197sc_CursorsVisibleBitMask);
+    if (areCursorsVisible())
+      screen_mode =
+          (K197screenMode)(screen_mode & (~K197sc_CursorsVisibleBitMask));
+    else
+      screen_mode =
+          (K197screenMode)(screen_mode | K197sc_CursorsVisibleBitMask);
   };
+
   /*!
      @brief  toggle the active cursor
   */
   void toggleActiveCursor() {
-     if (getActiveCursor() == CURSOR_B) screen_mode = (K197screenMode)(screen_mode & (~K197sc_activeCursorBitMask));
-     else screen_mode = (K197screenMode)(screen_mode | K197sc_activeCursorBitMask);
+    if (getActiveCursor() == CURSOR_B)
+      screen_mode =
+          (K197screenMode)(screen_mode & (~K197sc_activeCursorBitMask));
+    else
+      screen_mode = (K197screenMode)(screen_mode | K197sc_activeCursorBitMask);
   };
+
   /*!
      @brief  show the option menu
      @details also clears the other attributes
@@ -242,7 +297,7 @@ private:
       0x1a2b3c4dul; ///< This is the magic number telling us if the EEPROM
                     ///< contains data
   static const unsigned long revisionExpected =
-      0x01ul; ///< the revision of this structure. Increment whenever the
+      0x02ul; ///< the revision of this structure. Increment whenever the
               ///< structure is modified
 
   // structure identity
@@ -259,16 +314,20 @@ private:
        @return Not really a return type, this attribute will save some RAM
     */
     union {
-      unsigned char value = 0x00; ///< allows access to all the flags in the
-                                  ///< union as one unsigned char
+      uint16_t value = 0x00; ///< allows access to all the flags in the
+                             ///< union as one 16 bit unsigned integer
       struct {
-        bool additionalModes : 1; ///< store menu option value
-        bool reassignStoRcl : 1;  ///< store menu option value
-        bool logEnable : 1;       ///< store menu option value
-        bool logSplitUnit : 1;    ///< store menu option value
-        bool logTimestamp : 1;    ///< store menu option value
-        bool logTamb : 1;         ///< store menu option value
-        bool logStat : 1;         ///< store menu option value
+        bool additionalModes : 1;      ///< store menu option value
+        bool reassignStoRcl : 1;       ///< store menu option value
+        bool showDoodle : 1;           ///< store menu option value
+        bool logEnable : 1;            ///< store menu option value
+        bool logSplitUnit : 1;         ///< store menu option value
+        bool logTimestamp : 1;         ///< store menu option value
+        bool logTamb : 1;              ///< store menu option value
+        bool logStat : 1;              ///< store menu option value
+        bool gr_yscale_show0 : 1;      ///< store menu option value
+        bool gr_xscale_roll_mode : 1;  ///< store menu option value
+        bool gr_xscale_autosample : 1; ///< store menu option value
       };
     } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
@@ -277,17 +336,23 @@ private:
     byte contrastCtrl;   ///< store menu option value
     byte logSkip;        ///< store menu option value
     byte logStatSamples; ///< store menu option value
+    byte opt_gr_type;    ///< store menu option value
+    byte opt_gr_yscale;  ///< store menu option value
+    byte gr_sample_time; ///< store menu option value
+    byte cursor_a;       ///< store cursor A position
+    byte cursor_b;       ///< store cursor B position
   }; ///< Structure designed to collect all byte optipons together
 
   bool_options_struct bool_options; ///< store all bool options
   byte_options_struct byte_options; ///< store all byte options
+  K197screenMode screenMode;        ///< store screen mode
 
   void copyFromUI();
-  void copyToUI();
+  void copyToUI(bool restore_screen_mode = false);
 
 public:
   static bool store_to_EEPROM();
-  static bool retrieve_from_EEPROM();
+  static bool retrieve_from_EEPROM(bool restore_screen_mode = false);
 };
 extern UImanager uiman;
 

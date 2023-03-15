@@ -28,20 +28,28 @@
   2 ///< the y offset where the text should be written (relative to the upper
     ///< left corner of a menu item)
 
-UIwindow *UIwindow::currentWindow = NULL;
+UIwindow *UIwindow::currentWindow = NULL; ///< keep track of current window
 
-size_t strlen(const __FlashStringHelper *ifsh, size_t max=100) {
+/*!
+   @brief overloads standard strlen for PROGMEM strings passed as a
+   __FlashStringHelper *
+   @param ifsh the input string (must be stored in PROGMEM)
+   @param max the maximu size that can be returned (default 100)
+   @return the string lenght (without the terminating null character)
+*/
+size_t strlen(const __FlashStringHelper *ifsh, size_t max = 100) {
   PGM_P p = reinterpret_cast<PGM_P>(ifsh);
   size_t n;
-  for (n=0; n<=max; n++) {
-    if ( pgm_read_byte(p++) == 0 ) break;
+  for (n = 0; n <= max; n++) {
+    if (pgm_read_byte(p++) == 0)
+      break;
   }
   return n;
 }
 
 /*!
    @brief draw a frame when the menu item is selected
-   @param u8g2 a poimnter to the u8g2 library object
+   @param u8g2 a pointer to the u8g2 library object
    @param x the x coordinate of the top/left corner
    @param y the y coordinate of the top/left corner
    @param w the y width of the menu item
@@ -241,6 +249,15 @@ bool UImenu::handleUIEvent(K197UIeventsource eventSource,
         return true;
       }
     }
+    // If we end up here, we could not find any selectable item
+    if (firstVisibleItem > 0)
+      firstVisibleItem--;
+    return true;
+  } else if (eventSource == K197key_REL &&
+             eventType == UIeventDoubleClick) { // top
+    firstVisibleItem = 0;
+    selectFirstItem();
+    return true;
   }
   return false;
 }
@@ -268,7 +285,6 @@ void MenuInputBool::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
     u8g2->drawLine(x, y + checkbox_size, x + checkbox_size, y);
   }
 }
-
 
 /*!
    @brief handle UI events
@@ -331,7 +347,7 @@ void MenuInputByte::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
      @return the new value
 */
 static byte calcIncrement(const byte val, const K197UIeventsource eventSource,
-                   const byte increment) {
+                          const byte increment) {
   byte newval;
   if (eventSource == K197key_RCL) { // Increment
     newval = val + increment;
@@ -342,21 +358,24 @@ static byte calcIncrement(const byte val, const K197UIeventsource eventSource,
     if (newval > val)
       newval = 0;
   }
-  DebugOut.print(F("New inc: ")); DebugOut.println(newval);
+  DebugOut.print(F("New inc: "));
+  DebugOut.println(newval);
   return newval;
 }
 
 /*!
      @brief utility function used to simplify handleUIEvent()
-     @details: note that this function wraps around if max<255 (this is intended)
+     @details: note that this function wraps around if max<255 (this is
+   intended)
      @param val the current value of the MenuInputByte
      @param eventSource (used to determine the sign of the value change)
      @param increment the increment
-     @param max the maximum allowed value 
+     @param max the maximum allowed value
      @return the new value
 */
-static byte calcIncrementExt(const byte val, const K197UIeventsource eventSource,
-                   const byte increment, const byte max) {
+static byte calcIncrementExt(const byte val,
+                             const K197UIeventsource eventSource,
+                             const byte increment, const byte max) {
   byte newval;
   if (eventSource == K197key_RCL) { // Increment
     newval = val + increment;
@@ -407,7 +426,8 @@ bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
 
 /*!
      @brief draw the menu
-     @details invoke UIMenuButtonItem::draw, then print the text and the selected option to the right.
+     @details invoke UIMenuButtonItem::draw, then print the text and the
+   selected option to the right.
      @param u8g2 a poimnter to the u8g2 library object
      @param x the x coordinate of the top/left corner
      @param y the y coordinate of the top/left corner
@@ -415,12 +435,12 @@ bool MenuInputByte::handleUIEvent(K197UIeventsource eventSource,
      @param selected true if the menu item is selected
 */
 void MenuInputOptions::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
-                         u8g2_uint_t w, bool selected) {
+                            u8g2_uint_t w, bool selected) {
   UIMenuButtonItem::draw(u8g2, x, y, w, selected);
-  if (value<options_size) {
-      u8g2->print(F(": < "));
-      u8g2->print(options[value]);
-      u8g2->print(F(" >"));
+  if (value < options_size) {
+    u8g2->print(F(": < "));
+    u8g2->print(options[value]);
+    u8g2->print(F(" >"));
   }
 }
 
@@ -433,17 +453,17 @@ void MenuInputOptions::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y,
    @return true if the event has been entirely handled by this object
 */
 bool MenuInputOptions::handleUIEvent(K197UIeventsource eventSource,
-                                  K197UIeventType eventType) {
+                                     K197UIeventType eventType) {
   if ((eventSource == K197key_RCL || eventSource == K197key_STO)) {
     switch (eventType) {
     case UIeventPress:
-      setValue(calcIncrementExt(value, eventSource, 1, options_size-1));
+      setValue(calcIncrementExt(value, eventSource, 1, options_size - 1));
       break;
     case UIeventLongPress:
-      setValue(calcIncrementExt(value, eventSource, 1, options_size-1));
+      setValue(calcIncrementExt(value, eventSource, 1, options_size - 1));
       break;
     case UIeventHold:
-      setValue(calcIncrementExt(value, eventSource, 2, options_size-1));
+      setValue(calcIncrementExt(value, eventSource, 2, options_size - 1));
       break;
     case UIeventRelease:
       change();
@@ -456,59 +476,80 @@ bool MenuInputOptions::handleUIEvent(K197UIeventsource eventSource,
   return UIMenuButtonItem::handleUIEvent(eventSource, eventType);
 }
 
+/*!
+   @brief draw the message box
+   @details: note that differently from menu items, a message box is drawn above
+   its parent (tipically the menu that includes the action that resulted in the
+   box being displayed)
+   @param u8g2 a poimnter to the u8g2 library object
+   @param x the x coordinate of the top/left corner
+   @param y the y coordinate of the top/left corner
+*/
 void UImessageBox::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y) {
-    // draw parent and acquire its height
-    u8g2_uint_t parent_width;
-    if (parent!=NULL) {
-        parent->draw(u8g2, x, y);
-        parent_width=parent->getWidth();
-    } else {
-        parent_width=u8g2->getDisplayWidth();
-    }
-    // Calc x and y for this window
-    x = x + (parent_width-width)/2;
-    y = (u8g2->getDisplayHeight()+y-height)/2;
+  // draw parent and acquire its height
+  u8g2_uint_t parent_width;
+  if (parent != NULL) {
+    parent->draw(u8g2, x, y);
+    parent_width = parent->getWidth();
+  } else {
+    parent_width = u8g2->getDisplayWidth();
+  }
+  // Calc x and y for this window
+  x = x + (parent_width - width) / 2;
+  y = (u8g2->getDisplayHeight() + y - height) / 2;
 
-    // Clear the window area
-    u8g2->setFont(u8g2_font_6x12_mr);
-    u8g2->setCursor(x, y);
-    u8g2->setFontMode(0);
-    u8g2->setDrawColor(0);
-    u8g2->drawBox(x, y, width, height);
-    u8g2->setDrawColor(1);
+  // Clear the window area
+  u8g2->setFont(u8g2_font_6x12_mr);
+  u8g2->setCursor(x, y);
+  u8g2->setFontMode(0);
+  u8g2->setDrawColor(0);
+  u8g2->drawBox(x, y, width, height);
+  u8g2->setDrawColor(1);
 
-    // Draw window frames
-    u8g2->setDrawColor(1);
-    u8g2->setFontMode(0);
-    u8g2->drawFrame(x, y, width, height);
-    u8g2->drawFrame(x+(width-btn_width)/2, y+btn_Offset, btn_width, btn_height);
+  // Draw window frames
+  u8g2->setDrawColor(1);
+  u8g2->setFontMode(0);
+  u8g2->drawFrame(x, y, width, height);
+  u8g2->drawFrame(x + (width - btn_width) / 2, y + btn_Offset, btn_width,
+                  btn_height);
 
-    // Set required text attributes 
-    u8g2->setFontPosTop();
-    u8g2->setFontRefHeightExtendedText();
-    u8g2->setFontDirection(0);
-    
-    // print message
-    u8g2_uint_t text_width = u8g2->getMaxCharWidth()*strlen(text); // monospace font
-    if (text_width>width) text_width = width;
-    u8g2->setCursor(x+(width-text_width)/2, y+text_offset_y);
-    u8g2->print(text);
+  // Set required text attributes
+  u8g2->setFontPosTop();
+  u8g2->setFontRefHeightExtendedText();
+  u8g2->setFontDirection(0);
 
-    // print "Ok" text
-    u8g2->setCursor(x+width/2-u8g2->getMaxCharWidth(), y+btn_Offset+(btn_height-u8g2->getMaxCharHeight())/2);
-    u8g2->print(F("Ok"));
+  // print message
+  u8g2_uint_t text_width =
+      u8g2->getMaxCharWidth() * strlen(text); // monospace font
+  if (text_width > width)
+    text_width = width;
+  u8g2->setCursor(x + (width - text_width) / 2, y + text_offset_y);
+  u8g2->print(text);
+
+  // print "Ok" text
+  u8g2->setCursor(x + width / 2 - u8g2->getMaxCharWidth(),
+                  y + btn_Offset + (btn_height - u8g2->getMaxCharHeight()) / 2);
+  u8g2->print(F("Ok"));
 }
-
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored                                                 \
-    "-Wunused-parameter" // A derived class may eturn a different valuse
-                         // depending on being selected
-bool UImessageBox::handleUIEvent(K197UIeventsource eventSource, K197UIeventType eventType) {
-    // Click any button to dismiss this message box. Any other event is ignored.
-    if (eventType == UIeventClick) {
-        closeWindow();
-    }
-    return true;
+    "-Wunused-parameter" // A derived class may use different parameters
+/*!
+   @brief handle UI events for a message box
+   @details clicking any button closes the message box. all other evdents are
+   ignored (in other graphic environments we could say the message box is
+   "modal").
+   @param eventSource the source of the event (see K197UIeventsource)
+   @param eventType the type of event (see K197UIeventType)
+   @return always return true
+*/
+bool UImessageBox::handleUIEvent(K197UIeventsource eventSource,
+                                 K197UIeventType eventType) {
+  // Click any button to dismiss this message box. Any other event is ignored.
+  if (eventType == UIeventClick) {
+    closeWindow();
+  }
+  return true;
 }
- #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop

@@ -12,7 +12,7 @@ Prerequisites
 -------------
 The sketch have been developed and tested using a AVR64DB28 microcontroller. It should run with AVR128DB28 and can be easily adapted to packages with 32, 48 and 64 pins. It will not run with 32 Kbit chips. It may run with the DA chips, however those chips will require some kind of voltage conversion somewhere, considering that the display runs at 3.3V and the 197/197A main board interface is done at 5V levels.
 
-The display need to be configured to use SPI (usually this means moving one resistor, see references)
+The display need to be configured to use SPI (usually this means moving one or two resistors, see references)
 
 You can refer to the links above for more information about the HW used
 
@@ -23,6 +23,7 @@ You will need the Arduino IDE, with dxCore (https://github.com/SpenceKonde/DxCor
 Connections:
 ------------
 Currently this sketch assumes that the microcontroller is connected as follows:
+- Internal clock is used (required to free up enough i/o pins)
 - AVDD and VDD connected to a 3.3V power source (which is also supplied to the display)
 - VDDIO2 connected to +5V (same voltage as the 197/197A main board +5V digital power rail)
 - PA0-PA1 used as Serial (for programming via bootloader and/or debug output)
@@ -34,9 +35,19 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 - PD1-PD4 connected to the pushbutton cluster on the front panel
 - PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
 
-The SW has some support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX) pin PA2 should be connected to the BT module 5V power via a SW divider (the pin max voltage is 3.3V), pin PA5 should be connected to the BT_STATE so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
+The SW has some support for a HC-05 bluetooth module. If used, in addition to PA0-PA1 (Serial RX/TX), the BT module 5V power should be connected to the AVR pin PA2 via a SW divider (the pin max voltage is 3.3V), while pin PA5 should be connected to the BT_STATE of the module so that the SW can detect and display the connection status. In addition BT_STATE can also be connected via a capacitor to the reset pin to autoreset the micro. The module should be configure to interface with an Arduino with baud rate = 115200 according to the many instructions available (hint: google hc-05 bluetooth module arduino).
 
 The definition of the pins in pinout.h can be changed to support the OLED in 4 wire SPI mode, but in such a case it will not be possible to detect when the Bluetooth module is powered on and off via PIN PA2.
+
+DxCore settings:
+-------------
+This is the DxCore settings that are required (unless you are ready to modify the sketch to adapt):
+- WDT Timeout: disabled (note that we enable the watchdog at the end of setup)
+- Bootloader Serial Port: USART0 (if Optiboot is used)
+- Multivoltage I/O (MVIO): enabled
+- attachInterrupt: only enabled ports
+- printf: minimal
+- Wire: 1x Wire master OR slave (least flash & RAM)
 
 Functionality:
 -------------
@@ -46,9 +57,9 @@ The current SW is implementing the same functions available in the 197/197A (wit
 - Graph
 - Additional temperature measurement (with K type thermocouple)
 
-Holding the "REL" button for 0.5 s will show a Options menu to enable the additional functions and variouis options, as well as data logging to bluetooth serial.
+Holding the "REL" button for 0.5 s will show a Options menu to enable the additional functions and various options, as well as data logging to bluetooth serial.
 
-clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode can be entered while in graph mode, but it has no effect (currently, this may change in future revisions). Changing display mode cancel the holding. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
+clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode can be entered while in graph mode, but it has no effect (currently, this may change in future revisions). Changing display mode cancel the holding (currently, this may change in future revisions). Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
 
 Some commands can be entered via Serial connection (connect via Serial/bluetooth Serial and send "?" for a list)
 
@@ -66,6 +77,8 @@ The temperature of the cold joint is also shown (this is measured with the AVR i
 
 Options menu:
 -------------
+The options menu list a hyerarchical menu system that allow to set a number of options. The menu is entered holding the REL key (holding a second time exits the menu). For navigating the menu see the section "Keyboard".
+
 At the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
 
 Two menu items enable storing and retrieving the configuration to the EEPROM. At startup and after reset the retrieve happens automatically.
@@ -75,28 +88,43 @@ Statistics display mode
 An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example measurement unit, REL state, AC button, etc.).
 
 Graph display mode
--------------
+------------------
 An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Double clicking the STO button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.).
 
-Sample rate and other options can be set in the options menu.
+Sample rate, preferences for auto-scaling and other options can be set in the options menu (Under the sub menu "Graph options"). 
 
-The x (time) scale changes automatically depending on how many samples have been collected. At most 180 samples can be stored, corresponding to about 60s at the fastest sample rate. Note that the timje scale is only approximate, as we assume that the voltmeter is measuring at exactly 3 Hz. When a more exact analysis is required, it is recommended to log the data via bluetooth.
+The x (time) scale changes automatically depending on how many samples have been collected. At most 180 samples can be stored, corresponding to about 60s at the fastest sample rate. Note that the time scale is only approximate, as we assume that the voltmeter is measuring at exactly 3 Hz. When a more exact analysis is required, it is recommended to log the data via bluetooth.
+
+Graph display mode with cursors
+-------------------------------
+Holding the RCL key in graph mode shows and hides the cursors. Two cursors are shown on the graph, labelled A and B. 
+
+When the cursors are shown, the panel at the right of the graph shows the value at the cursors rather than the latest measurement. the average calculated between cursor A and cursor B is also shown, as well as the difference in time (based on K197 sampling rate).   
+
+One of the cursors is active and is indicated by a "<" or ">" character. When cursors are shown, REL and Db move the active cursor to the left and right respectively. Clicking "RCL" switches the active cursor.
 
 Keyboard: 
 ---------
 compared to the original K197, the use of the the pushbuttons on the front panel changes as follows:
-- Holding the REL button will enter the Options menu
-- double click of the REL button resets the statistics (but otherwise does not affect the reference value)
+- Holding the REL button will enter the Options menu (note 1)
+- double click of the REL button resets the statistics, but otherwise does not affect the reference value (note 1)
 - Normal STO and RCL functions can be disabled from the options menu. When disabled, the buttons are repurposed as follows:
   - clicking the STO button once hold the currently displayed measurement when in normal or statistics mode. A second click returns to continuos updates.
   - Holding the STO button alternates between "normal" and "statistics" display mode (when repurposing of STO and RCL is enabled)
   - Double clicking the STO button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
-
+ 
+ Note 1: When in graph mode, holding the RCL key shows the cursors. When cursors are shown, the key function changes as follows:
+ - REL and Db move the active cursor to the left and right respectively. 
+ - Clicking "RCL" switch the active cursor.
+ - Holding "RCL" go back to the graph mode without cursors 
+  
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
-REL = up (hold to exit the menu)
-dB  = down
-STO = left
-RCL = right/select/ok
+- REL = up (hold to exit the menu, double click up all the way to the top)
+- dB  = down (hold goes down faster)
+- STO = left (acts on the selected menu item)
+- RCL = right/select/ok (acts on the selected menu item)
+
+In general changes to a menu item are active immediately when the key is clicked (for example, for a checkbox) or in some cases when the key is released.
 
 Porting:
 -------
