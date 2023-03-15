@@ -1,5 +1,5 @@
 # K197Display
-This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on dxCore (see references below) 
+This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on DxCore (see references below) 
 
 DISCLAIMER: Please note that the purpose of this repository is educational. Any use of the information for any other purpose is under own responsibility.
 
@@ -18,7 +18,7 @@ You can refer to the links above for more information about the HW used
 
 If you do not have the 197/K197A available, but for whatever reason you want to test this software, you may want to look at this simulator: https://github.com/alx2009/displayBoardTester
 
-You will need the Arduino IDE, with dxCore (https://github.com/SpenceKonde/DxCore) and the u8g2 library (https://github.com/olikraus/u8g2/wiki)
+You will need the Arduino IDE, with DxCore (https://github.com/SpenceKonde/DxCore) and the u8g2 library (https://github.com/olikraus/u8g2/wiki)
 
 Connections:
 ------------
@@ -30,7 +30,7 @@ Currently this sketch assumes that the microcontroller is connected as follows:
 - PA2 used to detect when the Bluetooth Module is powered on (if used)
 - PA3, PA4, PA6 used to interface the OLED (3 wire SPI mode)
 - PA5 is connected to the BT module BT_STATE (if used)
-- PA7 is connected to a LED (optional, default LED_BUILTIN for dxCore) 
+- PA7 is connected to a LED (optional, default LED_BUILTIN for DxCore) 
 - PC0-PC3 used to interface the 197/197A main board (4-wire SPI)
 - PD1-PD4 connected to the pushbutton cluster on the front panel
 - PD5, PD7, PF0, PF1 used to interface to the 197/197A main board (push-button input)
