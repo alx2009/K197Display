@@ -295,7 +295,8 @@ static inline byte fifo_pull() {
 */
 void CCL_interrupt_handler() {
   // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
-  //   rather than missing an event
+                                  //  rather than missing an event
+                                  // Note: needed only with ISR(CCL_CCL_vect) 
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
 }
@@ -439,11 +440,11 @@ void k197ButtonCluster::setup() {
   Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
   Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
 
-  Logic::start();
+  // CCL.INTCTRL0|=0b11111111; //Will replace attachInterrupt when dxCore 1.5.0
+  //  will be released... 
 
-  // CCL.INTCTRL0|=0b00001111; //Will replace attachInterrupt when dxCore 1.5.0
-  //  will be released... DebugOut.print(F("CCL.LUT0CTRLA="));
-  // DebugOut.println(CCL.LUT0CTRLA, HEX);
+  Logic::start();
+  //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
   // at startup or reset (e.g. watchdog reset).
