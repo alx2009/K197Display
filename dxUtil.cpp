@@ -61,24 +61,26 @@ void dxUtilClass::begin() {
    restart of the micro...
 */
 void dxUtilClass::printResetFlags() {
+  bool printed_something=false;
   if (reset_flags & RSTCTRL_UPDIRF_bm) {
-    DebugOut.println(F("UPDI reset (upload)"));
+    DebugOut.print(F("UPDI ")); bool printed_something=true;
   }
   if (reset_flags & RSTCTRL_WDRF_bm) {
-    DebugOut.println(F("WDT reset"));
+    DebugOut.print(F("WDT ")); bool printed_something=true;
   }
   if (reset_flags & RSTCTRL_SWRF_bm) {
-    DebugOut.println(F("SW reset"));
+    DebugOut.print(F("SW ")); bool printed_something=true;
   }
   if (reset_flags & RSTCTRL_EXTRF_bm) {
-    DebugOut.println(F("HW Reset"));
+    DebugOut.print(F("HW ")); bool printed_something=true;
   }
   if (reset_flags & RSTCTRL_BORF_bm) {
-    DebugOut.println(F("Brownout Reset"));
+    DebugOut.print(F("Bwnout ")); bool printed_something=true;
   }
   if (reset_flags & RSTCTRL_PORF_bm) {
-    DebugOut.println(F("Power on reset"));
+    DebugOut.print(F("POW ")); bool printed_something=true;
   }
+  if (printed_something) DebugOut.println(F("Reset"));
 }
 
 /*!
