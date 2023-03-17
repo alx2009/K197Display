@@ -343,7 +343,7 @@ void loop() {
     PROFILE_println(DebugOut.PROFILE_DEVICE,
                     F("Time spent in getNewReading()"));
     if (msg_printout) {
-      DebugOut.print(F("SPI packet - N="));
+      DebugOut.print(F("SPI - N="));
       DebugOut.print(n);
       DebugOut.print(F(": "));
       k197dev.debugPrintData(DMMReading, n);
@@ -375,11 +375,11 @@ void loop() {
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {
     collisionStatus = collision;
-    DebugOut.println(F("Collision "));
+    DebugOut.println(F("Coll. "));
     if (collisionStatus) {
-      DebugOut.println(F("DETECTED"));
+      DebugOut.println(F("DETECT"));
     } else {
-      DebugOut.println(F("cleared"));
+      DebugOut.println(F("clear"));
     }
   }
   pushbuttons.checkNew();
