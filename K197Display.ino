@@ -86,7 +86,7 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   dxUtil.reportStack();
-  Serial.print(F(" Max loop time (us): "));
+  Serial.print(F(" Max loop (us): "));
   Serial.println(uiman.looptimerMax);
   uiman.looptimerMax = 0;
   Serial.println(F("> "));
@@ -97,11 +97,11 @@ void printPrompt() { // Here we want to use Serial, rather than DebugOut
 */
 void printHelp() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
-  Serial.println(F(" ? - print this help text"));
-  Serial.println(F(" swr  ==> triger software reset"));
-  Serial.println(F(" volt ==> check voltages & temperature"));
-  Serial.println(F(" msg ==> toggle printout of data to/from main board"));
-  Serial.println(F(" log ==> toggle data logging"));
+  Serial.println(F(" ?    > help"));
+  Serial.println(F(" swr  > SW reset"));
+  Serial.println(F(" volt > show V & T"));
+  Serial.println(F(" msg  > messages"));
+  Serial.println(F(" log  > logging"));
 
   printPrompt();
 }
