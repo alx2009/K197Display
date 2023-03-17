@@ -584,49 +584,6 @@ void k197graph_label_type::setScaleMultiplierDown(
 }
 
 /*!
- @brief used during troubleshooting. To be removed before final release.
- @param testmin min
- @param testmax max
-*/
-void K197device::troubleshootAutoscale(float testmin, float testmax) {
-  PROFILE_start(DebugOut.PROFILE_MATH);
-
-  k197graph_label_type y0;
-  y0.setLog10Ceiling(testmin); // Find order of magnitude
-  // Then we fine tune the multiplier (1x, 5x or 2x)
-  y0.setScaleMultiplierDown(testmax);
-  float ymin = y0.getValue();
-
-  k197graph_label_type y1;
-  y1.setLog10Ceiling(testmin); // Find order of magnitude
-  // Then we fine tune the multiplier (1x, 5x or 2x)
-  y1.setScaleMultiplierUp(testmax);
-  float ymax = y1.getValue();
-
-  PROFILE_stop(DebugOut.PROFILE_MATH);
-  PROFILE_println(DebugOut.PROFILE_MATH,
-                  F("Time spent in troubleshootAutoscale()"));
-
-  // Print result
-  DebugOut.print(F("testmin="));
-  DebugOut.println(testmin);
-  DebugOut.print(F("MIN 10^"));
-  DebugOut.print(y0.pow10);
-  DebugOut.print(F("*"));
-  DebugOut.print(y0.mult);
-  DebugOut.print(F("="));
-  DebugOut.println(ymin);
-  DebugOut.print(F("testmax="));
-  DebugOut.println(testmax);
-  DebugOut.print(F("MAX 10^"));
-  DebugOut.print(y1.pow10);
-  DebugOut.print(F("*"));
-  DebugOut.print(y1.mult);
-  DebugOut.print(F("="));
-  DebugOut.println(ymax);
-}
-
-/*!
  @brief select the scale for the Y axis of a graph (autoscaling)
  @details The scale is set so that the graph can be displayed with the best
  possible resolution

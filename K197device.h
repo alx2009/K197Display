@@ -525,7 +525,6 @@ private:
 public:
   void fillGraphDisplayData(k197graph_type *graphdata,
                             k197graph_yscale_opt yopt);
-  void troubleshootAutoscale(float testmin, float testmax);
   void resetStatistics();
 
   /*!
