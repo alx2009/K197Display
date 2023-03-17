@@ -115,7 +115,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 */
 void printError(
     const char *buf) { // Here we want to use Serial, rather than DebugOut
-  Serial.print(F("Invalid command: "));
+  Serial.print(F("Invalid: "));
   Serial.println(buf);
   printHelp();
 }
@@ -147,7 +147,7 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     return;
   }
   if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
-    Serial.println(F("Testing SW reset"));
+    Serial.println(F("SWR"));
     Serial.flush();
     _PROTECTED_WRITE(RSTCTRL.SWRR, 1);
   } else if ((strcasecmp_P(buf, PSTR("volt")) == 0)) {
@@ -294,7 +294,7 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  DebugOut.println(F("K197Display running on dxCore"));
+  DebugOut.println(F("K197Display"));
 
   k197dev.setup();
 
@@ -307,12 +307,6 @@ void setup() {
   DebugOut.print(F(", "));
   dxUtil.pollMVIOstatus();
   dxUtil.checkTemperature();
-
-  if (BTman.isPresent()) {
-    DebugOut.println(F("BT is on"));
-  } else {
-    DebugOut.println(F("BT is off"));
-  }
 
   delay(100);
 
