@@ -428,7 +428,7 @@ void k197ButtonCluster::setup() {
   CCL.INTCTRL0|=0b11111111; 
 
   Logic::start();
-  DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
+  //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
   // at startup or reset (e.g. watchdog reset).
