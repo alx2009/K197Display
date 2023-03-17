@@ -171,23 +171,10 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     printHelp();
     return;
   }
-  if (strcasecmp_P(buf, PSTR("wdt")) == 0) {
-    Serial.println(F("Testing watchdog reset"));
-    Serial.flush();
-    _PROTECTED_WRITE(WDT.CTRLA,
-                     WDT_WINDOW_8CLK_gc |
-                         WDT_PERIOD_8CLK_gc); // enable the WDT, minimum
-                                              // timeout, minimum window.
-    while (1)
-      __asm__ __volatile__("wdr" ::);
-  } else if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
+  if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
     Serial.println(F("Testing SW reset"));
     Serial.flush();
     _PROTECTED_WRITE(RSTCTRL.SWRR, 1);
-  } else if ((strcasecmp_P(buf, PSTR("jmp0")) == 0)) {
-    Serial.println(F("Testing dirty reset"));
-    Serial.flush();
-    asm volatile("jmp 0");
   } else if ((strcasecmp_P(buf, PSTR("volt")) == 0)) {
     // Serial.println(F("Check voltages")); Serial.flush();
     dxUtil.checkVoltages(false);
