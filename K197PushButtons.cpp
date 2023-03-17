@@ -425,13 +425,6 @@ void k197ButtonCluster::setup() {
   UI_REL_Event.start();
   UI_DB_Event.start();
 
-  // attach the CCL interrupts (note: this should be replaced with direct access
-  // to CCL.INTCTRL0 when dxCore Logic library supports this method
-  //Logic0.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  //Logic1.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  //Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  //Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
-
   CCL.INTCTRL0|=0b11111111; 
 
   Logic::start();
