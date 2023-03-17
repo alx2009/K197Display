@@ -475,7 +475,7 @@ void k197ButtonCluster::checkNew() {
   byte x = fifo_pull();
   sei();
   if (b) {
-    DebugOut.println(F("FIFO Full"));
+    DebugOut.println(F("FIFO "));
     DebugOut.print(n);
   }
   if (x != fifo_NO_DATA) { // We have a new raw event

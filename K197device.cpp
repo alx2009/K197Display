@@ -139,7 +139,7 @@ bool K197device::getNewReading() {
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
-    DebugOut.print(F("Warning, K197 n="));
+    DebugOut.print(F("!K197 n="));
     DebugOut.println(n);
   }
   if (n > 0)
@@ -179,7 +179,7 @@ byte K197device::getNewReading(byte *data) {
         message[nchar] = '.';
         nchar++;
       } else {
-        DebugOut.println(F("Warning, K197 dupl. DP"));
+        DebugOut.println(F("!K197 DP"));
       }
     }
     int seg128 = ((data[i] & 0b11111000) >> 1) |
@@ -207,7 +207,7 @@ byte K197device::getNewReading(byte *data) {
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
       annunciators8 |= K197_Cal_bm;
-      DebugOut.println(F(" CAL found!"));
+      //DebugOut.println(F(" CAL found!"));
     }
   }
   if (isTKModeActive() && flags.msg_is_num) {
