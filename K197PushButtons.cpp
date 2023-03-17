@@ -111,28 +111,28 @@ bool k197ButtonCluster::isPressed(K197UIeventsource eventSource) {
 void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
   switch (event) {
   case UIeventClick:
-    DebugOut.print(F("eventClick"));
+    DebugOut.print(F("evClick"));
     break;
   case UIeventDoubleClick:
-    DebugOut.print(F("eventDoubleClick"));
+    DebugOut.print(F("evDbClick"));
     break;
   case UIeventLongClick:
-    DebugOut.print(F("eventLongClick"));
+    DebugOut.print(F("evLgClick"));
     break;
   case UIeventPress:
-    DebugOut.print(F("eventPress"));
+    DebugOut.print(F("evPress"));
     break;
   case UIeventLongPress:
-    DebugOut.print(F("eventLongPress"));
+    DebugOut.print(F("evLgPress"));
     break;
   case UIeventHold:
-    DebugOut.print(F("eventHold"));
+    DebugOut.print(F("evHold"));
     break;
   case UIeventRelease:
-    DebugOut.print(F("eventRelease"));
+    DebugOut.print(F("evRls"));
     break;
   default:
-    DebugOut.print(F("unknown ev. "));
+    DebugOut.print(F("ev?"));
     DebugOut.print(event);
     break;
   }
