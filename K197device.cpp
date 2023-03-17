@@ -366,7 +366,7 @@ void K197device::debugPrint() {
     DebugOut.println();
   }
   if (flags.msg_is_ovrange)
-    DebugOut.print(F(" + Ov.Range"));
+    DebugOut.print(F(" + OvR"));
   DebugOut.println();
 }
 
@@ -682,13 +682,13 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
 
   for (int i = 0; i < cache.gr_size; i++) {
     if (i >= graphdata->x_size) { // should be impossible but just to be safe
-      DebugOut.print(F("i="));
-      DebugOut.print(i);
-      DebugOut.print(F(", c="));
-      DebugOut.print(cache.gr_size);
-      DebugOut.print(F(", g="));
-      DebugOut.print(graphdata->x_size);
-      DebugOut.println(F("graph size!"));
+      //DebugOut.print(F("i="));
+      //DebugOut.print(i);
+      //DebugOut.print(F(", c="));
+      //DebugOut.print(cache.gr_size);
+      //DebugOut.print(F(", g="));
+      //DebugOut.print(graphdata->x_size);
+      DebugOut.println(F("gr size!"));
       break;
     }
     graphdata->point[i] = (cache.graph[i] - ymin) * scale_factor + 0.5;
