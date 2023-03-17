@@ -294,13 +294,11 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  DebugOut.println(F("K197Display"));
-
   k197dev.setup();
 
   uiman.setup();
-  u8g2log.println(F("K197Display"));
   DebugOut.useOled(true);
+  DebugOut.println(F("K197Display"));
 
   dxUtil.printResetFlags();
   dxUtil.checkVoltages(false);
