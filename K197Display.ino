@@ -98,13 +98,10 @@ void printPrompt() { // Here we want to use Serial, rather than DebugOut
 void printHelp() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   Serial.println(F(" ? - print this help text"));
-  Serial.println(F(" wdt  ==> trigger watchdog reset"));
   Serial.println(F(" swr  ==> triger software reset"));
-  Serial.println(F(" jmp0 ==> jump to 0 (dirty reset)"));
   Serial.println(F(" volt ==> check voltages & temperature"));
   Serial.println(F(" msg ==> toggle printout of data to/from main board"));
   Serial.println(F(" log ==> toggle data logging"));
-  Serial.println(F(" contrast n ==> set display contrast [0-255]"));
 
   printPrompt();
 }
@@ -121,28 +118,6 @@ void printError(
   Serial.print(F("Invalid command: "));
   Serial.println(buf);
   printHelp();
-}
-
-/*!
-      @brief handle the "contrast" command
-      Reads the contrast value from serial and change contrast accordingly
-*/
-void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
-                     // does not even support input)
-  dxUtil.checkFreeStack();
-  static char buf[INPUT_BUFFER_SIZE];
-  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
-  buf[i] = 0;
-  if (i == 0) { // no characters read
-    Serial.println(F("Contrast: <no change>"));
-    Serial.flush();
-    return;
-  }
-  uint8_t value = atoi(buf);
-  Serial.print(F("Contrast="));
-  Serial.println(value);
-  Serial.flush();
-  uiman.setContrast(value);
 }
 
 /*!
@@ -188,8 +163,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
       msg_printout = true;
   } else if ((strcasecmp_P(buf, PSTR("log")) == 0)) {
     cmdLog();
-  } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
-    cmdContrast();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
