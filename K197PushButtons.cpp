@@ -469,14 +469,14 @@ void k197ButtonCluster::checkNew() {
     }
   }
 
-  cli();
-  int8_t n = fifo_getSize();
-  bool b = fifo_isFull();
+  //cli();
+  //int8_t n = fifo_getSize();
+  bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
   byte x = fifo_pull();
-  sei();
+  //sei();
   if (b) {
-    DebugOut.println(F("FIFO "));
-    DebugOut.print(n);
+    DebugOut.println(F("FIFO!"));
+    //DebugOut.println(n);
   }
   if (x != fifo_NO_DATA) { // We have a new raw event
     now = micros();
