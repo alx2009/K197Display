@@ -166,7 +166,7 @@ volatile static byte fifo_records[]{
    sizeof(fifo_records[0])) ///< max number of records in the FIFO queue, see
                             ///< fifo_pull()
 
-volatile static int8_t fifo_front =
+volatile static uint8_t fifo_front =
     0; // index to the front of the queue, see fifo_pull()
 // We use rear in the interrupt handler, hence the use of GPIO3
 // Initialized inside k197ButtonCluster::setup()
@@ -360,7 +360,7 @@ void k197ButtonCluster::setup() {
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
 
-  fifo_rear = (uint8_t)-1; // Initialize register
+  fifo_rear = fifo_MAX_RECORDS-1;
 
   // Route pins for pushbuttons to Logic blocks 0-3
   UI_STO_Event.set_generator(UI_STO);
@@ -434,21 +434,13 @@ void k197ButtonCluster::setup() {
   // at startup or reset (e.g. watchdog reset).
   unsigned long now = micros();
   cli();
-  fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
-            (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
-  byte x = fifo_pull();
+  byte x = (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
+            (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm));
   sei();
   initButton(0, getButtonState(x & UI_STO_bm), now);
   initButton(1, getButtonState(x & UI_RCL_bm), now);
   initButton(2, getButtonState(x & UI_REL_bm), now);
   initButton(3, getButtonState(x & UI_DB_bm), now);
-  cli();
-  fifo_push(
-      (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
-      (UI_REL_VPORT.IN &
-       (UI_REL_bm | UI_DB_bm))); // Make sure we do not lose any state change
-  sei();
-
   // Setup the click timer.
   setupClicktimer();
 }
