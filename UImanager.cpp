@@ -587,7 +587,7 @@ void UImanager::clearScreen() {
   // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
-  k197dev.setDisplayHold(false);
+  //k197dev.setDisplayHold(false);
   dxUtil.checkFreeStack();
 }
 

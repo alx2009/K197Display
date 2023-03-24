@@ -41,7 +41,11 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Keep hold when switching between display modes ?
+// Implement true hold for main screen
+// Remove interaction bwteen STO click/long click
+// Implement true hold for statistics screen
+// Implement true hold for graph screen
+//
 // Bug2fix:
 //
 // Latest benchmark:
