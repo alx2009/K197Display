@@ -159,7 +159,7 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define fifo_NO_DATA                                                           \
   0xff ///< value returned when the fifo is empty (see fifo_pull())
 volatile static byte fifo_records[]{
-    0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff}; ///< array implementing the FIFO queue, see fifo_pull()
 #define fifo_MAX_RECORDS                                                       \
   (sizeof(fifo_records) /                                                      \
