@@ -1350,11 +1350,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           else
             uiman.setScreenMode(K197sc_normal);
         } else if (eventType == UIeventDoubleClick) {
-          K197screenMode screen_mode = uiman.getScreenMode();
-          if (screen_mode != K197sc_graph)
-            uiman.setScreenMode(K197sc_graph);
-          else
-            uiman.setScreenMode(K197sc_normal);
+          // NOP
         }
         return true; // Skip normal handling in the main sketch
       }
@@ -1365,12 +1361,14 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           if (isGraphMode() && areCursorsVisible())
             toggleActiveCursor();
         } else if (eventType == UIeventLongPress) {
+          K197screenMode screen_mode = uiman.getScreenMode();
+          if (screen_mode != K197sc_graph)
+            uiman.setScreenMode(K197sc_graph);
+          else
+            uiman.setScreenMode(K197sc_normal);
+        } else if (eventType == UIeventDoubleClick) {
           if (isGraphMode())
             toggleCursorsVisibility();
-        } else if (eventType == UIeventDoubleClick) {
-          DebugOut.print(F("Max loop (us): "));
-          DebugOut.println(looptimerMax);
-          looptimerMax = 0UL;
         }
         return true; // Skip normal handling in the main sketch
       }
