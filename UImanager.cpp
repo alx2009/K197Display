@@ -638,11 +638,13 @@ DEF_MENU_ACTION(
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
+DEF_MENU_ACTION(resetAVR, 15, "RESET",
+                  _PROTECTED_WRITE(RSTCTRL.SWRR, 1);); ///< Menu input
 
 UImenuItem *mainMenuItems[] = {
     &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog,
     &btGraphOpt,     &showDoodle,      &contrastCtrl,   &exitMenu,
-    &saveSettings,   &reloadSettings,  &openLog}; ///< Root menu items
+    &saveSettings,   &reloadSettings,  &openLog, &resetAVR}; ///< Root menu items
 
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
 DEF_MENU_BOOL(logEnable, 15, "Enabled");                     ///< Menu input
