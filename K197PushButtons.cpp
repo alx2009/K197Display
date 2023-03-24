@@ -51,6 +51,8 @@ unsigned long lastHold[] = {0UL, 0UL, 0UL,
                             0UL}; ///< micros() when last hold event generated
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last released
+bool enableDoubleClick[] = {true, true, true, true}; ///< 
+
 /*!
     @brief  set a call back for a push button in the cluster
 
@@ -523,12 +525,15 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
       invoke_callback(i, UIeventRelease);
       if ((now - startPressed[i]) > longPressTime) {
         invoke_callback(i, UIeventLongClick);
+        enableDoubleClick[i] = false; // This will prevent that the next click is recognized as a double click...
       } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
         invoke_callback(i, UIeventClick);
-        invoke_callback(i, UIeventDoubleClick);
+        if (enableDoubleClick[i]) invoke_callback(i, UIeventDoubleClick);
+        enableDoubleClick[i] = false; // This prevents a third click to give raise to a further double click...
         // DebugOut.print(F("Dbclick time: "));
         // DebugOut.println(now-lastReleased[i]);
       } else {
+        enableDoubleClick[i] = true; // This will enable double click for the next click
         invoke_callback(i, UIeventClick);
         // DebugOut.print(F("Click time: "));
         // DebugOut.println(now-startPressed[i]);
