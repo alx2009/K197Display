@@ -461,11 +461,8 @@ void k197ButtonCluster::checkNew() {
     }
   }
 
-  //cli();
-  //int8_t n = fifo_getSize();
   bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
   byte x = fifo_pull();
-  //sei();
   if (b) {
     DebugOut.println(F("FIFO!"));
     //DebugOut.println(n);
