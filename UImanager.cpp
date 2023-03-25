@@ -407,9 +407,9 @@ void UImanager::updateNormalScreen() {
     dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
-  } else if (!k197dev.getDisplayHold()) {
+  } /*else if (!k197dev.getDisplayHold()) {
     u8g2.print(F("          "));
-  }
+  }*/
 
   dxUtil.checkFreeStack();
 }
