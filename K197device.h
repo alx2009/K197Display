@@ -518,6 +518,20 @@ private:
     };
     void resetGraph();
     void resampleGraph(uint16_t nsamples_new);
+    
+  public:
+    struct k197_cache_hold_struct {
+      char raw_msg[K197_RAW_MSG_SIZE]; ///< holds raw_msg
+      byte raw_dp = 0x00; ///< holds raw_dp
+      byte annunciators0 = 0x00; ///< holds annunciators0
+      float tcold = 0.0; ///< holds tcold
+      float average = 0.0; ///< holds cache.average
+      float min = 0.0;     ///< holds cache.min
+      float max = 0.0;     ///< holds cache.max
+      const __FlashStringHelper * unit=NULL;
+      const __FlashStringHelper * unit_with_db=NULL;
+      bool isTKModeActive=false;
+    } hold; ///< cache values in hold mode
   } cache; ///< cache measured values and related status information
 
   void updateCache();
