@@ -206,6 +206,8 @@ void UImanager::setup() {
    to setup();
 */
 void UImanager::updateDisplay() {
+  u8g2.clearBuffer(); // Clear display area
+
   if (k197dev.isNotCal() && isSplitScreen())
     updateSplitScreen();
   else if (k197dev.isCal() || (getScreenMode() == K197sc_normal))
@@ -223,6 +225,8 @@ void UImanager::updateDisplay() {
 /*!
     @brief  update the display, used when in debug and other modes with split
    screen.
+   @details this screen always show the current measured value, even if we are in hold mode
+   This is by design so that it is possible to see the current value without exiting the hold mode
 */
 void UImanager::updateSplitScreen() {
   u8g2_uint_t x = 140;
@@ -286,29 +290,28 @@ void UImanager::updateNormalScreen() {
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
-  if (!k197dev.getDisplayHold()) {
-    u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
-    for (byte i = 1; i <= 7; i++) {
-      if (k197dev.isDecPointOn(i)) {
+  bool hold = k197dev.getDisplayHold();
+  u8g2.drawStr(xraw, yraw, k197dev.getRawMessage(hold));
+  for (byte i = 1; i <= 7; i++) {
+      if (k197dev.isDecPointOn(i, hold)) {
         u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
                      yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
       }
-    }
-    // set the unit
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    const unsigned int xunit = 229;
-    const unsigned int yunit = 20;
-    u8g2.setCursor(xunit, yunit);
-    u8g2.print(k197dev.getUnit());
-
-    // set the AC/DC indicator
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    const unsigned int xac = xraw + 3;
-    const unsigned int yac = 40;
-    u8g2.setCursor(xac, yac);
-    if (k197dev.isAC())
-      u8g2.print(F("AC"));
   }
+  // set the unit
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  const unsigned int xunit = 229;
+  const unsigned int yunit = 20;
+  u8g2.setCursor(xunit, yunit);
+  u8g2.print(k197dev.getUnit(hold));
+
+  // set the AC/DC indicator
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  const unsigned int xac = xraw + 3;
+  const unsigned int yac = 40;
+  u8g2.setCursor(xac, yac);
+  if (k197dev.isAC(hold))
+    u8g2.print(F("AC"));
 
   // set the other announciators
   u8g2.setFont(u8g2_font_8x13_mr);
@@ -329,29 +332,27 @@ void UImanager::updateNormalScreen() {
   x = 0;
   u8g2.setCursor(x, y);
 
-  if (!k197dev.getDisplayHold()) {
-    if (k197dev.isREL())
-      u8g2.print(F("REL"));
-    x = u8g2.tx;
-    x += (u8g2.getMaxCharWidth() / 2);
-    u8g2.setCursor(x, y);
-    if (k197dev.isdB())
-      u8g2.print(F("dB"));
-  }
+  if (k197dev.isREL(hold))
+    u8g2.print(F("REL"));
+  x = u8g2.tx;
+  x += (u8g2.getMaxCharWidth() / 2);
+  u8g2.setCursor(x, y);
+  if (k197dev.isdB(hold))
+    u8g2.print(F("dB"));
+  
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
-  if (k197dev.getDisplayHold()) {
+  if (hold) {
     u8g2.print(F("HOLD"));
-  } else {
-    if (k197dev.isSTO())
-      u8g2.print(F("STO "));
-
-    y += u8g2.getMaxCharHeight();
-    u8g2.setCursor(x, y);
-    if (k197dev.isRCL())
-      u8g2.print(F("RCL "));
   }
+  if (k197dev.isSTO(hold))
+    u8g2.print(F("STO "));
+
+  y += u8g2.getMaxCharHeight();
+  u8g2.setCursor(x, y);
+  if (k197dev.isRCL(hold))
+    u8g2.print(F("RCL "));
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
@@ -367,14 +368,14 @@ void UImanager::updateNormalScreen() {
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (k197dev.isTKModeActive() &&
-      !k197dev.getDisplayHold()) { // Display local temperature
+  if ( k197dev.isTKModeActive(hold) ) { // Display local temperature
     char buf[K197_RAW_MSG_SIZE + 1];
-    dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
+    dtostrf(k197dev.getTColdJunction(hold), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
-    u8g2.print(k197dev.getUnit());
+    u8g2.print(k197dev.getUnit(hold));
   } 
 
+  updateBtStatus();
   dxUtil.checkFreeStack();
 }
 
@@ -392,82 +393,82 @@ void UImanager::updateMinMaxScreen() {
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
 
-  if (!k197dev.getDisplayHold()) {
-    u8g2.drawStr(xraw, yraw, k197dev.getRawMessage());
-    for (byte i = 1; i <= 7; i++) {
-      if (k197dev.isDecPointOn(i)) {
+  bool hold = k197dev.getDisplayHold();
+  
+  u8g2.drawStr(xraw, yraw, k197dev.getRawMessage(hold));
+  for (byte i = 1; i <= 7; i++) {
+      if (k197dev.isDecPointOn(i, hold)) {
         u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
                      yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
       }
-    }
-
-    // set the unit
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    const unsigned int xunit = 229;
-    const unsigned int yunit = 20;
-    u8g2.setCursor(xunit, yunit);
-    u8g2.print(k197dev.getUnit(true));
-
-    // set the AC/DC indicator
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    int char_height_9x15 = u8g2.getMaxCharHeight(); // needed later on
-    const unsigned int xac = 229;
-    const unsigned int yac = 35;
-    u8g2.setCursor(xac, yac);
-    if (k197dev.isAC())
-      u8g2.print(F("AC"));
-
-    // set the other announciators
-    u8g2.setFont(u8g2_font_6x12_mr);
-    unsigned int x = 0;
-    unsigned int y = 5;
-    u8g2.setCursor(x, y);
-    if (k197dev.isREL())
-      u8g2.print(F("REL"));
-
-    // Write Min/average/Max labels
-    u8g2.setFont(u8g2_font_5x7_mr);
-    x = u8g2.tx + 10;
-    y = 5;
-    u8g2.setCursor(x, y);
-    u8g2.print(F("Max "));
-    y += char_height_9x15;
-    u8g2.setCursor(x, y);
-    u8g2.print(F("Avg "));
-    y += char_height_9x15;
-    u8g2.setCursor(x, y);
-    u8g2.print(F("Min "));
-
-    u8g2.setFont(u8g2_font_9x15_m_symbols);
-    char buf[K197_RAW_MSG_SIZE + 1];
-    x = u8g2.tx;
-    y = 3;
-    u8g2.setCursor(x, y);
-    u8g2.print(formatNumber(buf, k197dev.getMax()));
-    y += char_height_9x15;
-    u8g2.setCursor(x, y);
-    u8g2.print(formatNumber(buf, k197dev.getAverage()));
-    y += char_height_9x15;
-    u8g2.setCursor(x, y);
-    u8g2.print(formatNumber(buf, k197dev.getMin()));
-
-    x = 170;
-    y = 2;
-    u8g2.setCursor(x, y);
-    u8g2.setFont(u8g2_font_5x7_mr);
-    if (k197dev.isTKModeActive()) { // Display local temperature
-      char buf[K197_RAW_MSG_SIZE + 1];
-      dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
-      u8g2.print(buf);
-      u8g2.print(k197dev.getUnit());
-    }
   }
-  u8g2.setFont(u8g2_font_8x13_mr);
+
+  // set the unit
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  const unsigned int xunit = 229;
+  const unsigned int yunit = 20;
+  u8g2.setCursor(xunit, yunit);
+  u8g2.print(k197dev.getUnit(true, hold));
+
+  // set the AC/DC indicator
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  int char_height_9x15 = u8g2.getMaxCharHeight(); // needed later on
+  const unsigned int xac = 229;
+  const unsigned int yac = 35;
+  u8g2.setCursor(xac, yac);
+  if (k197dev.isAC(hold))
+    u8g2.print(F("AC"));
+
+  // set the other announciators
+  u8g2.setFont(u8g2_font_6x12_mr);
   unsigned int x = 0;
-  unsigned int y = 5 + u8g2.getMaxCharHeight() * 2;
+  unsigned int y = 5;
+  u8g2.setCursor(x, y);
+  if (k197dev.isREL(hold))
+    u8g2.print(F("REL"));
+
+  // Write Min/average/Max labels
+  u8g2.setFont(u8g2_font_5x7_mr);
+  x = u8g2.tx + 10;
+  y = 5;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Max "));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Avg "));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(F("Min "));
+
+  u8g2.setFont(u8g2_font_9x15_m_symbols);
+  char buf[K197_RAW_MSG_SIZE + 1];
+  x = u8g2.tx;
+  y = 3;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getMax(hold)));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getAverage(hold)));
+  y += char_height_9x15;
+  u8g2.setCursor(x, y);
+  u8g2.print(formatNumber(buf, k197dev.getMin(hold)));
+
+  x = 170;
+  y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if (k197dev.getDisplayHold())
+  if (k197dev.isTKModeActive(hold)) { // Display local temperature
+    char buf[K197_RAW_MSG_SIZE + 1];
+    dtostrf(k197dev.getTColdJunction(hold), K197_RAW_MSG_SIZE, 2, buf);
+    u8g2.print(buf);
+    u8g2.print(k197dev.getUnit(hold));
+  }
+  u8g2.setFont(u8g2_font_8x13_mr);
+  x = 0;
+  y = 5 + u8g2.getMaxCharHeight() * 2;
+  u8g2.setCursor(x, y);
+  u8g2.setFont(u8g2_font_5x7_mr);
+  if (hold)
     u8g2.print(F("HOLD"));
   dxUtil.checkFreeStack();
 }
@@ -479,9 +480,6 @@ void UImanager::updateMinMaxScreen() {
       @param connected true if a BT connection is detected, false otherwise
 */
 void UImanager::updateBtStatus() {
-  if (isSplitScreen() || (getScreenMode() != K197sc_normal)) {
-    return;
-  }
   unsigned int x = 95;
   unsigned int y = 2;
   u8g2.setCursor(x, y);
@@ -497,7 +495,6 @@ void UImanager::updateBtStatus() {
   } else if (connected) {
     u8g2.print(F("<->"));
   }
-  u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
 
@@ -1002,8 +999,6 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
    screen.
 */
 void UImanager::updateGraphScreen() {
-  u8g2.clearBuffer(); // Clear display area
-
   // Get graph data
   k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue());
 
