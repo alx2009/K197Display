@@ -371,6 +371,32 @@ void K197device::debugPrint() {
 }
 
 // ***************************************************************************************
+//  Hold mode handling
+// ***************************************************************************************
+
+  /*!
+      @brief  set display hold mode
+      @param newValue true to enter display hold mode, false to exit
+  */
+  void K197device::setDisplayHold(bool newValue) {
+    if (newValue == flags.hold) return;
+    if (newValue) { // activate hold mode
+      // copy current data to cache.hold
+      memcpy(cache.hold.raw_msg, raw_msg, K197_RAW_MSG_SIZE *sizeof(char));
+      cache.hold.raw_dp = raw_dp; 
+      cache.hold.annunciators0 = annunciators0; 
+      cache.hold.tcold = tcold; 
+      cache.hold.average = cache.average; 
+      cache.hold.min = cache.min;     
+      cache.hold.max = cache.max;     
+      cache.hold.unit=getUnit();
+      cache.hold.unit_with_db=getUnit(true);
+      cache.hold.isTKModeActive=isTKModeActive();
+    }
+    flags.hold = newValue; 
+  };
+
+// ***************************************************************************************
 //  Cache handling
 // ***************************************************************************************
 

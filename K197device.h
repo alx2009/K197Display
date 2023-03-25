@@ -373,7 +373,7 @@ public:
       @brief  constructor for the class. Do not forget that setup() must be
      called before using the other member functions.
   */
-  K197device() { raw_msg[0] = 0; };
+  K197device() { raw_msg[0] = 0; cache.hold.raw_msg[0]=0; };
   bool getNewReading();
   byte getNewReading(byte *data);
 
@@ -383,11 +383,7 @@ public:
   */
   bool getDisplayHold() { return flags.hold; };
 
-  /*!
-      @brief  set display hold mode
-      @param newValue true to enter display hold mode, false to exit
-  */
-  void setDisplayHold(bool newValue) { flags.hold = newValue; };
+  void setDisplayHold(bool newValue);
 
   /*!
       @brief  Return the raw message
