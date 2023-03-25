@@ -231,20 +231,12 @@ void UImanager::updateSplitScreen() {
   u8g2.setCursor(x, y);
   if (k197dev.isAuto())
     u8g2.print(F("AUTO "));
-  else
-    u8g2.print(F("     "));
   if (k197dev.isBAT())
     u8g2.print(F("BAT "));
-  else
-    u8g2.print(F("    "));
   if (k197dev.isREL())
     u8g2.print(F("REL "));
-  else
-    u8g2.print(F("    "));
   if (k197dev.isCal())
     u8g2.print(F("Cal   "));
-  else
-    u8g2.print(F("      "));
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
@@ -261,23 +253,15 @@ void UImanager::updateSplitScreen() {
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   if (k197dev.isAC())
     u8g2.print(F(" AC   "));
-  else
-    u8g2.print(F("      "));
 
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
   if (k197dev.isSTO())
     u8g2.print(F("STO "));
-  else
-    u8g2.print(F("    "));
   if (k197dev.isRCL())
     u8g2.print(F("RCL "));
-  else
-    u8g2.print(F("    "));
   if (k197dev.isRMT())
     u8g2.print(F("RMT   "));
-  else
-    u8g2.print(F("      "));
 
   if (isSplitScreen() && !isMenuVisible()) { // Show the debug log
     u8g2.setFont(u8g2_font_5x7_mr); // set the font for the terminal window
@@ -348,15 +332,11 @@ void UImanager::updateNormalScreen() {
   if (!k197dev.getDisplayHold()) {
     if (k197dev.isREL())
       u8g2.print(F("REL"));
-    else
-      u8g2.print(F("   "));
     x = u8g2.tx;
     x += (u8g2.getMaxCharWidth() / 2);
     u8g2.setCursor(x, y);
     if (k197dev.isdB())
       u8g2.print(F("dB"));
-    else
-      u8g2.print(F("  "));
   }
   y += u8g2.getMaxCharHeight();
   x = 0;
@@ -436,8 +416,6 @@ void UImanager::updateMinMaxScreen() {
     u8g2.setCursor(xac, yac);
     if (k197dev.isAC())
       u8g2.print(F("AC"));
-    //else
-    //  u8g2.print(F("  "));
 
     // set the other announciators
     u8g2.setFont(u8g2_font_6x12_mr);
@@ -446,8 +424,6 @@ void UImanager::updateMinMaxScreen() {
     u8g2.setCursor(x, y);
     if (k197dev.isREL())
       u8g2.print(F("REL"));
-    else
-      u8g2.print(F("   "));
 
     // Write Min/average/Max labels
     u8g2.setFont(u8g2_font_5x7_mr);
@@ -484,8 +460,6 @@ void UImanager::updateMinMaxScreen() {
       dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
       u8g2.print(buf);
       u8g2.print(k197dev.getUnit());
-    } else {
-      u8g2.print(F("          "));
     }
   }
   u8g2.setFont(u8g2_font_8x13_mr);
@@ -495,8 +469,6 @@ void UImanager::updateMinMaxScreen() {
   u8g2.setFont(u8g2_font_5x7_mr);
   if (k197dev.getDisplayHold())
     u8g2.print(F("HOLD"));
-  else
-    u8g2.print(F("    "));
   dxUtil.checkFreeStack();
 }
 
@@ -516,9 +488,7 @@ void UImanager::updateBtStatus() {
   u8g2.setFont(u8g2_font_5x7_mr);
   if (BTman.isPresent()) {
     u8g2.print(F("bt "));
-  } else {
-    u8g2.print(F("   "));
-  }
+  } 
   x += u8g2.getStrWidth("   ");
   u8g2.setCursor(x, y);
   bool connected = BTman.isConnected();
@@ -526,8 +496,6 @@ void UImanager::updateBtStatus() {
     u8g2.print(F("<=>"));
   } else if (connected) {
     u8g2.print(F("<->"));
-  } else {
-    u8g2.print(F("   "));
   }
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
@@ -571,7 +539,6 @@ void UImanager::clearScreen() {
   // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
-  //k197dev.setDisplayHold(false);
   dxUtil.checkFreeStack();
 }
 
@@ -1166,8 +1133,6 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x,
   u8g2.setCursor(u8g2.tx, u8g2.ty + 1);
   if (k197dev.isAC())
     u8g2.print(F(" AC"));
-  else
-    u8g2.print(F("   "));
   if (k197dev.isREL())
     u8g2.print(F(" REL"));
 
