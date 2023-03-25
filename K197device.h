@@ -387,10 +387,10 @@ public:
 
   /*!
       @brief  Return the raw message
-
+      @param hold if true returns the value at the time hold mode was last entered
       @return last raw message received from the K197/197A
   */
-  const char *getRawMessage() { return raw_msg; };
+  const char *getRawMessage(bool hold) { return raw_msg; };
 
   /*!
       @brief  check if there is a decimal point on the nth character in raw
@@ -408,13 +408,16 @@ public:
 
       @param  char_n the char to check (allowed range: 0 to 7, however 0 always
      return false)
+      @param hold if true returns the value at the time hold mode was last entered
       @return true if the last raw_message received from the K197/197A had a
      decimal point at the nth character
   */
-  bool isDecPointOn(byte char_n) { return bitRead(raw_dp, char_n); };
+  bool isDecPointOn(byte char_n, bool hold=false) {
+    return hold ? bitRead(cache.hold.raw_dp, char_n) : bitRead(raw_dp, char_n);
+  };
 
   const __FlashStringHelper *
-  getUnit(bool include_dB = false); // Note: includes UTF-8 characters
+  getUnit(bool include_dB = false, bool hold=false); // Note: includes UTF-8 characters
   int8_t getUnitPow10();
 
   /*!
@@ -610,21 +613,30 @@ public:
 
   /*!
       @brief  returns the average value (see also setNsamples())
+      @param hold if true returns the value at the time hold mode was last entered
       @return average value
   */
-  float getAverage() { return cache.average; };
+  float getAverage(bool hold=false) { 
+    return hold ? cache.hold.average : cache.average;
+  };
 
   /*!
       @brief  returns the minimum value
+      @param hold if true returns the value at the time hold mode was last entered
       @return minimum value
   */
-  float getMin() { return cache.min; };
+  float getMin(bool hold=false) {
+    return hold ? cache.hold.min : cache.min;
+  };
 
   /*!
       @brief  returns the maximum value
+      @param hold if true returns the value at the time hold mode was last entered
       @return maximum value
   */
-  float getMax() { return cache.max; };
+  float getMax(bool hold=false) {
+    return hold ? cache.hold.max : cache.max;
+  };
 
 public:
   // annunciators0
@@ -636,14 +648,19 @@ public:
 
   /*!
       @brief  test if REL is on
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isREL() { return (annunciators0 & K197_REL_bm) != 0; };
+  inline bool isREL(bool hold=false) {
+    if (hold) return (cache.hold.annunciators0 & K197_REL_bm) != 0;
+    return (annunciators0 & K197_REL_bm) != 0;
+  };
   /*!
       @brief  test if STO is on
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isSTO() { return (annunciators0 & K197_STO_bm) != 0; };
+  inline bool isSTO(bool hold=false) { return (annunciators0 & K197_STO_bm) != 0; };
   /*!
       @brief  test if dB is on
       @return returns true if on, false otherwise
@@ -651,19 +668,22 @@ public:
   inline bool isdB() { return (annunciators0 & K197_dB_bm) != 0; };
   /*!
       @brief  test if AC is on
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isAC() { return (annunciators0 & K197_AC_bm) != 0; };
+  inline bool isAC(bool hold=false) { return (annunciators0 & K197_AC_bm) != 0; };
   /*!
       @brief  test if AC is on
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isDC() { return (annunciators0 & K197_AC_bm) == 0; };
+  inline bool isDC(bool hold=false) { return (annunciators0 & K197_AC_bm) == 0; };
   /*!
       @brief  test if RCL is on
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isRCL() { return (annunciators0 & K197_RCL_bm) != 0; };
+  inline bool isRCL(bool hold=false) { return (annunciators0 & K197_RCL_bm) != 0; };
   /*!
       @brief  test if BAT is on
       @return returns true if on, false otherwise
@@ -756,15 +776,17 @@ public:
 
   /*!
       @brief  check if the Thermocuple mode is active now
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns true when K Thermocouple mode is enabled and active,
   */
-  bool isTKModeActive() { return isV() && ismV() && flags.tkMode && isDC(); }
+  bool isTKModeActive(bool hold=false) { return isV() && ismV() && flags.tkMode && isDC(); }
 
   /*!
       @brief  returns the temperature used for cold junction compensation
+      @param hold if true returns the value at the time hold mode was last entered
       @return temperature in celsius
   */
-  float getTColdJunction() {
+  float getTColdJunction(bool hold=false) {
     return abs(tcold) < 999.99 ? tcold : 999.99; // Keep it in the display range
                                                  // just to be on the safe side
   }

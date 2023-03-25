@@ -273,11 +273,12 @@ void K197device::setOverrange() {
 /*!
     @brief  return the unit, including SI prefix (V, mV, etc.)
     @param include_dB if true, returns "dB" as a unit when in dB mode
+    @param hold if true returns the value at the time hold mode was last entered
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
 const __FlashStringHelper *
-K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
+K197device::getUnit(bool include_dB, bool hold) { // Note: includes UTF-8 characters
   if (isV()) {                         // Voltage units
     if (flags.tkMode && ismV() && isDC())
       return F("°C");
