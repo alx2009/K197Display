@@ -324,8 +324,6 @@ void UImanager::updateNormalScreen() {
     u8g2.setCursor(xac, yac);
     if (k197dev.isAC())
       u8g2.print(F("AC"));
-    //else
-    //  u8g2.print(F("  "));
   }
 
   // set the other announciators
@@ -335,16 +333,12 @@ void UImanager::updateNormalScreen() {
   u8g2.setCursor(x, y);
   if (k197dev.isAuto())
     u8g2.print(F("AUTO"));
-  //else
-  //  u8g2.print(F("    "));
   x = u8g2.tx;
   x += u8g2.getMaxCharWidth() * 2;
   u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setCursor(x, y);
   if (k197dev.isBAT())
     u8g2.print(F("BAT"));
-  //else
-  //  u8g2.print(F("   "));
 
   u8g2.setFont(u8g2_font_8x13_mr);
   y += u8g2.getMaxCharHeight();
@@ -372,30 +366,22 @@ void UImanager::updateNormalScreen() {
   } else {
     if (k197dev.isSTO())
       u8g2.print(F("STO "));
-    //else
-    //  u8g2.print(F("    "));
 
     y += u8g2.getMaxCharHeight();
     u8g2.setCursor(x, y);
     if (k197dev.isRCL())
       u8g2.print(F("RCL "));
-    //else
-    //  u8g2.print(F("    "));
   }
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
   if (k197dev.isCal())
     u8g2.print(F("Cal"));
-  //else
-  //  u8g2.print(F("   "));
 
   y += u8g2.getMaxCharHeight() * 3;
   u8g2.setCursor(x, y);
   if (k197dev.isRMT())
     u8g2.print(F("RMT"));
-  //else
-  //  u8g2.print(F("   "));
 
   x = 140;
   y = 2;
@@ -407,9 +393,7 @@ void UImanager::updateNormalScreen() {
     dtostrf(k197dev.getTColdJunction(), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit());
-  } /*else if (!k197dev.getDisplayHold()) {
-    u8g2.print(F("          "));
-  }*/
+  } 
 
   dxUtil.checkFreeStack();
 }
@@ -452,8 +436,8 @@ void UImanager::updateMinMaxScreen() {
     u8g2.setCursor(xac, yac);
     if (k197dev.isAC())
       u8g2.print(F("AC"));
-    else
-      u8g2.print(F("  "));
+    //else
+    //  u8g2.print(F("  "));
 
     // set the other announciators
     u8g2.setFont(u8g2_font_6x12_mr);
