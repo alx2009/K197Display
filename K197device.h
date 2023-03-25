@@ -390,7 +390,7 @@ public:
       @param hold if true returns the value at the time hold mode was last entered
       @return last raw message received from the K197/197A
   */
-  const char *getRawMessage(bool hold) { 
+  const char *getRawMessage(bool hold=false) { 
     return hold ? cache.hold.raw_msg : raw_msg;
   };
 
