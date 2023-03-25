@@ -334,7 +334,7 @@ void UImanager::updateNormalScreen() {
 
   if (k197dev.isREL(hold))
     u8g2.print(F("REL"));
-  x = u8g2.tx;
+  x += u8g2.getMaxCharWidth() * 3;
   x += (u8g2.getMaxCharWidth() / 2);
   u8g2.setCursor(x, y);
   if (k197dev.isdB(hold))
@@ -346,6 +346,8 @@ void UImanager::updateNormalScreen() {
   if (hold) {
     u8g2.print(F("HOLD"));
   }
+  x += u8g2.getMaxCharWidth() * 3;
+  x += (u8g2.getMaxCharWidth() / 2);  
   if (k197dev.isSTO(hold))
     u8g2.print(F("STO "));
 
@@ -386,12 +388,16 @@ void UImanager::updateNormalScreen() {
 void UImanager::updateMinMaxScreen() {
   u8g2.setFont(
       u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
-  const unsigned int xraw = 130;
-  const unsigned int yraw = 15;
+  const unsigned int xraw = 130;  // x coordinate for raw_msg
+  const unsigned int yraw = 15;   // y coordinate for raw_msg
   const unsigned int dpsz_x = 3;  // decimal point size in x direction
   const unsigned int dpsz_y = 3;  // decimal point size in y direction
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
+  const unsigned int xstat = 28; // x coordinate for the statistics
+  const unsigned int ystat = 5;   // y coordinate for the statistics (1st line)
+  const unsigned int xunit = 229; // x coordinate for the unit
+  const unsigned int yunit = 20;  // y coordinate for the unit
 
   bool hold = k197dev.getDisplayHold();
   
@@ -405,8 +411,6 @@ void UImanager::updateMinMaxScreen() {
 
   // set the unit
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  const unsigned int xunit = 229;
-  const unsigned int yunit = 20;
   u8g2.setCursor(xunit, yunit);
   u8g2.print(k197dev.getUnit(true, hold));
 
@@ -429,8 +433,9 @@ void UImanager::updateMinMaxScreen() {
 
   // Write Min/average/Max labels
   u8g2.setFont(u8g2_font_5x7_mr);
-  x = u8g2.tx + 10;
-  y = 5;
+  x = xstat;
+  y = ystat;
+  DebugOut.print(F("x=")); DebugOut.println(x);
   u8g2.setCursor(x, y);
   u8g2.print(F("Max "));
   y += char_height_9x15;
