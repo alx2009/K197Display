@@ -520,6 +520,9 @@ private:
     void resampleGraph(uint16_t nsamples_new);
     
   public:
+    /*!
+       @brief structure used to store values to be displayed in hold mode
+    */
     struct k197_cache_hold_struct {
       char raw_msg[K197_RAW_MSG_SIZE]; ///< holds raw_msg
       byte raw_dp = 0x00; ///< holds raw_dp
@@ -531,7 +534,7 @@ private:
       const __FlashStringHelper * unit=NULL;
       const __FlashStringHelper * unit_with_db=NULL;
       bool isTKModeActive=false;
-    } hold; ///< cache values in hold mode
+    } hold; ///< store values to be displayed in hold mode
   } cache; ///< cache measured values and related status information
 
   void updateCache();
