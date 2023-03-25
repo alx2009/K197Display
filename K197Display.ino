@@ -276,6 +276,7 @@ void setup() {
   PORTC.PORTCTRL = PORT_SRL_bm;
   PORTD.PORTCTRL = PORT_SRL_bm;
   PORTF.PORTCTRL = PORT_SRL_bm;
+  dxUtil.begin();
   pushbuttons.setup();
   pushbuttons.setCallback(myButtonCallback);
 
@@ -287,7 +288,6 @@ void setup() {
 
   DebugOut.begin();
 
-  dxUtil.begin();
   BTman.setup();
 
   // We acquire one value and discard it, this may be needed before we can have
@@ -370,7 +370,6 @@ void loop() {
     BTman.checkPresence();
     if (BTman.checkConnection() == BTmoduleTurnedOff)
       uiman.setLogging(false);
-    uiman.updateBtStatus();
     PROFILE_stop(DebugOut.PROFILE_DISPLAY);
     PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in BT checks()"));
   }
