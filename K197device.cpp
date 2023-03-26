@@ -279,6 +279,9 @@ void K197device::setOverrange() {
 */
 const __FlashStringHelper *
 K197device::getUnit(bool include_dB, bool hold) { // Note: includes UTF-8 characters
+  if (hold) {
+    return include_dB ? cache.hold.unit_with_db : cache.hold.unit;
+  }
   if (isV()) {                         // Voltage units
     if (flags.tkMode && ismV() && isDC())
       return F("°C");
