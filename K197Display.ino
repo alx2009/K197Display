@@ -46,6 +46,7 @@ moving to inline assembler and naked interrupt handlers
 // Implement true hold for graph screen
 //
 // Bug2fix:
+// isOverange() does not work in Ohm mode (does it in V/A mode?)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
