@@ -114,6 +114,19 @@ bool K197device::getNewReading() {
 #define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add 1 because of '.'
 
 /*!
+   @brief utility function, check if a message indicates overrange
+   @details an overrange message is a six character message "  0L  ", 
+    optionally pre-pended by a "-" character 
+   @param message points to the message to check
+   @return true if the meesage indicates overrange
+*/
+bool checkMessage4overrange(const char *message) {
+   if (message[0]=='-') message++;
+   if (strcasecmp_P(message, PSTR("  0L  ")) == 0) return true;
+   return false;
+}
+
+/*!
       @brief process a new reading
 
    @details process a new reading that has just been received via SPI and return
@@ -198,12 +211,8 @@ byte K197device::getNewReading(byte *data) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
     flags.msg_is_ovrange = false;
   } else {
-    // if (strstr(message, "0L") != NULL) {/
-    if (strcasecmp_P(message, PSTR("0L")) == 0) {
-      flags.msg_is_ovrange = true;
-    } else {
-      flags.msg_is_ovrange = false;
-    }
+    //DebugOut.print(F("message=<")); DebugOut.print(message); DebugOut.println(F(">"));
+    flags.msg_is_ovrange = checkMessage4overrange(message);
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
       annunciators8 |= K197_Cal_bm;
