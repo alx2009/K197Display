@@ -42,11 +42,8 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 // Review format main/minmax screen
-// Add more indicators to minmax screen
+// Improve handling of REL button
 // Implement true hold for graph screen
-//
-// Bug2fix:
-// isOverange() does not work in Ohm mode (does it in V/A mode?)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
