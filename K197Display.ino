@@ -41,7 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Remove interaction bwteen STO click/long click
 // Review format main/minmax screen
 // Add more indicators to minmax screen
 // Implement true hold for graph screen
