@@ -81,8 +81,6 @@ private:
   byte cursor_a = 60;  ///< Stores cursor A position
   byte cursor_b = 120; ///< Stores cursor B position
 
-  bool show_volt = false; ///< Show voltages if true (not currently used)
-  bool show_temp = false; ///< Show temperature if true  (not currently used)
   K197screenMode screen_mode =
       (K197screenMode)(K197sc_normal |
                        K197sc_FullScreenBitMask); ///< Keep track of how to
