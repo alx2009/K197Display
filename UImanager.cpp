@@ -349,12 +349,12 @@ void UImanager::updateNormalScreen() {
   x += u8g2.getMaxCharWidth() * 3;
   x += (u8g2.getMaxCharWidth() / 2);  
   if (k197dev.isSTO(hold))
-    u8g2.print(F("STO "));
+    u8g2.print(F("STO"));
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
   if (k197dev.isRCL(hold))
-    u8g2.print(F("RCL "));
+    u8g2.print(F("RCL"));
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
@@ -423,7 +423,7 @@ void UImanager::updateMinMaxScreen() {
   if (k197dev.isAC(hold))
     u8g2.print(F("AC"));
 
-  // set the other announciators
+  // set the REL announciator
   u8g2.setFont(u8g2_font_6x12_mr);
   unsigned int x = 0;
   unsigned int y = 5;
@@ -475,6 +475,26 @@ void UImanager::updateMinMaxScreen() {
   u8g2.setFont(u8g2_font_5x7_mr);
   if (hold)
     u8g2.print(F("HOLD"));
+
+  // set the other announciators
+  x=0;
+  y=63-u8g2.getMaxCharHeight()-3;
+  u8g2.setCursor(x, y);
+  if (k197dev.isSTO(hold))
+    u8g2.print(F("STO "));
+  if (k197dev.isRCL(hold))
+    u8g2.print(F("RCL "));
+  if (k197dev.isBAT())
+    u8g2.print(F("BAT "));
+  if (k197dev.isRMT())
+    u8g2.print(F("RMT "));
+  if (k197dev.isCal())
+    u8g2.print(F("Cal "));
+  if(k197dev.isOvrange())
+    u8g2.print(F("E "));
+  if (k197dev.isAuto())
+    u8g2.print(F("AUTO"));
+    
   dxUtil.checkFreeStack();
 }
 
