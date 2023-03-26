@@ -491,7 +491,7 @@ void UImanager::updateMinMaxScreen() {
   if (k197dev.isCal())
     u8g2.print(F("Cal "));
   if(k197dev.isOvrange())
-    u8g2.print(F("E "));
+    u8g2.print(F("ovRange "));
   if (k197dev.isAuto())
     u8g2.print(F("AUTO"));
     
