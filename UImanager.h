@@ -81,6 +81,8 @@ private:
   byte cursor_a = 60;  ///< Stores cursor A position
   byte cursor_b = 120; ///< Stores cursor B position
 
+  bool hold_flag = false; ///< prevents changing hold mode at long press
+
   K197screenMode screen_mode =
       (K197screenMode)(K197sc_normal |
                        K197sc_FullScreenBitMask); ///< Keep track of how to

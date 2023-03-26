@@ -1290,14 +1290,35 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     case K197key_STO:
       if (reassignStoRcl.getValue()) {
         if (eventType == UIeventPress) {
-          k197dev.setDisplayHold(!k197dev.getDisplayHold());
+          if (k197dev.getDisplayHold()) { // we are currently on hold
+              // At this point we don't know if it will be a short or long press/click
+              // since removing hold is not time critical, we wait until the click event
+              // We will fix things in the following events
+              hold_flag=true;
+          } else { // we are currently not on hold
+              // At this point we don't know if it will be a short or long press
+              // since hold can be time critical, we set hold mode immediately
+              // We will fix things in the following events
+              hold_flag=false;
+              k197dev.setDisplayHold(true);
+          }
           // GPIOR3 |= 0x10; // set debug flag
         } else if (eventType == UIeventLongPress) {
+          // if hold was not active before, we need to undo the activation
+          if (hold_flag==false) { // hold was not active before
+             // and then we cancel the hold
+             k197dev.setDisplayHold(false);
+          }
           K197screenMode screen_mode = uiman.getScreenMode();
           if (screen_mode != K197sc_minmax)
             uiman.setScreenMode(K197sc_minmax);
           else
             uiman.setScreenMode(K197sc_normal);
+        } else if (eventType == UIeventClick) {
+          // Now we know this was a short click
+          if (hold_flag) { // hold was active when button was pressed
+             k197dev.setDisplayHold(false); // so now we need to cancel the hold
+          }            
         } else if (eventType == UIeventDoubleClick) {
           // NOP
         }
