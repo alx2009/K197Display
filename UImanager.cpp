@@ -344,16 +344,25 @@ void UImanager::updateNormalScreen() {
   u8g2.setCursor(x, y);
   if (hold) {
     u8g2.print(F("HOLD"));
+    // not enough space, go to the next line
+    x = 0;
+    y = u8g2.tx+u8g2.getMaxCharHeight();
+    u8g2.setCursor(x, y);
   }
-  x += u8g2.getMaxCharWidth() * 3;
-  x += (u8g2.getMaxCharWidth() / 2);  
-  if (k197dev.isSTO())
+  if (k197dev.isSTO()) {
     u8g2.print(F("STO"));
-
-  y += u8g2.getMaxCharHeight();
-  u8g2.setCursor(x, y);
+    x=u8g2.tx+(u8g2.getMaxCharWidth() / 2);
+  } else {
+    x=u8g2.tx+(u8g2.getMaxCharWidth() * 7 / 2);    
+  }
+  if (!hold) { // then move to Next line now
+    x=0;
+    y += u8g2.getMaxCharHeight();    
+  }
+  u8g2.setCursor(x, y);    
   if (k197dev.isRCL())
     u8g2.print(F("RCL"));
+
   x = 229;
   y = 0;
   u8g2.setCursor(x, y);
