@@ -193,10 +193,8 @@ void UImanager::setup() {
 // ***************************************************************************************
 
 /*!
-    @brief  update the display. The information comes from the pointer to
-   K197device passed when the object was constructed
-
-    This function will not cause the K197device object to read new data, it will
+    @brief  update the display. 
+    @details This function will not cause the K197device object to read new data, it will
    use whatever data is already stored in the object.
 
     Therefore, it should not be called before the first data has been received
@@ -204,8 +202,9 @@ void UImanager::setup() {
 
     If you want to add an initial scren/text, the best way would be to add this
    to setup();
+   @param stepDoodle if true and the doodle animation is enabled, the animation is updated
 */
-void UImanager::updateDisplay() {
+void UImanager::updateDisplay(bool stepDoodle) {
   u8g2.clearBuffer(); // Clear display area
 
   if (k197dev.isNotCal() && isSplitScreen())
@@ -217,7 +216,7 @@ void UImanager::updateDisplay() {
   else
     updateGraphScreen();
 
-  displayDoodle(doodle_x_coord, doodle_y_coord);
+  displayDoodle(doodle_x_coord, doodle_y_coord, stepDoodle);
   u8g2.sendBuffer();
   dxUtil.checkFreeStack();
 }
@@ -348,12 +347,12 @@ void UImanager::updateNormalScreen() {
   }
   x += u8g2.getMaxCharWidth() * 3;
   x += (u8g2.getMaxCharWidth() / 2);  
-  if (k197dev.isSTO(hold))
+  if (k197dev.isSTO())
     u8g2.print(F("STO"));
 
   y += u8g2.getMaxCharHeight();
   u8g2.setCursor(x, y);
-  if (k197dev.isRCL(hold))
+  if (k197dev.isRCL())
     u8g2.print(F("RCL"));
   x = 229;
   y = 0;
@@ -435,7 +434,6 @@ void UImanager::updateMinMaxScreen() {
   u8g2.setFont(u8g2_font_5x7_mr);
   x = xstat;
   y = ystat;
-  DebugOut.print(F("x=")); DebugOut.println(x);
   u8g2.setCursor(x, y);
   u8g2.print(F("Max "));
   y += char_height_9x15;
@@ -480,9 +478,9 @@ void UImanager::updateMinMaxScreen() {
   x=0;
   y=63-u8g2.getMaxCharHeight()-3;
   u8g2.setCursor(x, y);
-  if (k197dev.isSTO(hold))
+  if (k197dev.isSTO())
     u8g2.print(F("STO "));
-  if (k197dev.isRCL(hold))
+  if (k197dev.isRCL())
     u8g2.print(F("RCL "));
   if (k197dev.isBAT())
     u8g2.print(F("BAT "));
@@ -864,13 +862,15 @@ void UImanager::logData() {
    changes the active font, however it does not change the cursor coordinates
     @param x the x coordinate where to display the animation (upper-left corner)
     @param y the y coordinate where to display the animation (upper-left corner)
+    @param stepDoodle if false the doodle animation is not updated
 */
-void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y) {
+void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle) {
   static byte phase = 0;
   if (!showDoodle.getValue())
     return;
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.drawGlyph(x, y, ((u8g2_uint_t)0x25f4) + phase);
+  if (!stepDoodle) return;
   if (--phase > 3)
     phase = 3;
 }

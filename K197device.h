@@ -662,8 +662,7 @@ public:
       @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isSTO(bool hold=false) {
-     if (hold) return (cache.hold.annunciators0 & K197_STO_bm) != 0;
+  inline bool isSTO() {
      return (annunciators0 & K197_STO_bm) != 0;
   };
   /*!
@@ -697,8 +696,7 @@ public:
       @param hold if true returns the value at the time hold mode was last entered
       @return returns true if on, false otherwise
   */
-  inline bool isRCL(bool hold=false) {
-    if (hold) return (cache.hold.annunciators0 & K197_RCL_bm) != 0;
+  inline bool isRCL() {
     return (annunciators0 & K197_RCL_bm) != 0;
   };
   /*!

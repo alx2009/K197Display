@@ -189,10 +189,10 @@ void myButtonCallback(K197UIeventsource eventSource,
   dxUtil.checkFreeStack();
   if (uiman.handleUIEvent(eventSource,
                           eventType)) { // UI related event, no need to do more
-    // DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
-    // DebugOut.print(F(" "));
-    // k197ButtonCluster::DebugOut_printEventName(eventType);
-    // DebugOut.println(F("Btn handled by UI"));
+    //DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    //DebugOut.print(F(" "));
+    //k197ButtonCluster::DebugOut_printEventName(eventType);
+    //DebugOut.println(F("Btn handled by UI"));
     return;
   }
   if (k197dev.isNotCal() && uiman.isSplitScreen())
@@ -213,10 +213,10 @@ void myButtonCallback(K197UIeventsource eventSource,
     return;
   }
 
-  // DebugOut.print(F("Btn "));
+  //DebugOut.print(F("Btn "));
   switch (eventSource) {
   case K197key_STO:
-    // DebugOut.print(F("STO"));
+    //DebugOut.print(F("STO"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -224,7 +224,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_RCL:
-    // DebugOut.print(F("RCL"));
+    //DebugOut.print(F("RCL"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -234,7 +234,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long
     // press from a (short) click
-    // DebugOut.print(F("REL"));
+    //DebugOut.print(F("REL"));
     if (k197dev.isNotCal() && eventType == UIeventClick) {
       pushbuttons.clickREL();
     }
@@ -245,7 +245,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_DB:
-    // DebugOut.print(F("DB"));
+    //DebugOut.print(F("DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -253,9 +253,9 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   }
-  // DebugOut.print(F(" "));
-  // k197ButtonCluster::DebugOut_printEventName(eventType);
-  // DebugOut.println();
+  //DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(eventType);
+  //DebugOut.println();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +324,7 @@ bool collisionStatus =
     false; ///< keep track if a collision was detected by the SPI peripheral
 
 static unsigned long looptimer = 0UL;
+static unsigned long lastUpdate = 0UL;
 
 /*!
       @brief Arduino loop function
@@ -352,6 +353,7 @@ void loop() {
       k197dev.debugPrint();
     }
     if (n == 9) {
+      lastUpdate=looptimer;
       PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.updateDisplay();
       PROFILE_stop(DebugOut.PROFILE_DISPLAY);
@@ -381,6 +383,16 @@ void loop() {
     }
   }
   pushbuttons.checkNew();
+  if ( (looptimer-lastUpdate) > (k197dev.isRCL() ? 375000l : 1000000l)) { // K197 is not updating data   
+    uiman.updateDisplay(false); // We still want to update the display but the doodle should stay the same
+    lastUpdate=looptimer;
+    BTman.checkPresence();
+    if (BTman.checkConnection() == BTmoduleTurnedOff)
+      uiman.setLogging(false);
+    if (k197dev.isRCL()) { // In RCL mode it is normal that the K197 is not sending anything
+        __asm__ __volatile__("wdr" ::);
+    } // ELSE if this persists it will cause a watchdog reset 
+  }
 
   PROFILE_stop(DebugOut.PROFILE_LOOP);
   PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
