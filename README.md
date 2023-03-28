@@ -89,7 +89,7 @@ An additional "statistics" display mode is available when the option to repurpos
 
 Graph display mode
 ------------------
-An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Double clicking the STO button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.).
+An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Holding the RCL button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.).
 
 Sample rate, preferences for auto-scaling and other options can be set in the options menu (Under the sub menu "Graph options"). 
 
@@ -97,7 +97,7 @@ The x (time) scale changes automatically depending on how many samples have been
 
 Graph display mode with cursors
 -------------------------------
-Holding the RCL key in graph mode shows and hides the cursors. Two cursors are shown on the graph, labelled A and B. 
+Double click of the RCL key in graph mode shows and hides the cursors. Two cursors are shown on the graph, labelled A and B. 
 
 When the cursors are shown, the panel at the right of the graph shows the value at the cursors rather than the latest measurement. the average calculated between cursor A and cursor B is also shown, as well as the difference in time (based on K197 sampling rate).   
 
@@ -111,12 +111,12 @@ compared to the original K197, the use of the the pushbuttons on the front panel
 - Normal STO and RCL functions can be disabled from the options menu. When disabled, the buttons are repurposed as follows:
   - clicking the STO button once hold the currently displayed measurement when in normal or statistics mode. A second click returns to continuos updates.
   - Holding the STO button alternates between "normal" and "statistics" display mode (when repurposing of STO and RCL is enabled)
-  - Double clicking the STO button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
+  - Holding the RCL button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
  
- Note 1: When in graph mode, holding the RCL key shows the cursors. When cursors are shown, the key function changes as follows:
+ Note 1: When in graph mode, double click of the RCL button shows the cursors. When cursors are shown, the key function changes as follows:
  - REL and Db move the active cursor to the left and right respectively. 
  - Clicking "RCL" switch the active cursor.
- - Holding "RCL" go back to the graph mode without cursors 
+ - Double click of "RCL" goes back to the graph mode without cursors 
   
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
 - REL = up (hold to exit the menu, double click up all the way to the top)

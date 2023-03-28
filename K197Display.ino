@@ -41,7 +41,11 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-//  Keep hold when switching between display modes ?
+// Implement true hold for main screen
+// Remove interaction bwteen STO click/long click
+// Implement true hold for statistics screen
+// Implement true hold for graph screen
+//
 // Bug2fix:
 //
 // Latest benchmark:
@@ -86,7 +90,7 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   dxUtil.reportStack();
-  Serial.print(F(" Max loop time (us): "));
+  Serial.print(F(" Max loop (us): "));
   Serial.println(uiman.looptimerMax);
   uiman.looptimerMax = 0;
   Serial.println(F("> "));
@@ -97,14 +101,11 @@ void printPrompt() { // Here we want to use Serial, rather than DebugOut
 */
 void printHelp() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
-  Serial.println(F(" ? - print this help text"));
-  Serial.println(F(" wdt  ==> trigger watchdog reset"));
-  Serial.println(F(" swr  ==> triger software reset"));
-  Serial.println(F(" jmp0 ==> jump to 0 (dirty reset)"));
-  Serial.println(F(" volt ==> check voltages & temperature"));
-  Serial.println(F(" msg ==> toggle printout of data to/from main board"));
-  Serial.println(F(" log ==> toggle data logging"));
-  Serial.println(F(" contrast n ==> set display contrast [0-255]"));
+  Serial.println(F(" ?    > help"));
+  Serial.println(F(" swr  > SW reset"));
+  Serial.println(F(" volt > show V & T"));
+  Serial.println(F(" msg  > messages"));
+  Serial.println(F(" log  > logging"));
 
   printPrompt();
 }
@@ -118,51 +119,9 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 */
 void printError(
     const char *buf) { // Here we want to use Serial, rather than DebugOut
-  Serial.print(F("Invalid command: "));
+  Serial.print(F("Invalid: "));
   Serial.println(buf);
   printHelp();
-}
-
-/*!
-      @brief handle the "contrast" command
-      Reads the contrast value from serial and change contrast accordingly
-*/
-void cmdContrast() { // Here we want to use Serial, rather than DebugOut (which
-                     // does not even support input)
-  dxUtil.checkFreeStack();
-  static char buf[INPUT_BUFFER_SIZE];
-  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
-  buf[i] = 0;
-  if (i == 0) { // no characters read
-    Serial.println(F("Contrast: <no change>"));
-    Serial.flush();
-    return;
-  }
-  uint8_t value = atoi(buf);
-  Serial.print(F("Contrast="));
-  Serial.println(value);
-  Serial.flush();
-  uiman.setContrast(value);
-}
-
-void cmdTmpScaling() {
-  static char buf[INPUT_BUFFER_SIZE];
-  size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
-  buf[i] = 0;
-  if (i == 0) { // no characters read
-    Serial.println(F("Contrast: <no change>"));
-    Serial.flush();
-    return;
-  }
-  float value = atof(buf);
-  Serial.print(F("X="));
-  Serial.println(value);
-  Serial.flush();
-  // PROFILE_start(DebugOut.PROFILE_MATH);
-  k197dev.troubleshootAutoscale(value, value);
-  // PROFILE_stop(DebugOut.PROFILE_MATH);
-  // PROFILE_println(DebugOut.PROFILE_MATH,
-  //                   F("Time spent in troubleshootAutoscale()"));
 }
 
 /*!
@@ -191,23 +150,10 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
     printHelp();
     return;
   }
-  if (strcasecmp_P(buf, PSTR("wdt")) == 0) {
-    Serial.println(F("Testing watchdog reset"));
-    Serial.flush();
-    _PROTECTED_WRITE(WDT.CTRLA,
-                     WDT_WINDOW_8CLK_gc |
-                         WDT_PERIOD_8CLK_gc); // enable the WDT, minimum
-                                              // timeout, minimum window.
-    while (1)
-      __asm__ __volatile__("wdr" ::);
-  } else if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
-    Serial.println(F("Testing SW reset"));
+  if ((strcasecmp_P(buf, PSTR("swr")) == 0)) {
+    Serial.println(F("SWR"));
     Serial.flush();
     _PROTECTED_WRITE(RSTCTRL.SWRR, 1);
-  } else if ((strcasecmp_P(buf, PSTR("jmp0")) == 0)) {
-    Serial.println(F("Testing dirty reset"));
-    Serial.flush();
-    asm volatile("jmp 0");
   } else if ((strcasecmp_P(buf, PSTR("volt")) == 0)) {
     // Serial.println(F("Check voltages")); Serial.flush();
     dxUtil.checkVoltages(false);
@@ -221,10 +167,6 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
       msg_printout = true;
   } else if ((strcasecmp_P(buf, PSTR("log")) == 0)) {
     cmdLog();
-  } else if ((strcasecmp_P(buf, PSTR("contrast")) == 0)) {
-    cmdContrast();
-  } else if ((strcasecmp_P(buf, PSTR("x")) == 0)) {
-    cmdTmpScaling();
   } else if ((strcasecmp_P(buf, PSTR(" ")) == 0)) {
     // do nothing;
   } else {
@@ -356,25 +298,17 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  DebugOut.println(F("K197Display running on dxCore"));
-
   k197dev.setup();
 
   uiman.setup();
-  u8g2log.println(F("K197Display"));
   DebugOut.useOled(true);
+  DebugOut.println(F("K197Display"));
 
   dxUtil.printResetFlags();
   dxUtil.checkVoltages(false);
   DebugOut.print(F(", "));
   dxUtil.pollMVIOstatus();
   dxUtil.checkTemperature();
-
-  if (BTman.isPresent()) {
-    DebugOut.println(F("BT is on"));
-  } else {
-    DebugOut.println(F("BT is off"));
-  }
 
   delay(100);
 
@@ -411,7 +345,7 @@ void loop() {
     PROFILE_println(DebugOut.PROFILE_DEVICE,
                     F("Time spent in getNewReading()"));
     if (msg_printout) {
-      DebugOut.print(F("SPI packet - N="));
+      DebugOut.print(F("SPI - N="));
       DebugOut.print(n);
       DebugOut.print(F(": "));
       k197dev.debugPrintData(DMMReading, n);
@@ -443,11 +377,11 @@ void loop() {
   bool collision = k197dev.collisionDetected();
   if (collision != collisionStatus) {
     collisionStatus = collision;
-    DebugOut.println(F("Collision "));
+    DebugOut.println(F("Coll. "));
     if (collisionStatus) {
-      DebugOut.println(F("DETECTED"));
+      DebugOut.println(F("DETECT"));
     } else {
-      DebugOut.println(F("cleared"));
+      DebugOut.println(F("clear"));
     }
   }
   pushbuttons.checkNew();

@@ -144,7 +144,7 @@ public:
      @return true if the screen is in graph mode
   */
   bool isGraphMode() {
-    return !isMenuVisible() && ((screen_mode & K197sc_graph) != 0x00);
+    return !isMenuVisible() && ((screen_mode & K197sc_ScreenModeMask) == K197sc_graph);
   };
   /*!
      @brief  chek if the cursors are visible

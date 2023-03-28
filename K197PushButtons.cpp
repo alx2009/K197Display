@@ -51,6 +51,8 @@ unsigned long lastHold[] = {0UL, 0UL, 0UL,
                             0UL}; ///< micros() when last hold event generated
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last released
+bool enableDoubleClick[] = {true, true, true, true}; ///< 
+
 /*!
     @brief  set a call back for a push button in the cluster
 
@@ -111,28 +113,28 @@ bool k197ButtonCluster::isPressed(K197UIeventsource eventSource) {
 void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
   switch (event) {
   case UIeventClick:
-    DebugOut.print(F("eventClick"));
+    DebugOut.print(F("evClick"));
     break;
   case UIeventDoubleClick:
-    DebugOut.print(F("eventDoubleClick"));
+    DebugOut.print(F("evDbClick"));
     break;
   case UIeventLongClick:
-    DebugOut.print(F("eventLongClick"));
+    DebugOut.print(F("evLgClick"));
     break;
   case UIeventPress:
-    DebugOut.print(F("eventPress"));
+    DebugOut.print(F("evPress"));
     break;
   case UIeventLongPress:
-    DebugOut.print(F("eventLongPress"));
+    DebugOut.print(F("evLgPress"));
     break;
   case UIeventHold:
-    DebugOut.print(F("eventHold"));
+    DebugOut.print(F("evHold"));
     break;
   case UIeventRelease:
-    DebugOut.print(F("eventRelease"));
+    DebugOut.print(F("evRls"));
     break;
   default:
-    DebugOut.print(F("unknown ev. "));
+    DebugOut.print(F("ev?"));
     DebugOut.print(event);
     break;
   }
@@ -159,14 +161,14 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define fifo_NO_DATA                                                           \
   0xff ///< value returned when the fifo is empty (see fifo_pull())
 volatile static byte fifo_records[]{
-    0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff}; ///< array implementing the FIFO queue, see fifo_pull()
 #define fifo_MAX_RECORDS                                                       \
   (sizeof(fifo_records) /                                                      \
    sizeof(fifo_records[0])) ///< max number of records in the FIFO queue, see
                             ///< fifo_pull()
 
-volatile static int8_t fifo_front =
+volatile static uint8_t fifo_front =
     0; // index to the front of the queue, see fifo_pull()
 // We use rear in the interrupt handler, hence the use of GPIO3
 // Initialized inside k197ButtonCluster::setup()
@@ -269,34 +271,26 @@ static inline byte fifo_pull() {
   return x;
 }
 
-// Interrupt handler for the CCL vector. Whatever the CCL causing the event, we
-// push a copy of the pushbutton pins to the fifo queue This should work in
-// dxCore 1.5.x when it is released... except it does not (investigating)
-// ISR(CCL_CCL_vect) { //__vector_7
-
 /*!
     @brief  Interrupt handler, called for CCL events
     @details Each one of the 4 CCL handles a button (see also
    k197ButtonCluster::setup()). The CCL CHANGE interrupt is used to detect a
    change of button state after the CCL filter (for HW debouncing).
 
-    The handler simply push the logic level of the relevant pins to the rear of
+   The handler simply push the logic level of the relevant pins to the rear of
    the fifo queue (see fifo_push().
 
-    Since we use the Logic library that comes with dxCore, we have to use
-   Logic::attachInterrupt. It is not very efficient, and it is expected that a
-   future release of dxCore would support defining the handler as
-   ISR(CCL_CCL_vect). In the current form the overhead due to the handling in
-   dxCore + saving all registered before the function call means that from time
-   to time pushing a button cause an overrun on the SPI bus. Note that the
-   current implementation relies on STO being on the same I/O port as RCL, and
-   REL with DB. A future HW revision will move all 4 buttons to the same I/O
+   Note 1: This should work in DxCore 1.5.x and later. And it does but only IF Logic 
+   library.properties is modified, ading a line with dot_a_linkage=true. 
+   See discussion here: https://github.com/SpenceKonde/DxCore/discussions/418
+   
+   Note 2: the current implementation relies on STO being on the same I/O port
+   as RCL, and REL with DB. A future HW revision will move all 4 buttons to the same I/O
    port, potentially optimizing the interrupt handler further.
 */
-void CCL_interrupt_handler() {
-  // CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
-                                  //  rather than missing an event
-                                  // Note: needed only with ISR(CCL_CCL_vect) 
+ISR(CCL_CCL_vect) { //__vector_7
+  CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
+                                //   rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
 }
@@ -368,7 +362,7 @@ void k197ButtonCluster::setup() {
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
 
-  fifo_rear = (uint8_t)-1; // Initialize register
+  fifo_rear = fifo_MAX_RECORDS-1;
 
   // Route pins for pushbuttons to Logic blocks 0-3
   UI_STO_Event.set_generator(UI_STO);
@@ -433,15 +427,7 @@ void k197ButtonCluster::setup() {
   UI_REL_Event.start();
   UI_DB_Event.start();
 
-  // attach the CCL interrupts (note: this should be replaced with direct access
-  // to CCL.INTCTRL0 when dxCore Logic library supports this method
-  Logic0.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  Logic1.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  Logic2.attachInterrupt(CCL_interrupt_handler, CHANGE);
-  Logic3.attachInterrupt(CCL_interrupt_handler, CHANGE);
-
-  // CCL.INTCTRL0|=0b11111111; //Will replace attachInterrupt when dxCore 1.5.0
-  //  will be released... 
+  CCL.INTCTRL0|=0b11111111; 
 
   Logic::start();
   //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
@@ -450,21 +436,13 @@ void k197ButtonCluster::setup() {
   // at startup or reset (e.g. watchdog reset).
   unsigned long now = micros();
   cli();
-  fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
-            (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
-  byte x = fifo_pull();
+  byte x = (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
+            (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm));
   sei();
   initButton(0, getButtonState(x & UI_STO_bm), now);
   initButton(1, getButtonState(x & UI_RCL_bm), now);
   initButton(2, getButtonState(x & UI_REL_bm), now);
   initButton(3, getButtonState(x & UI_DB_bm), now);
-  cli();
-  fifo_push(
-      (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
-      (UI_REL_VPORT.IN &
-       (UI_REL_bm | UI_DB_bm))); // Make sure we do not lose any state change
-  sei();
-
   // Setup the click timer.
   setupClicktimer();
 }
@@ -485,14 +463,11 @@ void k197ButtonCluster::checkNew() {
     }
   }
 
-  cli();
-  int8_t n = fifo_getSize();
-  bool b = fifo_isFull();
+  bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
   byte x = fifo_pull();
-  sei();
   if (b) {
-    DebugOut.println(F("FIFO Full"));
-    DebugOut.print(n);
+    DebugOut.println(F("FIFO!"));
+    //DebugOut.println(n);
   }
   if (x != fifo_NO_DATA) { // We have a new raw event
     now = micros();
@@ -550,12 +525,15 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
       invoke_callback(i, UIeventRelease);
       if ((now - startPressed[i]) > longPressTime) {
         invoke_callback(i, UIeventLongClick);
+        enableDoubleClick[i] = false; // This will prevent that the next click is recognized as a double click...
       } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
         invoke_callback(i, UIeventClick);
-        invoke_callback(i, UIeventDoubleClick);
+        if (enableDoubleClick[i]) invoke_callback(i, UIeventDoubleClick);
+        enableDoubleClick[i] = false; // This prevents a third click to give raise to a further double click...
         // DebugOut.print(F("Dbclick time: "));
         // DebugOut.println(now-lastReleased[i]);
       } else {
+        enableDoubleClick[i] = true; // This will enable double click for the next click
         invoke_callback(i, UIeventClick);
         // DebugOut.print(F("Click time: "));
         // DebugOut.println(now-startPressed[i]);

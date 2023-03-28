@@ -139,7 +139,7 @@ bool K197device::getNewReading() {
 byte K197device::getNewReading(byte *data) {
   byte n = getNewData(data);
   if (n != 9) {
-    DebugOut.print(F("Warning, K197 n="));
+    DebugOut.print(F("!K197 n="));
     DebugOut.println(n);
   }
   if (n > 0)
@@ -179,7 +179,7 @@ byte K197device::getNewReading(byte *data) {
         message[nchar] = '.';
         nchar++;
       } else {
-        DebugOut.println(F("Warning, K197 dupl. DP"));
+        DebugOut.println(F("!K197 DP"));
       }
     }
     int seg128 = ((data[i] & 0b11111000) >> 1) |
@@ -207,7 +207,7 @@ byte K197device::getNewReading(byte *data) {
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
       annunciators8 |= K197_Cal_bm;
-      DebugOut.println(F(" CAL found!"));
+      //DebugOut.println(F(" CAL found!"));
     }
   }
   if (isTKModeActive() && flags.msg_is_num) {
@@ -366,7 +366,7 @@ void K197device::debugPrint() {
     DebugOut.println();
   }
   if (flags.msg_is_ovrange)
-    DebugOut.print(F(" + Ov.Range"));
+    DebugOut.print(F(" + OvR"));
   DebugOut.println();
 }
 
@@ -584,49 +584,6 @@ void k197graph_label_type::setScaleMultiplierDown(
 }
 
 /*!
- @brief used during troubleshooting. To be removed before final release.
- @param testmin min
- @param testmax max
-*/
-void K197device::troubleshootAutoscale(float testmin, float testmax) {
-  PROFILE_start(DebugOut.PROFILE_MATH);
-
-  k197graph_label_type y0;
-  y0.setLog10Ceiling(testmin); // Find order of magnitude
-  // Then we fine tune the multiplier (1x, 5x or 2x)
-  y0.setScaleMultiplierDown(testmax);
-  float ymin = y0.getValue();
-
-  k197graph_label_type y1;
-  y1.setLog10Ceiling(testmin); // Find order of magnitude
-  // Then we fine tune the multiplier (1x, 5x or 2x)
-  y1.setScaleMultiplierUp(testmax);
-  float ymax = y1.getValue();
-
-  PROFILE_stop(DebugOut.PROFILE_MATH);
-  PROFILE_println(DebugOut.PROFILE_MATH,
-                  F("Time spent in troubleshootAutoscale()"));
-
-  // Print result
-  DebugOut.print(F("testmin="));
-  DebugOut.println(testmin);
-  DebugOut.print(F("MIN 10^"));
-  DebugOut.print(y0.pow10);
-  DebugOut.print(F("*"));
-  DebugOut.print(y0.mult);
-  DebugOut.print(F("="));
-  DebugOut.println(ymin);
-  DebugOut.print(F("testmax="));
-  DebugOut.println(testmax);
-  DebugOut.print(F("MAX 10^"));
-  DebugOut.print(y1.pow10);
-  DebugOut.print(F("*"));
-  DebugOut.print(y1.mult);
-  DebugOut.print(F("="));
-  DebugOut.println(ymax);
-}
-
-/*!
  @brief select the scale for the Y axis of a graph (autoscaling)
  @details The scale is set so that the graph can be displayed with the best
  possible resolution
@@ -725,13 +682,13 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
 
   for (int i = 0; i < cache.gr_size; i++) {
     if (i >= graphdata->x_size) { // should be impossible but just to be safe
-      DebugOut.print(F("i="));
-      DebugOut.print(i);
-      DebugOut.print(F(", c="));
-      DebugOut.print(cache.gr_size);
-      DebugOut.print(F(", g="));
-      DebugOut.print(graphdata->x_size);
-      DebugOut.println(F("graph size!"));
+      //DebugOut.print(F("i="));
+      //DebugOut.print(i);
+      //DebugOut.print(F(", c="));
+      //DebugOut.print(cache.gr_size);
+      //DebugOut.print(F(", g="));
+      //DebugOut.print(graphdata->x_size);
+      DebugOut.println(F("gr size!"));
       break;
     }
     graphdata->point[i] = (cache.graph[i] - ymin) * scale_factor + 0.5;

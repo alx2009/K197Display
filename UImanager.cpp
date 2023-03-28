@@ -168,7 +168,7 @@ void UImanager::setup() {
     // DebugOut.println(F("SPI pin mapping OK!"));
     // DebugOut.flush();
   } else {
-    DebugOut.println(F("SPI pin mapping failed!"));
+    DebugOut.println(F("SPI map!"));
     DebugOut.flush();
     while (true)
       ;
@@ -182,8 +182,8 @@ void UImanager::setup() {
   u8g2.clearBuffer();
   setup_draw();
   u8g2.sendBuffer();
-  DebugOut.print(F("sizeof(u8g2_uint_t)="));
-  DebugOut.println(sizeof(u8g2_uint_t));
+  //DebugOut.print(F("sizeof(u8g2_uint_t)="));
+  //DebugOut.println(sizeof(u8g2_uint_t));
 
   setupMenus();
 }
@@ -587,7 +587,7 @@ void UImanager::clearScreen() {
   // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
-  k197dev.setDisplayHold(false);
+  //k197dev.setDisplayHold(false);
   dxUtil.checkFreeStack();
 }
 
@@ -638,11 +638,13 @@ DEF_MENU_ACTION(
 DEF_MENU_ACTION(openLog, 15, "Show log",
                 dxUtil.reportStack();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
+DEF_MENU_ACTION(resetAVR, 15, "RESET",
+                  _PROTECTED_WRITE(RSTCTRL.SWRR, 1);); ///< Menu input
 
 UImenuItem *mainMenuItems[] = {
     &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog,
     &btGraphOpt,     &showDoodle,      &contrastCtrl,   &exitMenu,
-    &saveSettings,   &reloadSettings,  &openLog}; ///< Root menu items
+    &saveSettings,   &reloadSettings,  &openLog, &resetAVR}; ///< Root menu items
 
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
 DEF_MENU_BOOL(logEnable, 15, "Enabled");                     ///< Menu input
@@ -1348,11 +1350,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           else
             uiman.setScreenMode(K197sc_normal);
         } else if (eventType == UIeventDoubleClick) {
-          K197screenMode screen_mode = uiman.getScreenMode();
-          if (screen_mode != K197sc_graph)
-            uiman.setScreenMode(K197sc_graph);
-          else
-            uiman.setScreenMode(K197sc_normal);
+          // NOP
         }
         return true; // Skip normal handling in the main sketch
       }
@@ -1363,12 +1361,14 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
           if (isGraphMode() && areCursorsVisible())
             toggleActiveCursor();
         } else if (eventType == UIeventLongPress) {
+          K197screenMode screen_mode = uiman.getScreenMode();
+          if (screen_mode != K197sc_graph)
+            uiman.setScreenMode(K197sc_graph);
+          else
+            uiman.setScreenMode(K197sc_normal);
+        } else if (eventType == UIeventDoubleClick) {
           if (isGraphMode())
             toggleCursorsVisibility();
-        } else if (eventType == UIeventDoubleClick) {
-          DebugOut.print(F("Max loop (us): "));
-          DebugOut.println(looptimerMax);
-          looptimerMax = 0UL;
         }
         return true; // Skip normal handling in the main sketch
       }
@@ -1494,16 +1494,16 @@ void permadata::copyToUI(bool restore_screen_mode) {
 */
 bool permadata::store_to_EEPROM() {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
-    DebugOut.print(F(" Data size "));
-    DebugOut.print(sizeof(permadata));
-    DebugOut.print(F(" exceed EEPROM len: "));
-    DebugOut.print(EEPROM.length());
+    DebugOut.print(F("Data size"));
+    //DebugOut.print(CH_SPACE); DebugOut.print(sizeof(permadata));
+    //DebugOut.print(F(" exceed EEPROM len: "));
+    //DebugOut.print(EEPROM.length());
     return false;
   }
   permadata pdata;
   pdata.copyFromUI();
   EEPROM.put(EEPROM_BASE_ADDRESS, pdata);
-  DebugOut.println(F("EEPROM: store ok"));
+  //DebugOut.println(F("EEPROM ok"));
   return true;
 }
 
@@ -1516,16 +1516,16 @@ bool permadata::store_to_EEPROM() {
 */
 bool permadata::retrieve_from_EEPROM(bool restore_screen_mode) {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
-    DebugOut.print(F("EEPROM: Data size="));
-    DebugOut.print(sizeof(permadata));
-    DebugOut.print(F(" exceed "));
-    DebugOut.println(EEPROM.length());
+    DebugOut.print(F("Data size"));
+    //DebugOut.print(CH_SPACE); DebugOut.print(sizeof(permadata));
+    //DebugOut.print(F(" exceed "));
+    //DebugOut.println(EEPROM.length());
     return false;
   }
   permadata pdata;
   EEPROM.get(EEPROM_BASE_ADDRESS, pdata);
   if (pdata.magicNumber != magicNumberExpected) {
-    DebugOut.println(F("EEPROM: no data"));
+    DebugOut.println(F("No data"));
     return false;
   }
   if (pdata.revision != revisionExpected) {
@@ -1536,6 +1536,6 @@ bool permadata::retrieve_from_EEPROM(bool restore_screen_mode) {
     return false;
   }
   pdata.copyToUI(restore_screen_mode);
-  DebugOut.println(F("EEPROM: restore ok"));
+  //DebugOut.println(F("EEPROM: restore ok"));
   return true;
 }
