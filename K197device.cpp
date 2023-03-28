@@ -86,7 +86,7 @@ float getMsgValue(char *s, int len) {
 }
 
 // ***************************************************************************************
-//  Read data from the voltmenter
+//  Read data from the voltmeter
 // ***************************************************************************************
 
 /*!
@@ -112,6 +112,19 @@ bool K197device::getNewReading() {
 }
 
 #define K197_MSG_SIZE (K197_RAW_MSG_SIZE + 1) ///< add 1 because of '.'
+
+/*!
+   @brief utility function, check if a message indicates overrange
+   @details an overrange message is a six character message "  0L  ", 
+    optionally pre-pended by a "-" character 
+   @param message points to the message to check
+   @return true if the meesage indicates overrange
+*/
+bool checkMessage4overrange(const char *message) {
+   if (message[0]=='-') message++;
+   if (strcasecmp_P(message, PSTR("  0L  ")) == 0) return true;
+   return false;
+}
 
 /*!
       @brief process a new reading
@@ -198,12 +211,8 @@ byte K197device::getNewReading(byte *data) {
     msg_value = getMsgValue(message, K197_MSG_SIZE);
     flags.msg_is_ovrange = false;
   } else {
-    // if (strstr(message, "0L") != NULL) {/
-    if (strcasecmp_P(message, PSTR("0L")) == 0) {
-      flags.msg_is_ovrange = true;
-    } else {
-      flags.msg_is_ovrange = false;
-    }
+    //DebugOut.print(F("message=<")); DebugOut.print(message); DebugOut.println(F(">"));
+    flags.msg_is_ovrange = checkMessage4overrange(message);
     msg_value = 0.0;
     if (strncmp_P(message, PSTR(" CAL"), 4) == 0) {
       annunciators8 |= K197_Cal_bm;
@@ -273,11 +282,15 @@ void K197device::setOverrange() {
 /*!
     @brief  return the unit, including SI prefix (V, mV, etc.)
     @param include_dB if true, returns "dB" as a unit when in dB mode
+    @param hold if true returns the value at the time hold mode was last entered
     @return the unit (2 characters + terminating NUL). This is a UTF-8 string
    because it may include Ω or µ
 */
 const __FlashStringHelper *
-K197device::getUnit(bool include_dB) { // Note: includes UTF-8 characters
+K197device::getUnit(bool include_dB, bool hold) { // Note: includes UTF-8 characters
+  if (hold) {
+    return include_dB ? cache.hold.unit_with_db : cache.hold.unit;
+  }
   if (isV()) {                         // Voltage units
     if (flags.tkMode && ismV() && isDC())
       return F("°C");
@@ -369,6 +382,32 @@ void K197device::debugPrint() {
     DebugOut.print(F(" + OvR"));
   DebugOut.println();
 }
+
+// ***************************************************************************************
+//  Hold mode handling
+// ***************************************************************************************
+
+  /*!
+      @brief  set display hold mode
+      @param newValue true to enter display hold mode, false to exit
+  */
+  void K197device::setDisplayHold(bool newValue) {
+    if (newValue == flags.hold) return;
+    if (newValue) { // activate hold mode
+      // copy current data to cache.hold
+      memcpy(cache.hold.raw_msg, raw_msg, K197_RAW_MSG_SIZE *sizeof(char));
+      cache.hold.raw_dp = raw_dp; 
+      cache.hold.annunciators0 = annunciators0; 
+      cache.hold.tcold = tcold; 
+      cache.hold.average = cache.average; 
+      cache.hold.min = cache.min;     
+      cache.hold.max = cache.max;     
+      cache.hold.unit=getUnit();
+      cache.hold.unit_with_db=getUnit(true);
+      cache.hold.isTKModeActive=isTKModeActive();
+    }
+    flags.hold = newValue; 
+  };
 
 // ***************************************************************************************
 //  Cache handling

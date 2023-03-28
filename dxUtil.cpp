@@ -63,22 +63,22 @@ void dxUtilClass::begin() {
 void dxUtilClass::printResetFlags() {
   bool printed_something=false;
   if (reset_flags & RSTCTRL_UPDIRF_bm) {
-    DebugOut.print(F("UPDI ")); bool printed_something=true;
+    DebugOut.print(F("UPDI ")); printed_something=true;
   }
   if (reset_flags & RSTCTRL_WDRF_bm) {
-    DebugOut.print(F("WDT ")); bool printed_something=true;
+    DebugOut.print(F("WDT ")); printed_something=true;
   }
   if (reset_flags & RSTCTRL_SWRF_bm) {
-    DebugOut.print(F("SW ")); bool printed_something=true;
+    DebugOut.print(F("SW ")); printed_something=true;
   }
   if (reset_flags & RSTCTRL_EXTRF_bm) {
-    DebugOut.print(F("HW ")); bool printed_something=true;
+    DebugOut.print(F("HW ")); printed_something=true;
   }
   if (reset_flags & RSTCTRL_BORF_bm) {
-    DebugOut.print(F("Bwnout ")); bool printed_something=true;
+    DebugOut.print(F("Bwnout ")); printed_something=true;
   }
   if (reset_flags & RSTCTRL_PORF_bm) {
-    DebugOut.print(F("POW ")); bool printed_something=true;
+    DebugOut.print(F("POW ")); printed_something=true;
   }
   if (printed_something) DebugOut.println(F("Reset"));
 }

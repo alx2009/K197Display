@@ -81,14 +81,14 @@ private:
   byte cursor_a = 60;  ///< Stores cursor A position
   byte cursor_b = 120; ///< Stores cursor B position
 
-  bool show_volt = false; ///< Show voltages if true (not currently used)
-  bool show_temp = false; ///< Show temperature if true  (not currently used)
+  bool hold_flag = false; ///< prevents changing hold mode at long press
+
   K197screenMode screen_mode =
       (K197screenMode)(K197sc_normal |
                        K197sc_FullScreenBitMask); ///< Keep track of how to
                                                   ///< display stuff...
 
-  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y);
+  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle=true);
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();
@@ -270,7 +270,7 @@ public:
     clearScreen();
   };
 
-  void updateDisplay();
+  void updateDisplay(bool stepDoodle=true);
   void updateBtStatus();
 
   void setContrast(uint8_t value);
