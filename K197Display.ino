@@ -41,13 +41,8 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Review format main/minmax screen
-// Improve handling of REL button
 // Implement true hold for graph screen
 //
-// Bug to fix: 
-//  In normal mode, there is no space between Hold and STO, in addition they partially overlap "-" when both are active
-//  In normal mode, RCL is not in the original position...            
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
