@@ -121,8 +121,8 @@ compared to the original K197, the use of the the pushbuttons on the front panel
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
 - REL = up (hold to exit the menu, double click up all the way to the top)
 - dB  = down (hold goes down faster)
-- STO = left (acts on the selected menu item)
-- RCL = right/select/ok (acts on the selected menu item)
+- STO = -/select/ok (acts on the selected menu item)
+- RCL = +/select/ok (acts on the selected menu item)
 
 In general changes to a menu item are active immediately when the key is clicked (for example, for a checkbox) or in some cases when the key is released.
 
