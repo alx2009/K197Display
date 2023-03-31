@@ -437,17 +437,19 @@ public:
 
   /*!
       @brief  check if message is a number
+      @param hold if true returns the value at the time hold mode was last entered 
       @return true if message is a number (false means something else, like
      "Err", "0L", etc.)
   */
-  bool isNumeric() { return flags.msg_is_num; };
+  bool isNumeric(bool hold=false) { return hold ? cache.hold.isNumeric : flags.msg_is_num; };
 
   /*!
       @brief  returns the measurement value if available
+      @param hold if true returns the value at the time hold mode was last entered
       @return returns the measurement value if available (isNumeric() returns
      true) or 0.0 otherwise
   */
-  float getValue() { return msg_value; };
+  float getValue(bool hold=false) { return hold ? cache.hold.msg_value : msg_value; };
 
   void debugPrint();
 
@@ -528,13 +530,21 @@ private:
       char raw_msg[K197_RAW_MSG_SIZE]; ///< holds raw_msg
       byte raw_dp = 0x00; ///< holds raw_dp
       byte annunciators0 = 0x00; ///< holds annunciators0
+      float msg_value; ///< holds the measured value
       float tcold = 0.0; ///< holds tcold
       float average = 0.0; ///< holds cache.average
       float min = 0.0;     ///< holds cache.min
       float max = 0.0;     ///< holds cache.max
       const __FlashStringHelper * unit=NULL;
       const __FlashStringHelper * unit_with_db=NULL;
-      bool isTKModeActive=false;
+      bool isTKModeActive=false; ///< holds true if temperature
+      bool isNumeric=false; ///< holds true if numeric
+
+      //The following data is needed to hold the entire graph
+      float graph[max_graph_size];        ///< holds cache.graph
+      byte gr_index = max_graph_size - 1; ///< holds gr_index
+      byte gr_size = 0;  ///< holds gr_size
+      uint16_t nsamples_graph=0; ///<Holds the sample time
     } hold; ///< store values to be displayed in hold mode
   } cache; ///< cache measured values and related status information
 
@@ -542,7 +552,7 @@ private:
 
 public:
   void fillGraphDisplayData(k197graph_type *graphdata,
-                            k197graph_yscale_opt yopt);
+                            k197graph_yscale_opt yopt, bool hold=false);
   void resetStatistics();
 
   /*!
@@ -589,12 +599,14 @@ public:
   /*!
       @brief get graph value at point n
       @param n the requested point
+      @param hold if true returns the value at the time hold mode was last entered
       @return the value of the graph at point n
   */
-  float getGraphValue(byte n) {
+  float getGraphValue(byte n, bool hold=false) {
+    if (hold) return n >= cache.hold.gr_size ? 0.0 : cache.hold.graph[n];
     return n >= cache.gr_size ? 0.0 : cache.graph[n];
   };
-  float getGraphAverage(byte n0, byte n1);
+  float getGraphAverage(byte n0, byte n1, bool hold=false);
 
   /*!
       @brief  set the autosample flag

@@ -398,6 +398,7 @@ void K197device::debugPrint() {
       memcpy(cache.hold.raw_msg, raw_msg, K197_RAW_MSG_SIZE *sizeof(char));
       cache.hold.raw_dp = raw_dp; 
       cache.hold.annunciators0 = annunciators0; 
+      cache.hold.msg_value = msg_value;
       cache.hold.tcold = tcold; 
       cache.hold.average = cache.average; 
       cache.hold.min = cache.min;     
@@ -405,6 +406,13 @@ void K197device::debugPrint() {
       cache.hold.unit=getUnit();
       cache.hold.unit_with_db=getUnit(true);
       cache.hold.isTKModeActive=isTKModeActive();
+      cache.hold.isNumeric=flags.msg_is_num;
+
+      //copy current graph data to cache.hold
+      memcpy(cache.hold.graph, cache.graph, cache.gr_size * sizeof(float));
+      cache.hold.gr_index = cache.gr_index; 
+      cache.hold.gr_size = cache.gr_size;  
+      cache.hold.nsamples_graph = cache.nsamples_graph;       
     }
     flags.hold = newValue; 
   };
@@ -693,18 +701,23 @@ void k197graph_type::setScale(float grmin, float grmax,
  that is needed to display the graph (e.g. the axis labels)
  @param graphdata pointer to the data structure to fill
  @param yopt the required options for the scale
+ @param hold if true returns the value at the time hold mode was last entered
 */
 void K197device::fillGraphDisplayData(k197graph_type *graphdata,
-                                      k197graph_yscale_opt yopt) {
+                                      k197graph_yscale_opt yopt, bool hold) {
+  float * graph = hold ? cache.hold.graph : cache.graph;
+  byte gr_size = hold ? cache.hold.gr_size : cache.gr_size;
+  
   // find max and min in the data set
   float grmin =
-      cache.gr_size > 0 ? cache.graph[0] : 0.0; ///< keep track of the minimum
+      gr_size > 0 ? graph[0] : 0.0; ///< keep track of the minimum
   float grmax = grmin;                          ///< keep track of the maximum
-  for (int i = 1; i < cache.gr_size; i++) {
-    if (cache.graph[i] < grmin)
-      grmin = cache.graph[i];
-    if (cache.graph[i] > grmax)
-      grmax = cache.graph[i];
+  
+  for (int i = 1; i < gr_size; i++) {
+    if (graph[i] < grmin)
+      grmin = graph[i];
+    if (graph[i] > grmax)
+      grmax = graph[i];
   }
 
   graphdata->setScale(grmin, grmax, yopt);
@@ -719,18 +732,18 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
   float scale_factor = float(graphdata->y_size) / (ymax - ymin);
   // DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9);
 
-  for (int i = 0; i < cache.gr_size; i++) {
+  for (int i = 0; i < gr_size; i++) {
     if (i >= graphdata->x_size) { // should be impossible but just to be safe
       //DebugOut.print(F("i="));
       //DebugOut.print(i);
       //DebugOut.print(F(", c="));
-      //DebugOut.print(cache.gr_size);
+      //DebugOut.print(gr_size);
       //DebugOut.print(F(", g="));
       //DebugOut.print(graphdata->x_size);
       DebugOut.println(F("gr size!"));
       break;
     }
-    graphdata->point[i] = (cache.graph[i] - ymin) * scale_factor + 0.5;
+    graphdata->point[i] = (graph[i] - ymin) * scale_factor + 0.5;
   }
   if (graphdata->y0.isNegative() &&
       graphdata->y1.isPositive()) { // 0 is included in the graph
@@ -739,10 +752,10 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
     graphdata->y_zero = 0;
   }
   // DebugOut.print(F(", yzero=")); DebugOut.println(graphdata->y_zero, 9);
-  graphdata->current_idx = cache.gr_index;
-  graphdata->npoints = cache.gr_size;
-  graphdata->nsamples_graph = cache.nsamples_graph;
-}
+  graphdata->current_idx = hold ? cache.hold.gr_index : cache.gr_index;
+  graphdata->npoints = gr_size;
+  graphdata->nsamples_graph = hold ? cache.hold.nsamples_graph : cache.nsamples_graph;
+} 
 
 /*!
  \def SWAP_BYTE(b0, b1)
@@ -766,15 +779,17 @@ void K197device::fillGraphDisplayData(k197graph_type *graphdata,
    @param num_pts the number of points to average [range: 0 - gr_size-1]
    @return the requested average value (or 0.0 if num_pts==0 or gr_size==0)
 */
-float K197device::getGraphAverage(byte idx, byte num_pts) {
+float K197device::getGraphAverage(byte idx, byte num_pts, bool hold) {
+  float * graph = hold ? cache.hold.graph : cache.graph;
+  byte gr_size = hold ? cache.hold.gr_size : cache.gr_size;
 
-  if (cache.gr_size == 0)
+  if (gr_size == 0)
     return 0.0;
   float acc = 0.0;
   for (byte i = 0; i < num_pts; i++) {
     if (idx >= cache.gr_size)
       idx = 0;
-    acc += cache.graph[idx];
+    acc += graph[idx];
     idx++;
   }
   return num_pts == 0 ? acc : acc / num_pts;
