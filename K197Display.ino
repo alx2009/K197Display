@@ -41,8 +41,13 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Implement true hold for graph screen
+// Investigate delay caused by Serial activity...
+// Finish testing true hold for graph screen
+// Find a space where to print Hold in cursor mode
 // Option to log invalid data to BT
+//
+// Bug to fix:
+// When cursor A = cursor B, average is not correctly calculated (probable fencepost bug)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
