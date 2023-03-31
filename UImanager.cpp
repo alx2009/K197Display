@@ -1033,8 +1033,10 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
    screen.
 */
 void UImanager::updateGraphScreen() {
+  bool hold = k197dev.getDisplayHold();
+    
   // Get graph data
-  k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue());
+  k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue(), hold);
 
   // autoscale x axis
   uint16_t i1 = 16;
@@ -1066,8 +1068,7 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
                  k197graph.y_size - u8g2.getMaxCharHeight());
-  uint16_t nseconds = gr_sample_time.getValue();
-  printXYLabel(k197graph.y0, nseconds == 0 ? i1 / 3 : i1 * nseconds);
+  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? i1 / 3 : (i1 / 3) * k197graph.nsamples_graph);
   u8g2_uint_t botln_x = u8g2.tx;
   u8g2.setCursor(k197graph.x_size + 2, 0);
   printYLabel(k197graph.y1);
@@ -1148,6 +1149,8 @@ void UImanager::updateGraphScreen() {
 */
 void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x,
                                            u8g2_uint_t botln_x) {
+  bool hold = k197dev.getDisplayHold();
+
   u8g2_uint_t x = 185 + 10;
   u8g2_uint_t y = 3;
   u8g2.setFont(u8g2_font_5x7_mr);
@@ -1155,24 +1158,24 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x,
   u8g2.setCursor(x, y);
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197dev.getUnit(true));
+  u8g2.print(k197dev.getUnit(true, hold));
   y += u8g2.getMaxCharHeight();
 
   u8g2.setFont(u8g2_font_6x12_mr);
   u8g2.setCursor(u8g2.tx, u8g2.ty + 1);
-  if (k197dev.isAC())
+  if (k197dev.isAC(hold))
     u8g2.print(F(" AC"));
-  if (k197dev.isREL())
+  if (k197dev.isREL(hold))
     u8g2.print(F(" REL"));
 
   x = 185 + 5;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
-  if (k197dev.isNumeric()) {
+  if (k197dev.isNumeric(hold)) {
     char buf[K197_RAW_MSG_SIZE + 1];
-    u8g2.print(formatNumber(buf, k197dev.getValue()));
+    u8g2.print(formatNumber(buf, k197dev.getValue(hold)));
   } else {
-    u8g2.print(k197dev.getRawMessage());
+    u8g2.print(k197dev.getRawMessage(hold));
   }
 
   // Draw AUTO & HOLD at about the same height as the Y label
@@ -1206,32 +1209,33 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
                                            u8g2_uint_t botln_x, u8g2_uint_t ax,
                                            u8g2_uint_t bx) {
   char buf[K197_RAW_MSG_SIZE + 1];
+  bool hold = k197dev.getDisplayHold();
+  
   u8g2.setCursor(topln_x + 1, 0);
-
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  u8g2.print(k197dev.getUnit(true));
+  u8g2.print(k197dev.getUnit(true, hold));
 
   u8g2.setFont(u8g2_font_5x7_mr);
   u8g2.setCursor(u8g2.tx + 2, 3);
-  if (k197dev.isAC())
+  if (k197dev.isAC(hold))
     u8g2.print(F("AC"));
   else
     u8g2.print(CH_SPACE);
   u8g2.setCursor(u8g2.tx + 2, u8g2.ty);
-  if (k197dev.isREL())
+  if (k197dev.isREL(hold))
     u8g2.print(F("REL"));
 
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 4);
   u8g2.print(F("<A>"));
   u8g2.print(CH_SPACE);
-  // u8g2.print(k197dev.getGraphValue(ax), 6);
-  u8g2.print(formatNumber(buf, k197dev.getGraphValue(ax)));
+  // u8g2.print(k197dev.getGraphValue(ax, hold), 6);
+  u8g2.print(formatNumber(buf, k197dev.getGraphValue(ax, hold)));
 
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("<B>"));
   u8g2.print(CH_SPACE);
-  // u8g2.print(k197dev.getGraphValue(bx), 6);
-  u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx)));
+  // u8g2.print(k197dev.getGraphValue(bx, hold), 6);
+  u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints);
@@ -1255,7 +1259,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   // u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax),
   // 6);
   u8g2.print(formatNumber(
-      buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax)));
+      buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       GPIOR3 &= (~0x10); // reset flag: we print only once
@@ -1270,7 +1274,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   if (k197graph.nsamples_graph == 0) {
     u8g2.print(float(deltax) / 3.0, 2);
   } else {
-    u8g2.print(deltax * k197graph.nsamples_graph);
+    u8g2.print(deltax * k197graph.nsamples_graph / 3.0);
   }
   u8g2.print(CH_SPACE);
   u8g2.print('s');
