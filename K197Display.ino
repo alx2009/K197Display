@@ -42,7 +42,7 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 // Implement true hold for graph screen
-//
+// Option to log invalid data to BT
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
