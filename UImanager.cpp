@@ -1256,10 +1256,10 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Avg"));
   u8g2.print(CH_SPACE);
-  // u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax),
+  // u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax+1),
   // 6);
   u8g2.print(formatNumber(
-      buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax, hold)));
+      buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax+1, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       GPIOR3 &= (~0x10); // reset flag: we print only once
