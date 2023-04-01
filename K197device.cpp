@@ -429,7 +429,8 @@ void K197device::debugPrint() {
     @details average, max and min are calculated here
  */
 static inline bool change0(byte b1, byte b2) {
-  return (b1 & (~K197_MINUS_bm)) != (b2 & (~K197_MINUS_bm));
+  return ( b1 & (~(K197_MINUS_bm | K197_BAT_bm | K197_AUTO_bm)) ) 
+      != ( b2 & (~(K197_MINUS_bm | K197_BAT_bm | K197_AUTO_bm)) );
 }
 
 /*!
