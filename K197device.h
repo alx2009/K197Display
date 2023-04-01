@@ -442,6 +442,7 @@ public:
 
   const __FlashStringHelper *
   getUnit(bool include_dB = false, bool hold=false); // Note: includes UTF-8 characters
+  char getMainUnit();
   int8_t getUnitPow10();
 
   /*!
@@ -490,8 +491,8 @@ private:
     float msg_value = 0.0; ///< caches msg_value from previous measurement
     byte annunciators0 =
         0x00; ///< caches annunciators0 from previous measurement
-    char munit=CH_SPACE;        ///< Stores measurement unit (V, A, etc.)
-    char munit_prefix=CH_SPACE; ///< Stores meas. unit prefix (m, K, etc.)
+    char munit=CH_SPACE; ///< Stores measurement unit (V, A, etc.)
+    int8_t pow10=0;      ///< Stores the exponent corresponding to the prefix (m, K, etc.)
 
     float average = 0.0; ///< keep track of the average
     float min = 0.0;     ///< keep track of the minimum

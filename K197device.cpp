@@ -321,6 +321,27 @@ K197device::getUnit(bool include_dB, bool hold) { // Note: includes UTF-8 charac
 }
 
 /*!
+    @brief returns the main unit
+    @details this is not intended for external presentation, only for internal housekeeping
+    @ the supported units are: 'C' (°C), 'V' (Volt), 'O' (Ohm), 'A' (Ampere), 'B' (dB) and ' ' (unrecognized unit)
+    @returns a char corresponding to the main unit
+*/
+char K197device::getMainUnit() {
+  if (isV()) {                 // Voltage or Temperature 
+      if (flags.tkMode && ismV() && isDC()) return 'C'; 
+      else return 'V';                                  
+  } else if (isOmega()) {      // Resistence 
+      return 'O';
+  } else if (isA()) {          // Current 
+      return 'A';
+  } else if (isdB()) {         // dB 
+      return 'B';
+  } else { // No unit found
+      return ' ';
+  }
+}
+
+/*!
     @brief returns the exponent corresponding to the SI multiplier
     @details 10 elevated to the exponent returned gives the power of 10
    corresponding to the prefix set in the annouciators For example, 1KΩ means
@@ -350,7 +371,7 @@ int8_t K197device::getUnitPow10() {
       return -3;
     else
       return 0;
-  } else { // No unit found
+  } else { // dB or no unit found
     return 0;
   }
 }
@@ -435,26 +456,21 @@ static inline bool change0(byte b1, byte b2) {
 
 /*!
     @brief  utility function, get the conversion factor between measurement unit prefixes
-    @details for example, the conversion factor from 'k' (kilo) to 'm' (milli) is 1000000.0.
-    Recognized prefixes are: 'u', 'm', 'M', 'k', and ' ' (no prefix). Unrecognized prefix is handled like ' '.
-    @param old_pref old prefix
-    @param new_pref new prefix
-    @return the factor that when multiplied for a value expressed in old prefix returns the same value expressed with the new prefix
+    @details the input should be limited to what is visualized by the K197: -6, -3, 0, 3, 6
+    furthermore, -6 < (pow10_old-pow10_new) < +6 (nothing else is possible with the K197)
+    @param pow10_old old power of 10 (what would have been returned by getUnitPow10())
+    @param pow10_new new power of 10 (what is returned by getUnitPow10())
+    @return the factor that when multiplied for a value expressed in old pow10 returns the same value expressed with new pow10
  */
-float getPrefixConversionFactor(old_pref, new_pref) {
+float getPrefixConversionFactor(int8_t pow10_old, int8_t pow10_new) {
     float fconv;
-    // we calculate fconv in two steps
-    switch(old_pref) { // first step from old prefix to no prefix 
-        case '': fconv=1.0; break;  
-        case '': fconv=1.0; break;  
-        case '': fconv=1.0; break;  
-        default: fconv=1.0; break;  
-    }
-    switch(old_pref) { // first step from old prefix to no prefix 
-        case '': fconv*=1.0; break;  
-        case '': fconv*=1.0; break;  
-        case '': fconv*=1.0; break;  
-        default: fconv*=1.0; break;  
+    int8_t pow10 = pow10_old - pow10_new;
+    switch (pow10) {
+        case -6: fconv = 0.000001;  break;
+        case -3: fconv = 0.001;     break;
+        case  3: fconv = 1000.0;    break;
+        case  6: fconv = 1000000.0; break;
+        default: fconv = 1.0;       break;
     }
     return fconv;
 }
@@ -466,25 +482,17 @@ float getPrefixConversionFactor(old_pref, new_pref) {
 void K197device::updateCache() {
   if (!isNumeric())
     return; // No point updating statistics now
-  const __FlashStringHelper *fsh_unit = k197dev.getUnit(true);
-  PGM_P p = reinterpret_cast<PGM_P>(fsh_unit);
-  char munit_prefix = pgm_read_byte(p);
-  char munit = 0x00;
-  if (munit_prefix!=0x00) { // We assume p[0]==prefix, p[1]== unit
-      munit = pgm_read_byte(++p);
-      if (munit == 0x00) { // Wrong assumption, need to fix it
-          munit=munit_prefix;
-          munit_prefix=0x00;  
-      }
-  }
+  char munit = getMainUnit();
+  int8_t pow10 = getUnitPow10();
+  
   if (cache.tkMode != flags.tkMode ||
       change0(cache.annunciators0, annunciators0)
       || cache.munit != munit
-      || (!flags.graph_full_range && (cache.munit_prefix != munit_prefix) )
+      || (!flags.graph_full_range && (cache.pow10 != pow10) )
       ) { // Something important changed, reset stats
     resetStatistics();
   } else {
-    if (cache.munit_prefix != munit_prefix) {
+    if (cache.pow10 != pow10) {
         //TODO: rescale everything  
     }
     cache.average += (msg_value - cache.average) *
@@ -499,7 +507,7 @@ void K197device::updateCache() {
   cache.tkMode = flags.tkMode;
   cache.annunciators0 = annunciators0;
   cache.munit = munit;
-  cache.munit_prefix = munit_prefix;
+  cache.pow10 = pow10;
   if (getAutosample() &&
       cache.nskip_graph == 0) { // Autosample is on and a sample is ready
     if (cache.gr_size ==
