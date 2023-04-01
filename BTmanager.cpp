@@ -57,6 +57,7 @@ void BTmanager::setup() {
 
   if (bt_module_present) {
     Serial.begin(115200);
+    Serial.setTimeout(Serial_timeout);
     DebugOut.useSerial(true);
   } else {
     pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
@@ -124,9 +125,9 @@ BTmanagerResult BTmanager::checkPresence() {
     return BTmoduleOn; // Nothing to do
   bt_module_present = bt_module_present_now;
   if (bt_module_present) { // Module was turned on after setup().
-    Serial.begin(
-        115200); // Note: If this is the second time Serial.begin is called, a
-                 // bug in Serial may hang the SW, and cause a WDT reset
+    Serial.begin( // Note: If this is the second time Serial.begin is called, a
+        115200);  // bug in Serial may hang the SW, and cause a WDT reset
+    Serial.setTimeout(Serial_timeout);               
     DebugOut.useSerial(true);
     //DebugOut.println(F("BT turned on"));
     return BTmoduleTurnedOn;

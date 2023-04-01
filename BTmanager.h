@@ -44,6 +44,7 @@ enum BTmanagerResult {
 /**************************************************************************/
 class BTmanager {
 private:
+  static const long Serial_timeout = 5l; ///< the maximum milliseconds to wait for serial data.
   bool bt_module_present = false; ///< true if BT module is powered on
   bool bt_module_connected =
       false; ///< true if connection detected via BT_STATE pin
