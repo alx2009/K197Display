@@ -440,12 +440,27 @@ static inline bool change0(byte b1, byte b2) {
 void K197device::updateCache() {
   if (!isNumeric())
     return; // No point updating statistics now
+  const __FlashStringHelper *fsh_unit = k197dev.getUnit(true);
+  PGM_P p = reinterpret_cast<PGM_P>(fsh_unit);
+  char munit_prefix = pgm_read_byte(p);
+  char munit = 0x00;
+  if (munit_prefix!=0x00) { // We assume p[0]==prefix, p[1]== unit
+      munit = pgm_read_byte(++p);
+      if (munit == 0x00) { // Wrong assumption, need to fix it
+          munit=munit_prefix;
+          munit_prefix=0x00;  
+      }
+  }
   if (cache.tkMode != flags.tkMode ||
-      change0(cache.annunciators0, annunciators0) ||
-      cache.annunciators7 != annunciators7 ||
-      cache.annunciators8 != annunciators8) { // Something changed, reset stats
+      change0(cache.annunciators0, annunciators0)
+      || cache.munit != munit
+      || (!flags.graph_full_range && (cache.munit_prefix != munit_prefix) )
+      ) { // Something important changed, reset stats
     resetStatistics();
   } else {
+    if (cache.munit_prefix != munit_prefix) {
+        //TODO: rescale everything  
+    }
     cache.average += (msg_value - cache.average) *
                      cache.avg_factor; // This not perfect but good enough
                                        // in most practical cases.
@@ -457,8 +472,8 @@ void K197device::updateCache() {
   cache.msg_value = msg_value;
   cache.tkMode = flags.tkMode;
   cache.annunciators0 = annunciators0;
-  cache.annunciators7 = annunciators7;
-  cache.annunciators8 = annunciators8;
+  cache.munit = munit;
+  cache.munit_prefix = munit_prefix;
   if (getAutosample() &&
       cache.nskip_graph == 0) { // Autosample is on and a sample is ready
     if (cache.gr_size ==

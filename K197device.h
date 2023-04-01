@@ -490,10 +490,8 @@ private:
     float msg_value = 0.0; ///< caches msg_value from previous measurement
     byte annunciators0 =
         0x00; ///< caches annunciators0 from previous measurement
-    byte annunciators7 =
-        0x00; ///< caches annunciators7 from previous measurement
-    byte annunciators8 =
-        0x00; ///< caches annunciators8 from previous measurement
+    char munit=CH_SPACE;        ///< Stores measurement unit (V, A, etc.)
+    char munit_prefix=CH_SPACE; ///< Stores meas. unit prefix (m, K, etc.)
 
     float average = 0.0; ///< keep track of the average
     float min = 0.0;     ///< keep track of the minimum
