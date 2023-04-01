@@ -591,11 +591,12 @@ DEF_MENU_ACTION(
     exitMenu, 15, "Exit",
     uiman.showFullScreen();); ///< Menu close action (used in multiple menus)
 
+// Main menu
 DEF_MENU_SEPARATOR(mainSeparator0, 15, "< Options >"); ///< Menu separator
 DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");     ///< Menu input
 DEF_MENU_BOOL(reassignStoRcl, 15, "Reassign STO/RCL"); ///< Menu input
-DEF_MENU_OPEN(btDatalog, 15, "Data logging >>>", &UIlogMenu); ///< Open submenu
-DEF_MENU_OPEN(btGraphOpt, 15, "Graph options >>>",
+DEF_MENU_OPEN(btDatalog, 15, "Data logger >>>", &UIlogMenu); ///< Open submenu
+DEF_MENU_OPEN(btGraphOpt, 15, "Graph opt. >>>",
               &UIgraphMenu); ///< Open submenu
 DEF_MENU_BOOL_ACT(showDoodle, 15, "Doodle",
                   if (!getValue()) u8g2.drawGlyph(UImanager::doodle_x_coord,
@@ -626,6 +627,7 @@ UImenuItem *mainMenuItems[] = {
     &btGraphOpt,     &showDoodle,      &contrastCtrl,   &exitMenu,
     &saveSettings,   &reloadSettings,  &openLog, &resetAVR}; ///< Root menu items
 
+// Logging/statistics menu
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
 DEF_MENU_BOOL(logEnable, 15, "Enabled");                     ///< Menu input
 DEF_MENU_BYTE(logSkip, 15, "Samples to skip");               ///< Menu input
@@ -644,9 +646,9 @@ UImenuItem *logMenuItems[] = {
     &logTimestamp,   &logTamb,   &logStat, &logError, &logOvrange, &logSeparator1,
     &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
+// Graph menu
 DEF_MENU_SEPARATOR(graphSeparator0, 15,
                    "< Graph options >"); ///< Menu separator
-
 DEF_MENU_OPTION(opt_gr_type_lines, OPT_GRAPH_TYPE_LINES, 0,
                 "Lines"); ///< Menu input
 DEF_MENU_OPTION(opt_gr_type_dots, OPT_GRAPH_TYPE_DOTS, 1,
