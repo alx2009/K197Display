@@ -327,7 +327,7 @@ private:
         bool msg_is_num : 1;       ///< true if message is numeric
         bool msg_is_ovrange : 1;   ///< true if overange detected
         bool hold : 1;             ///< true if the display is holding the value
-        bool graph_full_range : 1; ///< true => graph rescaled at unit prefix change
+        bool graph_full_range : 1; ///< true> graph rescaled at unit prefix change
       };
     } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
