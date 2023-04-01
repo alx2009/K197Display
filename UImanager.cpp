@@ -1278,6 +1278,14 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   }
   u8g2.print(CH_SPACE);
   u8g2.print('s');
+
+  if (hold) {
+      u8g2_uint_t x = display_size_x-u8g2.getMaxCharWidth();
+      u8g2.setCursor(x, 7+u8g2.getMaxCharHeight());       u8g2.print('H');
+      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('o');
+      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('l');
+      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('d');
+  }
 }
 
 // ***************************************************************************************
