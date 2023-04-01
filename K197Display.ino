@@ -48,7 +48,7 @@ moving to inline assembler and naked interrupt handlers
 // Bug to fix:
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
 //
-// Latest benchmark:
+// Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
 // default logging)
 //            195 (normal + max logging), 142 (menu+max logging), 121
@@ -60,6 +60,10 @@ moving to inline assembler and naked interrupt handlers
 // options) BT checks ==> 75us (normal, connected), 10 us (options menu)
 // Increasing the OLED SPI clock shaves 13 ms to the loop time (195 ms to 182
 // ms)
+// Release 1.0 candidate: after implementation of hold in graph mode, loop time 
+// is tipically between 100-150 ms with log active with default parameters,
+// Occasionally higher but never observed above 200 ms
+// 
 //
 #include "K197device.h"
 
