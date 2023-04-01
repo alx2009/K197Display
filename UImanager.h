@@ -65,10 +65,14 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
+  static const u8g2_uint_t display_size_x =
+      256; ///< constant, "doodle" x coordinate
+  static const u8g2_uint_t display_size_y =
+      64; ///< constant, "doodle" y coordinate
   static const u8g2_uint_t doodle_x_coord =
-      256 - 8; ///< constant, "doodle" x coordinate
+      display_size_x - 8; ///< constant, "doodle" x coordinate
   static const u8g2_uint_t doodle_y_coord =
-      64 - 12; ///< constant, "doodle" y coordinate
+      display_size_y - 12; ///< constant, "doodle" y coordinate
 
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
