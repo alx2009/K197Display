@@ -633,13 +633,15 @@ DEF_MENU_BOOL(logSplitUnit, 15, "Split unit");               ///< Menu input
 DEF_MENU_BOOL(logTimestamp, 15, "Log tstamp");               ///< Menu input
 DEF_MENU_BOOL(logTamb, 15, "Incl. Tamb");                    ///< Menu input
 DEF_MENU_BOOL(logStat, 15, "Incl. Statistics");              ///< Menu input
+DEF_MENU_BOOL(logError, 15, "Log errors");                   ///< Menu input
+DEF_MENU_BOOL(logOvrange, 15, "Log ov.range");               ///< Menu input
 DEF_MENU_SEPARATOR(logSeparator1, 15, "< Statistics >");     ///< Menu separator
 DEF_MENU_BYTE_ACT(logStatSamples, 15, "Num. Samples",
                   k197dev.setNsamples(getValue());); ///< Menu input
 
 UImenuItem *logMenuItems[] = {
     &logSeparator0,  &logEnable, &logSkip, &logSplitUnit,
-    &logTimestamp,   &logTamb,   &logStat, &logSeparator1,
+    &logTimestamp,   &logTamb,   &logStat, &logError, &logOvrange, &logSeparator1,
     &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
 DEF_MENU_SEPARATOR(graphSeparator0, 15,
@@ -811,6 +813,14 @@ void UImanager::logData() {
     return;
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
     return;
+  if ( !k197dev.isNumeric() ) {
+      if ( k197dev.isOvrange() ) { 
+          if ( !logOvrange.getValue() ) return;
+      } else {
+          if ( !logError.getValue() ) return;
+      }
+  }
+    
   if (logskip_counter < logSkip.getValue()) {
     logskip_counter++;
     return;
