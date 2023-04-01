@@ -630,9 +630,9 @@ DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
 DEF_MENU_BOOL(logEnable, 15, "Enabled");                     ///< Menu input
 DEF_MENU_BYTE(logSkip, 15, "Samples to skip");               ///< Menu input
 DEF_MENU_BOOL(logSplitUnit, 15, "Split unit");               ///< Menu input
-DEF_MENU_BOOL(logTimestamp, 15, "Log timestamp");            ///< Menu input
-DEF_MENU_BOOL(logTamb, 15, "Include Tamb");                  ///< Menu input
-DEF_MENU_BOOL(logStat, 15, "Include Statistics");            ///< Menu input
+DEF_MENU_BOOL(logTimestamp, 15, "Log tstamp");               ///< Menu input
+DEF_MENU_BOOL(logTamb, 15, "Incl. Tamb");                    ///< Menu input
+DEF_MENU_BOOL(logStat, 15, "Incl. Statistics");              ///< Menu input
 DEF_MENU_SEPARATOR(logSeparator1, 15, "< Statistics >");     ///< Menu separator
 DEF_MENU_BYTE_ACT(logStatSamples, 15, "Num. Samples",
                   k197dev.setNsamples(getValue());); ///< Menu input
