@@ -657,6 +657,8 @@ DEF_MENU_OPTION_INPUT(opt_gr_type, 15, "Graph type", OPT(opt_gr_type_lines),
                       OPT(opt_gr_type_dots)); ///< Menu input
 
 DEF_MENU_SEPARATOR(graphSeparator1, 15, "< Y axis >"); ///< Menu separator
+DEF_MENU_BOOL_ACT(gr_yscale_full_range, 15, "Full range",
+                  k197dev.setGraphFullRange(getValue());); ///< Menu input
 BIND_MENU_OPTION(opt_gr_yscale_max, k197graph_yscale_zoom,
                  "zoom"); ///< Menu input
 BIND_MENU_OPTION(opt_gr_yscale_zero, k197graph_yscale_zero,
@@ -684,17 +686,10 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
                      return k197dev.getGraphPeriod();); ///< Menu input
 
 UImenuItem *graphMenuItems[] = {
-    &graphSeparator0,
-    &opt_gr_type,
-    &graphSeparator1,
-    &opt_gr_yscale,
-    &gr_yscale_show0,
-    &graphSeparator2,
-    &gr_xscale_roll_mode,
-    &gr_xscale_autosample,
-    &gr_sample_time,
-    &closeMenu,
-    &exitMenu}; ///< Collects all items in the graph menu
+       &graphSeparator0, &opt_gr_type, &graphSeparator1, &gr_yscale_full_range,
+       &opt_gr_yscale, &gr_yscale_show0, &graphSeparator2, &gr_xscale_roll_mode,
+       &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu
+    }; ///< Collects all items in the graph menu
 
 /*!
       @brief set the display contrast
