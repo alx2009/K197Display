@@ -41,13 +41,13 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Investigate delay caused by Serial activity...
-// Finish testing true hold for graph screen
-// Find a space where to print Hold in cursor mode
+// Remove delay when reading Serial
 // Option to log invalid data to BT
+// Option to rescale data when the unit changes, rather than resetting the graph
+// Save the two new options to EEPROM
 //
 // Bug to fix:
-// When cursor A = cursor B, average is not correctly calculated (probable fencepost bug)
+// Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
 //
 // Latest benchmark:
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
