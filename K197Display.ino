@@ -41,7 +41,7 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Option to log invalid data to BT
+// 
 // Option to rescale data when the unit changes, rather than resetting the graph
 // Save the two new options to EEPROM
 //
