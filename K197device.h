@@ -323,10 +323,11 @@ private:
       unsigned char value = 0x00; ///< allows acccess to all the flags in the
                                   ///< union as one unsigned char
       struct {
-        bool tkMode : 1;         ///< show T instead of V (K type thermocouple)
-        bool msg_is_num : 1;     ///< true if message is numeric
-        bool msg_is_ovrange : 1; ///< true if overange detected
-        bool hold : 1;           ///< true if the display is holding the value
+        bool tkMode : 1;           ///< show T instead of V (K type thermocouple)
+        bool msg_is_num : 1;       ///< true if message is numeric
+        bool msg_is_ovrange : 1;   ///< true if overange detected
+        bool hold : 1;             ///< true if the display is holding the value
+        bool graph_full_range : 1; ///< true => graph rescaled at unit prefix change
       };
     } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
@@ -384,6 +385,27 @@ public:
   bool getDisplayHold() { return flags.hold; };
 
   void setDisplayHold(bool newValue);
+
+  /*!
+      @brief  check if the graph supports the full dynamic range
+      @details when the full range is supported and a unit prefix changes (e.g. from mV to V)
+      the data stored in the graph are scaled approipriately to match the new unit prefix
+      (in the example above every value would be multiplied by 1000)
+      Note that this can result in a lack of precision for the data already acquired
+      (due to the fact double are not supported by the AVR)
+      @return true if full range supported
+  */
+
+  bool isGraphFullRange() { return flags.graph_full_range; };
+
+  /*!
+      @brief  set wether or not the graph full range is supported
+      @details see isGraphFullRange()
+      @param newValue new Value: true if the full range shall be supported
+  */
+  void setGraphFullRange(bool newValue) { flags.graph_full_range=newValue; };
+
+
 
   /*!
       @brief  Return the raw message
