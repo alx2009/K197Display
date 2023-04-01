@@ -98,7 +98,7 @@ size_t debugUtil::write(const uint8_t *buffer, size_t size) {
    Serial.availableForWrite(). Otherwise INT_MAX is returned (the Oled never
    blocks)
 
-        Note: it is ublikely this is used for a debug stream, but it is provided
+        Note: it is unlikely this is used for a debug stream, but it is provided
    just in case.
 
       @return the number of bytes that it is possible to write without blocking
