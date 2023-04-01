@@ -434,6 +434,32 @@ static inline bool change0(byte b1, byte b2) {
 }
 
 /*!
+    @brief  utility function, get the conversion factor between measurement unit prefixes
+    @details for example, the conversion factor from 'k' (kilo) to 'm' (milli) is 1000000.0.
+    Recognized prefixes are: 'u', 'm', 'M', 'k', and ' ' (no prefix). Unrecognized prefix is handled like ' '.
+    @param old_pref old prefix
+    @param new_pref new prefix
+    @return the factor that when multiplied for a value expressed in old prefix returns the same value expressed with the new prefix
+ */
+float getPrefixConversionFactor(old_pref, new_pref) {
+    float fconv;
+    // we calculate fconv in two steps
+    switch(old_pref) { // first step from old prefix to no prefix 
+        case '': fconv=1.0; break;  
+        case '': fconv=1.0; break;  
+        case '': fconv=1.0; break;  
+        default: fconv=1.0; break;  
+    }
+    switch(old_pref) { // first step from old prefix to no prefix 
+        case '': fconv*=1.0; break;  
+        case '': fconv*=1.0; break;  
+        case '': fconv*=1.0; break;  
+        default: fconv*=1.0; break;  
+    }
+    return fconv;
+}
+
+/*!
     @brief  update the cache
     @details average, max and min are calculated here
  */
