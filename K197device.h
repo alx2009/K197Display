@@ -570,6 +570,8 @@ private:
     } hold; ///< store values to be displayed in hold mode
   } cache; ///< cache measured values and related status information
 
+private:
+  bool isCacheInvalid(char munit, int8_t pow10);
   void updateCache();
 
 public:

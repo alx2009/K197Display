@@ -476,8 +476,40 @@ float getPrefixConversionFactor(int8_t pow10_old, int8_t pow10_new) {
 }
 
 /*!
+    @brief  check if cached data is invalid
+    @details check if cached data is invalid because the
+    unit has changed (e.g. from V to A) or one of the key announciators
+    have changed (e.g. REL). It is intyended to be called from inside updateCache.
+    @param munit the current main unit as returned by getMainUnit()
+    @param pow10 the current power of 10 as returned by getUnitPow10()
+    @return true if cached data is invalid
+ */
+bool K197device::isCacheInvalid(char munit, int8_t pow10) {
+    if (cache.tkMode != flags.tkMode) {
+        DebugOut.print(F("tkMode "));  
+        return true;
+    }
+    if (change0(cache.annunciators0, annunciators0)) {
+        DebugOut.print(F("change0 "));  
+        return true;      
+    }
+    if (cache.munit != munit) {
+        DebugOut.print(F("munit "));  
+        return true;      
+    }
+    if (!flags.graph_full_range && (cache.pow10 != pow10)) {
+        DebugOut.print(F("pow0 "));  
+        DebugOut.print(flags.graph_full_range); DebugOut.print(CH_SPACE);
+        return true; 
+    }     
+    return false;
+}
+
+/*!
     @brief  update the cache
-    @details average, max and min are calculated here
+    @details if the cache is invalid isCacheInvalid() the cache and graph is reset (see resetStatistics()).
+    Depending on settings, the cahced data can be rescaled to fit the new measurement unit prefix
+    (see rescaleStatistics()). Then average, max and min are calculated and the new data is added to the graph (see add2graph()) 
  */
 void K197device::updateCache() {
   if (!isNumeric())
@@ -485,11 +517,7 @@ void K197device::updateCache() {
   char munit = getMainUnit();
   int8_t pow10 = getUnitPow10();
   
-  if (cache.tkMode != flags.tkMode ||
-      change0(cache.annunciators0, annunciators0)
-      || cache.munit != munit
-      || (!flags.graph_full_range && (cache.pow10 != pow10) )
-      ) { // Something important changed, reset stats
+  if (isCacheInvalid(munit, pow10)) { // Something important changed, reset stats
     resetStatistics();
   } else {
     if (cache.pow10 != pow10) {
@@ -562,7 +590,7 @@ void K197device::rescaleStatistics(float fconv) {
    @brief reset graph
 */
 void K197device::k197_cache_struct::resetGraph() {
-  // DebugOut.println(F("resetGraph"));
+  DebugOut.println(F("resetGraph"));
   gr_index = max_graph_size - 1;
   gr_size = 0x00;
   nskip_graph = 0x00;
