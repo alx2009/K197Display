@@ -493,7 +493,7 @@ void K197device::updateCache() {
     resetStatistics();
   } else {
     if (cache.pow10 != pow10) {
-        //TODO: rescale everything  
+        rescaleStatistics(getPrefixConversionFactor(cache.pow10, pow10)); 
     }
     cache.average += (msg_value - cache.average) *
                      cache.avg_factor; // This not perfect but good enough
@@ -531,14 +531,27 @@ void K197device::updateCache() {
 }
 
 /*!
-    @brief  reset all statistics (min, average, max)
-    @details average, max and min are calculated here
+    @brief  reset all statistics (min, average, max) & graph data
+    @details average, max and min are reset, then resetGraph is invoked
  */
 void K197device::resetStatistics() {
   cache.average = msg_value;
   cache.min = msg_value;
   cache.max = msg_value;
   cache.resetGraph();
+}
+
+/*!
+    @brief  rescale all statistics (min, average, max) & graph data
+    @details average, max and min are multiplied by fconv
+    then rescaleGraph(fconv) is invoked
+    @param fconv the 
+ */
+void K197device::rescaleStatistics(float fconv) {
+  cache.average *= fconv;
+  cache.min *= fconv;
+  cache.max *= fconv;
+  cache.rescaleGraph(fconv);
 }
 
 // ***************************************************************************************
@@ -555,6 +568,18 @@ void K197device::k197_cache_struct::resetGraph() {
   nskip_graph = 0x00;
   if (autosample_graph) { // if autosample is set then...
     nsamples_graph = 0;   // set fastest sampling period
+  }
+}
+
+/*!
+    @brief  rescale graph data
+    @details every point in the graph is multipleied by fconv
+    @param fconv the conversion factor 
+ */
+void K197device::k197_cache_struct::rescaleGraph(float fconv) {
+  // DebugOut.println(F("rescaleGraph"));
+  for (int i = 0; i < gr_size; i++) {
+      graph[i] *= fconv;
   }
 }
 

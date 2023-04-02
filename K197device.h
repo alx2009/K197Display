@@ -541,6 +541,7 @@ private:
         nskip_graph = 0;
     };
     void resetGraph();
+    void rescaleGraph(float fconv);
     void resampleGraph(uint16_t nsamples_new);
     
   public:
@@ -575,6 +576,7 @@ public:
   void fillGraphDisplayData(k197graph_type *graphdata,
                             k197graph_yscale_opt yopt, bool hold=false);
   void resetStatistics();
+  void rescaleStatistics(float fconv);
 
   /*!
       @brief  set the number of samples for rolling average calculation
