@@ -730,7 +730,7 @@ void UImanager::setupMenus() {
   UIgraphMenu.num_items = sizeof(graphMenuItems) / sizeof(UImenuItem *);
   UIgraphMenu.selectFirstItem();
 
-  // gr_sample_time.setValue(k197dev.getGraphPeriod());
+  gr_yscale_full_range.setValue(true);
   gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
