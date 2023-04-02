@@ -132,7 +132,7 @@ public:
 /*!
     @brief  class implementing a separator button item
 
-    A menu butto is a line of text that can be selected. when selected the "Ok"
+    A menu button is a line of text that can be selected. when selected the "Ok"
    pushbutton triggers the "change() method. By default the change() method (in
    the base class) does not do anything, but a subclass can use it to implement
    any action (see also DEF_MENU_ACTION macro)

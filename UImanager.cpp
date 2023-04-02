@@ -730,7 +730,7 @@ void UImanager::setupMenus() {
   UIgraphMenu.num_items = sizeof(graphMenuItems) / sizeof(UImenuItem *);
   UIgraphMenu.selectFirstItem();
 
-  gr_yscale_full_range.setValue(true);
+  gr_yscale_full_range.setValue(true); gr_yscale_full_range.change();
   gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
@@ -1403,8 +1403,8 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
         return true; // Skip normal handling in the main sketch
       } else if (eventType == UIeventDoubleClick) {
         pushbuttons.cancelClickREL();
+        DebugOut.println(F("REL dblclk"));
         k197dev.resetStatistics();
-        // DebugOut.print('x');
         return true; // Skip normal handling in the main sketch
       }
       break;
@@ -1484,26 +1484,31 @@ void permadata::copyToUI(bool restore_screen_mode) {
   dxUtil.checkFreeStack();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
-  showDoodle.setValue(bool_options.showDoodle);
+  showDoodle.setValue(bool_options.showDoodle); showDoodle.change();
   logEnable.setValue(bool_options.logEnable);
+  logSkip.setValue(byte_options.logSkip);
   logSplitUnit.setValue(bool_options.logSplitUnit);
   logTimestamp.setValue(bool_options.logTimestamp);
   logTamb.setValue(bool_options.logTamb);
   logStat.setValue(bool_options.logStat);
-  gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
-  gr_xscale_roll_mode.setValue(bool_options.gr_xscale_roll_mode);
-  gr_xscale_autosample.setValue(bool_options.gr_xscale_autosample);
   logError.setValue(bool_options.logError);
   logOvrange.setValue(bool_options.logOvrange);
-  gr_yscale_full_range.setValue(bool_options.gr_yscale_full_range);
-  uiman.setContrast(byte_options.contrastCtrl);
-  logSkip.setValue(byte_options.logSkip);
-  logStatSamples.setValue(byte_options.logStatSamples);
+  logStatSamples.setValue(byte_options.logStatSamples); 
   k197dev.setNsamples(byte_options.logStatSamples);
+
+  gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
+  opt_gr_yscale.setValue((k197graph_yscale_opt)byte_options.opt_gr_yscale);
+  gr_xscale_roll_mode.setValue(bool_options.gr_xscale_roll_mode);
+  gr_xscale_autosample.setValue(bool_options.gr_xscale_autosample);
+  gr_xscale_autosample.change();
+  gr_yscale_full_range.setValue(bool_options.gr_yscale_full_range);
+  gr_yscale_full_range.change();
+
+  uiman.setContrast(byte_options.contrastCtrl);
   opt_gr_type.setValue(byte_options.opt_gr_type);
   if (!bool_options.gr_xscale_autosample) { // Do not mess sample rate if
                                             // autosamplig mode
-    opt_gr_yscale.setValue((k197graph_yscale_opt)byte_options.opt_gr_yscale);
+    gr_sample_time.setValue(byte_options.gr_sample_time);
   }
   if (restore_screen_mode)
     uiman.setScreenMode(screenMode);
