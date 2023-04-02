@@ -45,7 +45,7 @@ moving to inline assembler and naked interrupt handlers
 //
 // Bug to fix:
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
-// Sometime the graph resets even if no measurement unit has changed...
+// Sometime the graph resets for annunciator/unit reset (need more troubleshooting)
 //
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
