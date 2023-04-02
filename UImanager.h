@@ -332,9 +332,12 @@ private:
         bool gr_yscale_show0 : 1;      ///< store menu option value
         bool gr_xscale_roll_mode : 1;  ///< store menu option value
         bool gr_xscale_autosample : 1; ///< store menu option value
+        bool logError : 1;             ///< store menu option value
+        bool logOvrange : 1;           ///< store menu option value
+        bool gr_yscale_full_range : 1; ///< store menu option value
       };
     } __attribute__((packed)); ///<
-  }; ///< Structure designed to pack a number of flags into one byte
+  }; ///< Structure designed to pack a number of flags into two bytes
 
   struct byte_options_struct {
     byte contrastCtrl;   ///< store menu option value

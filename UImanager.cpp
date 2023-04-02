@@ -1460,6 +1460,9 @@ void permadata::copyFromUI() {
   bool_options.gr_yscale_show0 = gr_yscale_show0.getValue();
   bool_options.gr_xscale_roll_mode = gr_xscale_roll_mode.getValue();
   bool_options.gr_xscale_autosample = gr_xscale_autosample.getValue();
+  bool_options.logError = logError.getValue();
+  bool_options.logOvrange = logOvrange.getValue();
+  bool_options.gr_yscale_full_range = gr_yscale_full_range.getValue();
   byte_options.contrastCtrl = contrastCtrl.getValue();
   byte_options.logSkip = logSkip.getValue();
   byte_options.logStatSamples = logStatSamples.getValue();
@@ -1490,6 +1493,9 @@ void permadata::copyToUI(bool restore_screen_mode) {
   gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
   gr_xscale_roll_mode.setValue(bool_options.gr_xscale_roll_mode);
   gr_xscale_autosample.setValue(bool_options.gr_xscale_autosample);
+  logError.setValue(bool_options.logError);
+  logOvrange.setValue(bool_options.logOvrange);
+  gr_yscale_full_range.setValue(bool_options.gr_yscale_full_range);
   uiman.setContrast(byte_options.contrastCtrl);
   logSkip.setValue(byte_options.logSkip);
   logStatSamples.setValue(byte_options.logStatSamples);
