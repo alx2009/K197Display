@@ -41,9 +41,8 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// 
-// Option to rescale data when the unit changes, rather than resetting the graph
-// Save the two new options to EEPROM
+// Set default to rescale graph
+// Save the three new options to EEPROM
 //
 // Bug to fix:
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
