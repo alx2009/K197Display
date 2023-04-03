@@ -490,16 +490,18 @@ bool K197device::isCacheInvalid(char munit, int8_t pow10) {
         return true;
     }
     if (change0(cache.annunciators0, annunciators0)) {
-        DebugOut.print(F("change0 "));  
+        DebugOut.print(F("change0 "));  DebugOut.print(cache.annunciators0);
+        DebugOut.print('>'); DebugOut.print(annunciators0); DebugOut.print('.'); 
         return true;      
     }
     if (cache.munit != munit) {
-        DebugOut.print(F("munit "));  
+        DebugOut.print(F("munit "));  DebugOut.print(cache.munit);
+        DebugOut.print('>'); DebugOut.print(munit); DebugOut.print('.');
         return true;      
     }
     if (!flags.graph_full_range && (cache.pow10 != pow10)) {
-        DebugOut.print(F("pow0 "));  
-        DebugOut.print(flags.graph_full_range); DebugOut.print(CH_SPACE);
+        DebugOut.print(F("pow0 ")); DebugOut.print(cache.pow10);
+        DebugOut.print('>'); DebugOut.print(pow10); DebugOut.print('.');
         return true; 
     }     
     return false;
