@@ -47,6 +47,8 @@ moving to inline assembler and naked interrupt handlers
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
 // Sometime the graph resets for annunciator/unit reset (need more troubleshooting)
 //
+// When less data received from SPI, isCacheInvalid() is called twice at the exactly ame time (in ms)...
+//
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
 // default logging)
