@@ -170,10 +170,11 @@ volatile static byte fifo_records[]{
 
 volatile static uint8_t fifo_front =
     0; // index to the front of the queue, see fifo_pull()
-// We use rear in the interrupt handler, hence the use of GPIO3
-// Initialized inside k197ButtonCluster::setup()
-//#define fifo_rear GPIOR0 ///< index to the rear of the queue, see fifo_pull()
-static byte fifo_rear = 0x0;
+    
+//#define fifo_rear GPIOR0 //uncomment to use GPIOR0 to speed up slightly
+#ifndef fifo_rear 
+static byte fifo_rear = 0x0; ///< index to the rear of the queue, see fifo_pull()
+#endif
 
 /*!
     @brief  get the number of records actually stored in the FIFO queue (see
@@ -585,6 +586,11 @@ void k197ButtonCluster::setupClicktimer() {
       TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm; // Clear interrupt flags
 }
 
+//#define click_counter GPIOR2 //Uncomment to use General Purpose Register GPIOR2 to speed up the interrupt handler (slightly)
+#ifndef click_counter
+static byte click_counter = 0x00;
+#endif
+
 /*!
     @brief  schedule one (more) click of the REL button towards the K197 main
    board
@@ -597,13 +603,12 @@ void k197ButtonCluster::setupClicktimer() {
    design, so that a double click can cancel the scheduled clicks to
    perform an alternative action
 
-    General Purpose Register GPIOR2 is used to speed up the interrupt handler
 */
 void k197ButtonCluster::clickREL() {
-  if (GPIOR2 > REL_max_pending_clicks)
+  if (click_counter > REL_max_pending_clicks)
     return;
   cli();
-  GPIOR2++;
+  click_counter++;
   if ((AVR_TCA_PORT.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm) ==
       0x00) { // We need to start the timer
     // MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
@@ -623,7 +628,7 @@ void k197ButtonCluster::clickREL() {
         TCA_SINGLE_CLKSEL_DIV1024_gc |
         TCA_SINGLE_ENABLE_bm; // enable the timer with clock DIV1024
 
-    GPIOR2 = 0x01;
+    click_counter = 0x01;
     // DebugOut.print(F("Timer started, PER=0x"));
     // DebugOut.print(AVR_TCA_PORT.SINGLE.PER); DebugOut.print(", CMP0=");
     // DebugOut.println(AVR_TCA_PORT.SINGLE.CMP0);
@@ -642,28 +647,26 @@ void k197ButtonCluster::clickREL() {
    be initiated Any simulated presses already ongoing are not affected, but no
    new click will be initiated thereafter
 
-    General Purpose Register GPIOR2 is used to speed up the interrupt handler
-   (see also clickREL())
 */
-void k197ButtonCluster::cancelClickREL() { GPIOR2 = 0x00; }
+void k197ButtonCluster::cancelClickREL() { click_counter = 0x00; }
 
 /*!
     @brief  Interrupt handler, called for TCA timer overflow events
     @details This interrupt is called after enough time is passed from the last
    release, so that a new press can be recognized by the k197.
-    - If any click click is scheduled (GPIOR2>0) the MB_REL port is set to high,
+    - If any click click is scheduled (click_counter>0) the MB_REL port is set to high,
    and GPIOR2 is decremented
-    - If this was the last scheduled click (GPIOR2==0) the timer is stopped
+    - If this was the last scheduled click (click_counter==0) the timer is stopped
    and for good measure TCA interrupts are disabled.
    Note that the TCA instance used is defined in pinout.h
 */
 ISR(TCA_OVF_vect) {                                 // __vector_9
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Clear flag
-  if (GPIOR2 > 0) {                // At least one more click to generate
+  if (click_counter > 0) {                // At least one more click to generate
     MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
     MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
     // VPORTA.OUT |= 0x80;  // Turn on builtin LED
-    GPIOR2--;
+    click_counter--;
   } else {                              // We stop here
     AVR_TCA_PORT.SINGLE.INTCTRL = 0x00; // Disable all interrupts
     AVR_TCA_PORT.SINGLE.CTRLA =
