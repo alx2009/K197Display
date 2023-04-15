@@ -173,7 +173,7 @@ volatile static uint8_t fifo_front =
     
 //#define fifo_rear GPIOR0 //uncomment to use GPIOR0 to speed up slightly
 #ifndef fifo_rear 
-static byte fifo_rear = 0x0; ///< index to the rear of the queue, see fifo_pull()
+static volatile byte fifo_rear = 0x0; ///< index to the rear of the queue, see fifo_pull()
 #endif
 
 /*!
@@ -204,8 +204,9 @@ static inline bool fifo_isEmpty() {
 
 /*!
     @brief  check if the FIFO is full
-    @details this function is thread safe, but the result may not be consistent
+    @details this function is thread safe only if the GPIO are used, but even then the result may not be consistent
    with previous/following calls (see fifo_pull())
+   call cli()/sei() before/after this function if this may be a problem
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isFull() {
@@ -231,6 +232,7 @@ static inline bool fifo_isFull() {
    fifo_pull(), wich could result in the last record pushed being lost. However,
    if this is acceptable no long term corruption to the queue should result from
    this.
+   If this potential race condition is a problem, the call to this function should be bracketed between cli()/sei()
     @param b the record that should be pushed at the rear of the FIFO queue
 */
 static inline void fifo_push(byte b) {
@@ -257,8 +259,8 @@ served quickly to avoid losing data from the K197.
 Note that this function is not thread safe with respect to other pull()
 instances. It is thread safe with regard to push(), as long as the FIFO is not
 full. If the FIFO is full, there is a race condition with fifo_push(), wich
-could result in the last record pushed being lost. However, if this is
-acceptable no long term corruption to the queue should result from this.
+could result in the last record pushed being lost. 
+
     @return the record just pulled from the front of the queue (or fifo_NO_DATA
 if the queue is empty).
 */
@@ -464,9 +466,10 @@ void k197ButtonCluster::checkNew() {
       checkPressed(i, now);
     }
   }
-
+  sei();
   bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
   byte x = fifo_pull();
+  cli();
   if (b) {
     DebugOut.println(F("FIFO!"));
     //DebugOut.println(n);
@@ -588,7 +591,7 @@ void k197ButtonCluster::setupClicktimer() {
 
 //#define click_counter GPIOR2 //Uncomment to use General Purpose Register GPIOR2 to speed up the interrupt handler (slightly)
 #ifndef click_counter
-static byte click_counter = 0x00;
+static volatile byte click_counter = 0x00;
 #endif
 
 /*!
@@ -605,9 +608,11 @@ static byte click_counter = 0x00;
 
 */
 void k197ButtonCluster::clickREL() {
-  if (click_counter > REL_max_pending_clicks)
-    return;
   cli();
+  if (click_counter > REL_max_pending_clicks) {
+    sei();
+    return;
+  }
   click_counter++;
   if ((AVR_TCA_PORT.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm) ==
       0x00) { // We need to start the timer
@@ -648,14 +653,18 @@ void k197ButtonCluster::clickREL() {
    new click will be initiated thereafter
 
 */
-void k197ButtonCluster::cancelClickREL() { click_counter = 0x00; }
+void k197ButtonCluster::cancelClickREL() { 
+   sei();
+   click_counter = 0x00;
+   cli();
+}
 
 /*!
     @brief  Interrupt handler, called for TCA timer overflow events
     @details This interrupt is called after enough time is passed from the last
    release, so that a new press can be recognized by the k197.
     - If any click click is scheduled (click_counter>0) the MB_REL port is set to high,
-   and GPIOR2 is decremented
+   and click_counter is decremented
     - If this was the last scheduled click (click_counter==0) the timer is stopped
    and for good measure TCA interrupts are disabled.
    Note that the TCA instance used is defined in pinout.h
