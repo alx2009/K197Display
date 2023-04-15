@@ -178,8 +178,6 @@ bool SPIdevice::hasNewData() {
    Note that this method will block until hasNewData() returns true.
    If the caller doesn't want to block execution, it has to check hasNewData() before calling getNewData()
 
-   After this function returns the status of the 
-
       @param data byte array that will receive the copy of the data. MUST have
    room for at least PACKET elements!
       @return the number of bytes copied into data.
