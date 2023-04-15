@@ -62,7 +62,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
     u8g2->setFontMode(0);
     u8g2->drawFrame(x, y, w, getHeight(selected));
   }
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 #pragma GCC diagnostic push
@@ -77,7 +77,7 @@ void UImenuItem::draw(U8G2 *u8g2, u8g2_uint_t x, u8g2_uint_t y, u8g2_uint_t w,
 bool UImenuItem::handleUIEvent(K197UIeventsource eventSource,
                                K197UIeventType eventType) {
   return false;
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 #pragma GCC diagnostic pop

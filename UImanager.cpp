@@ -153,7 +153,7 @@ void setup_draw(void) {
     DebugOut.print(F("/"));
     DebugOut.println(u8g2.getMaxCharHeight());
   */
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -218,7 +218,7 @@ void UImanager::updateDisplay(bool stepDoodle) {
 
   displayDoodle(doodle_x_coord, doodle_y_coord, stepDoodle);
   u8g2.sendBuffer();
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -272,7 +272,7 @@ void UImanager::updateSplitScreen() {
   } else { // For all other modes we show the settings menu when in split mode
     UIwindow::getcurrentWindow()->draw(&u8g2, 0, 10);
   }
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -386,7 +386,7 @@ void UImanager::updateNormalScreen() {
   } 
 
   updateBtStatus();
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -502,7 +502,7 @@ void UImanager::updateMinMaxScreen() {
   if (k197dev.isAuto())
     u8g2.print(F("AUTO"));
     
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -527,7 +527,7 @@ void UImanager::updateBtStatus() {
   } else if (connected) {
     u8g2.print(F("<->"));
   }
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 // ***************************************************************************************
@@ -568,7 +568,7 @@ void UImanager::clearScreen() {
   // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 // ***************************************************************************************
@@ -617,7 +617,7 @@ DEF_MENU_ACTION(
       ERROR_msg_box.show();
     }); ///< load config from EEPROM and show result
 DEF_MENU_ACTION(openLog, 15, "Show log",
-                dxUtil.reportStack();
+                REPORT_FREE_STACK();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
 DEF_MENU_ACTION(resetAVR, 15, "RESET",
                   _PROTECTED_WRITE(RSTCTRL.SWRR, 1);); ///< Menu input
@@ -702,7 +702,7 @@ UImenuItem *graphMenuItems[] = {
 void UImanager::setContrast(uint8_t value) {
   u8g2.setContrast(value);
   contrastCtrl.setValue(value);
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -749,7 +749,7 @@ void UImanager::setLogging(bool yesno) {
   if (!yesno)
     logskip_counter = 0;
   logEnable.setValue(yesno);
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -860,7 +860,7 @@ void UImanager::logData() {
     Serial.print(unit);
   }
   Serial.println();
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 // ***************************************************************************************
@@ -1140,7 +1140,7 @@ void UImanager::updateGraphScreen() {
   } else {
     drawGraphScreenNormalPanel(topln_x, botln_x);
   }
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 /*!
@@ -1434,7 +1434,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       break;
     }
   return false;
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 }
 
 // ***************************************************************************************
@@ -1448,7 +1448,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
     @details This function is used inside store_to_EEPROM
 */
 void permadata::copyFromUI() {
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
   bool_options.additionalModes = additionalModes.getValue();
   bool_options.reassignStoRcl = reassignStoRcl.getValue();
   bool_options.showDoodle = showDoodle.getValue();
@@ -1481,7 +1481,7 @@ void permadata::copyFromUI() {
     @param restore_screen_mode if true restores the screen mode
 */
 void permadata::copyToUI(bool restore_screen_mode) {
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
   showDoodle.setValue(bool_options.showDoodle); showDoodle.change();
