@@ -19,10 +19,6 @@
 
 #include "K197PushButtons.h"
 #include <Arduino.h>
-#include <Event.h>
-#define CCL_CLKSEL_gm                                                          \
-  1 ///< This need to be defined to support all AVRxxDB features
-#include <Logic.h>
 
 #include "debugUtil.h"
 
@@ -274,10 +270,6 @@ static inline byte fifo_pull() {
 
    The handler simply push the logic level of the relevant pins to the rear of
    the fifo queue (see fifo_push().
-
-   Note 1: This should work in DxCore 1.5.x and later. And it does but only IF Logic 
-   library.properties is modified, ading a line with dot_a_linkage=true. 
-   See discussion here: https://github.com/SpenceKonde/DxCore/discussions/418
    
    Note 2: the current implementation relies on STO being on the same I/O port
    as RCL, and REL with DB. A future HW revision will move all 4 buttons to the same I/O
@@ -361,71 +353,62 @@ void k197ButtonCluster::setup() {
   fifo_rear = 0x00; // next push will go in 0x01, the front of the queue
 
   // Route pins for pushbuttons to Logic blocks 0-3
-  UI_STO_Event.set_generator(UI_STO);
-  UI_STO_Event.set_user(user::ccl0_event_a);
-  UI_RCL_Event.set_generator(UI_RCL);
-  UI_RCL_Event.set_user(user::ccl1_event_a);
-  UI_REL_Event.set_generator(UI_REL);
-  UI_REL_Event.set_user(user::ccl2_event_a);
-  UI_DB_Event.set_generator(UI_DB);
-  UI_DB_Event.set_user(user::ccl3_event_a);
+  EVSYS.CHANNEL2 = Ch2_UI_STO_Ev_src;
+  EVSYS.CHANNEL3 = Ch3_UI_RCL_Ev_src;
+  EVSYS.CHANNEL4 = Ch4_UI_REL_Ev_src;
+  EVSYS.CHANNEL5 = Ch5_UI_DB_Ev_src;
 
+  EVSYS.USERCCLLUT0A = EVSYS_USER_CHANNEL2_gc; // channel 2 ==> CCL LUT0 event input A 
+  EVSYS.USERCCLLUT1A = EVSYS_USER_CHANNEL3_gc; // channel 3 ==> CCL LUT1 event input A 
+  EVSYS.USERCCLLUT2A = EVSYS_USER_CHANNEL4_gc; // channel 4 ==> CCL LUT2 event input A 
+  EVSYS.USERCCLLUT3A = EVSYS_USER_CHANNEL5_gc; // channel 5 ==> CCL LUT3 event input A 
+
+  // Makes ure the CCL is disabled before configuration
+  CCL.CTRLA = 0x00; // Disable, nor running in standby
+  CCL.LUT0CTRLA = 0x00; // Disable CCL LUT0
+  CCL.LUT1CTRLA = 0x00; // Disable CCL LUT0
+  CCL.LUT2CTRLA = 0x00; // Disable CCL LUT0
+  CCL.LUT3CTRLA = 0x00; // Disable CCL LUT0
+
+  //Make sure the sequencers are disabled
+  CCL.SEQCTRL0 = 0x00;
+  CCL.SEQCTRL0 = 0x00;
+
+  //Make sure Interrupts are disabled
+  CCL.INTCTRL0 = 0x00;
+  
   // Initialize logic block 0
-  Logic0.enable = true; // Enable logic block 0
-  Logic0.input0 =
-      in::event_a; // Connect input 0 to ccl0_event_a (STO pin via UI_STO_Event)
-  // Logic0.input1 = in::event_b;  // Connect input 0 to ccl0_event_a (STO pin
-  // via UI_STO_Event)
-  Logic0.clocksource = clocksource::osc1k; // 1024Hz clock
-  Logic0.filter =
-      filter::filter;  // Debounce (must be stable for 4 clock cycles)
-  Logic0.truth = 0x55; // 0x55;
-  Logic0.init();
+  // ccl0 event a ==> input 0 (STO via Ev. ch 2)
+  CCL.TRUTH0 = 0x55; // 0x55;
+  CCL.LUT0CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
+  CCL.LUT0CTRLC = CCL_INSEL2_MASK_gc ;                       
+  CCL.LUT0CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
 
   // Initialize logic block 1
-  Logic1.enable = true; // Enable logic block 0
-  Logic1.input0 =
-      in::event_a; // Connect input 0 to ccl1_event_a (RCL pin via UI_RCL_Event)
-  Logic1.clocksource = clocksource::osc1k; // 1024Hz clock
-  Logic1.filter =
-      filter::filter; // Debounce (must be stable for 4 clock cycles)
-  Logic1.truth = 0x55;
-  Logic1.init();
+  // ccl0 event a ==> input 0 (RCL via Ev. ch 3)
+  CCL.TRUTH1 = 0x55; // 0x55;
+  CCL.LUT1CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
+  CCL.LUT1CTRLC = CCL_INSEL2_MASK_gc ;                       
+  CCL.LUT1CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
 
   // Initialize logic block 2
-  Logic2.enable = true; // Enable logic block 0
-  Logic2.input0 =
-      in::event_a; // Connect input 0 to ccl2_event_a (REL pin via UI_REL_Event)
-  Logic2.clocksource = clocksource::osc1k; // 1024Hz clock
-  Logic2.filter =
-      filter::filter; // Debounce (must be stable for 4 clock cycles)
-  Logic2.truth = 0x55;
-  Logic2.init();
+  // ccl0 event a ==> input 0 (REL via Ev. ch 4)
+  CCL.TRUTH2 = 0x55; // 0x55;
+  CCL.LUT2CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
+  CCL.LUT2CTRLC = CCL_INSEL2_MASK_gc ;                       
+  CCL.LUT2CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
 
   // Initialize logic block 3
-  Logic3.enable = true; // Enable logic block 0
-  Logic3.input0 =
-      in::event_a; // Connect input 0 to ccl3_event_a (DB pin via UI_DB_Event)
-  Logic3.clocksource = clocksource::osc1k; // 1024Hz clock
-  Logic3.filter =
-      filter::filter; // Debounce (must be stable for 4 clock cycles)
-  Logic3.truth = 0x55;
-  Logic3.init();
+  // ccl0 event a ==> input 0 (Db via Ev. ch 5)
+  CCL.TRUTH3 = 0x55; // 0x55;
+  CCL.LUT3CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
+  CCL.LUT3CTRLC = CCL_INSEL2_MASK_gc ;                       
+  CCL.LUT3CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
 
-  // for troubleshooting uncomment/modify the following to copy a logic block
-  // output to the built in led Event0.set_generator(gen::ccl0_out);
-  // Event0.set_user(user::evouta_pin_pa7);
-  // Event0.start();
+  // Setup interrupts and then enable the CCL peripheral
+  CCL.INTCTRL0 = CCL_INTMODE0_BOTH_gc | CCL_INTMODE1_BOTH_gc | CCL_INTMODE2_BOTH_gc | CCL_INTMODE3_BOTH_gc;
+  CCL.CTRLA = CCL_ENABLE_bm; // Enabled, nor running in standby
 
-  // Start the event and logic systems
-  UI_STO_Event.start();
-  UI_RCL_Event.start();
-  UI_REL_Event.start();
-  UI_DB_Event.start();
-
-  CCL.INTCTRL0|=0b11111111; 
-
-  Logic::start();
   //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
