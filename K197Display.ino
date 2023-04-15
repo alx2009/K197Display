@@ -326,7 +326,7 @@ void setup() {
       WDT_WINDOW_8CLK_gc |
           WDT_PERIOD_8KCLK_gc); // enable the WDT, 8s timeout, minimum window.
 }
-byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
+byte DMMReading[PACKET_DATA]; ///< buffer used to store the raw data received from
                          ///< the voltmeter main board
 
 bool collisionStatus =

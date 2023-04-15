@@ -62,7 +62,7 @@ static byte SPIflags=0x00; ///< Various flags used in interupt handlers
 #define SPIdone                                                                \
   0x02 ///< flag used to signal that all SPI data have been received
 
-volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
+volatile byte spiBuffer[PACKET_DATA]; ///< buffer used to receive data from SPI
 
 /*!
   @brief  Interrupt handler, called when the SS pin changes (only when
@@ -145,7 +145,7 @@ bool SPIdevice::hasNewData() {
     while (SPI1.INTFLAGS & SPI_RXCIF_bm) { // we have new SPI1.DATA
       volatile byte c =
           SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
-      if (nbyte < PACKET) {
+      if (nbyte < PACKET_DATA) {
         if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
                                         // DO Nothing
         } else {                        // this instead is data
@@ -179,7 +179,7 @@ bool SPIdevice::hasNewData() {
    If the caller doesn't want to block execution, it has to check hasNewData() before calling getNewData()
 
       @param data byte array that will receive the copy of the data. MUST have
-   room for at least PACKET elements!
+   room for at least PACKET_DATA elements!
       @return the number of bytes copied into data.
 */
 byte SPIdevice::getNewData(byte *data) {
@@ -187,7 +187,7 @@ byte SPIdevice::getNewData(byte *data) {
   while (!hasNewData()) {
     ;
   }
-  memcpy(data, (void *)spiBuffer, PACKET);
+  memcpy(data, (void *)spiBuffer, PACKET_DATA);
   SPIflags &= (~SPIdone);
   returnvalue = nbyte;
   nbyte = 0;
@@ -220,7 +220,7 @@ ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
     volatile byte c =
         SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
-    if (nbyte >= PACKET) {
+    if (nbyte >= PACKET_DATA) {
       return;
     }
     if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip

@@ -106,7 +106,7 @@ float getMsgValue(char *s, int len) {
       @return true if the data was received correctly, false otherwise
 */
 bool K197device::getNewReading() {
-  byte spiData[PACKET];
+  byte spiData[PACKET_DATA];
   byte n = getNewReading(spiData);
   return n == 9 ? true : false;
 }
