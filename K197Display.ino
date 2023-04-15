@@ -386,9 +386,9 @@ void loop() {
     collisionStatus = collision;
     DebugOut.println(F("Coll. "));
     if (collisionStatus) {
-      DebugOut.println(F("DETECT"));
+      DebugOut.println(F("DCT"));
     } else {
-      DebugOut.println(F("clear"));
+      DebugOut.println(F("clr"));
     }
   }
   pushbuttons.checkNew();
