@@ -161,19 +161,18 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define fifo_NO_DATA                                                           \
   0xff ///< value returned when the fifo is empty (see fifo_pull())
 volatile static byte fifo_records[]{
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff}; ///< array implementing the FIFO queue, see fifo_pull()
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+    }; ///< array implementing the FIFO queue, see fifo_pull()
 #define fifo_MAX_RECORDS                                                       \
   (sizeof(fifo_records) /                                                      \
    sizeof(fifo_records[0])) ///< max number of records in the FIFO queue, see
                             ///< fifo_pull()
 
-volatile static uint8_t fifo_front =
-    0; // index to the front of the queue, see fifo_pull()
+volatile static uint8_t fifo_front = 0x01; // index to the front of the queue, see fifo_pull()
     
 //#define fifo_rear GPIOR0 //uncomment to use GPIOR0 to speed up slightly
 #ifndef fifo_rear 
-static volatile byte fifo_rear = 0x0; ///< index to the rear of the queue, see fifo_pull()
+static volatile byte fifo_rear = 0x00; ///< index to the rear of the queue, see fifo_pull()
 #endif
 
 /*!
@@ -199,7 +198,7 @@ static inline int fifo_getSize() {
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isEmpty() {
-  return fifo_records[fifo_front] == fifo_NO_DATA; // self-explaining :-)
+  return fifo_records[fifo_front] == fifo_NO_DATA ?  true : false; // self-explaining :-)
 }
 
 /*!
@@ -211,7 +210,15 @@ static inline bool fifo_isEmpty() {
 */
 static inline bool fifo_isFull() {
   // If we do not have free space than the queue must be full
-  return fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS] != fifo_NO_DATA;
+  int idx = (fifo_rear + 1) % fifo_MAX_RECORDS;
+  byte val = fifo_records[idx];
+  if (val == fifo_NO_DATA) {
+      return false;
+  }
+  DebugOut.print(F("+idx=")); DebugOut.print(idx); 
+  DebugOut.print(F(", val=")); DebugOut.print(val); 
+  DebugOut.print(F(", X=")); DebugOut.println(fifo_NO_DATA); 
+  return  true;
 }
 
 /*!
@@ -258,8 +265,11 @@ served quickly to avoid losing data from the K197.
 
 Note that this function is not thread safe with respect to other pull()
 instances. It is thread safe with regard to push(), as long as the FIFO is not
-full. If the FIFO is full, there is a race condition with fifo_push(), wich
+full AND GPIOR is used for fifo_front/fifo_rear(1 cycle access). 
+If the FIFO is full, there is always a race condition with fifo_push(), wich
 could result in the last record pushed being lost. 
+
+If the race condition can be a problem, the function clal must be bracketed with cli()/sei()
 
     @return the record just pulled from the front of the queue (or fifo_NO_DATA
 if the queue is empty).
@@ -366,7 +376,8 @@ void k197ButtonCluster::setup() {
   pinConfigure(UI_DB, (PIN_DIR_INPUT | PIN_PULLUP_ON | PIN_INVERT_OFF |
                        PIN_INLVL_SCHMITT | PIN_ISC_ENABLE));
 
-  fifo_rear = fifo_MAX_RECORDS-1;
+  fifo_front = 0x01;
+  fifo_rear = 0x00; // next push will go in 0x01, the front of the queue
 
   // Route pins for pushbuttons to Logic blocks 0-3
   UI_STO_Event.set_generator(UI_STO);
@@ -466,13 +477,25 @@ void k197ButtonCluster::checkNew() {
       checkPressed(i, now);
     }
   }
-  sei();
-  bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
-  byte x = fifo_pull();
   cli();
+  bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
+  if (b || (!fifo_isEmpty()) ) {
+    if (b) {
+       DebugOut.print(b);
+       DebugOut.print(F(" idx=")); DebugOut.print((fifo_rear + 1) % fifo_MAX_RECORDS); 
+       DebugOut.print(F(", val=")); DebugOut.println(fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS]); 
+    }
+    
+    DebugOut.print(F(" front=")); DebugOut.print(fifo_front); DebugOut.print(F(", rear=")); DebugOut.println(fifo_rear); 
+    for (unsigned int i=0; i<fifo_MAX_RECORDS; i++) {
+      DebugOut.print(fifo_records[i], HEX); DebugOut.print(CH_SPACE);
+    }
+    DebugOut.println();
+  }
+  byte x = fifo_pull();
+  sei();
   if (b) {
     DebugOut.println(F("FIFO!"));
-    //DebugOut.println(n);
   }
   if (x != fifo_NO_DATA) { // We have a new raw event
     now = micros();
@@ -654,9 +677,9 @@ void k197ButtonCluster::clickREL() {
 
 */
 void k197ButtonCluster::cancelClickREL() { 
-   sei();
-   click_counter = 0x00;
    cli();
+   click_counter = 0x00;
+   sei();
 }
 
 /*!
