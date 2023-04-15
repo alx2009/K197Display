@@ -53,11 +53,11 @@
 
 //#define nbyte GPIOR1 //uncomment to use GPIOR1 to speed up interrupt handler slightly
 #ifndef nbyte
-static byte nbyte=0x00; ///< keep track of characters received from the SPI client
+static volatile byte nbyte=0x00; ///< keep track of characters received from the SPI client
 #endif
 //#define SPIflags GPIOR3 //uncomment to use GPIOR3 to speed up interrupt handler slightly
 #ifndef SPIflags
-static byte SPIflags=0x00; ///< Various flags used in interupt handlers
+static volatile byte SPIflags=0x00; ///< Various flags used in interupt handlers
 #endif
 #define SPIdone                                                                \
   0x02 ///< flag used to signal that all SPI data have been received
