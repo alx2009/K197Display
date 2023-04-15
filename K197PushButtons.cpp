@@ -178,8 +178,9 @@ static volatile byte fifo_rear = 0x00; ///< index to the rear of the queue, see 
 /*!
     @brief  get the number of records actually stored in the FIFO queue (see
    also fifo_pull())
-    @details this function is thread safe, but the result may not be consistent
-   with previous/following calls (see fifo_pull())
+    @details Note that this function is not thread safe with respect to
+   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+
     @return the number of records currently in the FIFO queue
 */
 static inline int fifo_getSize() {
@@ -193,8 +194,9 @@ static inline int fifo_getSize() {
 
 /*!
     @brief  check if the FIFO is empty
-    @details this function is thread safe, but the result may not be consistent
-   with previous/following calls (see fifo_pull())
+    @details    Note that this function is not thread safe with respect to
+   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isEmpty() {
@@ -203,9 +205,9 @@ static inline bool fifo_isEmpty() {
 
 /*!
     @brief  check if the FIFO is full
-    @details this function is thread safe only if the GPIO are used, but even then the result may not be consistent
-   with previous/following calls (see fifo_pull())
-   call cli()/sei() before/after this function if this may be a problem
+    @details t   Note that this function is not thread safe with respect to
+   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isFull() {
@@ -224,22 +226,8 @@ static inline bool fifo_isFull() {
 /*!
     @brief push a record at the rear of the FIFO queue (see also fifo_pull())
     @details This function is optimized for use in an interrupt handler.
-    To minimize the time spent in the interrupt handler, it does not check if
-   the FIFO is full. For this application this is acceptable because:
-    - a) button events are removed quickly enough that the queue should never
-   get full. If it does, it is a sign of a malfunction which is causing the main
-   loop to hung.
-    - b) even if we checked, we would lose some events. This implementation will
-   lose the older events.
-    - c) if the hanging persists, eventually the watchdog timeout will recover
-   the situation.
-   Note that this function is not thread safe with respect to
-   other push() instances. It is thread safe with regard to pull(), as long as
-   the FIFO is not full. If the FIFO is full, there is a race condition with
-   fifo_pull(), wich could result in the last record pushed being lost. However,
-   if this is acceptable no long term corruption to the queue should result from
-   this.
-   If this potential race condition is a problem, the call to this function should be bracketed between cli()/sei()
+    
+    If used both in the handler and outside, calls in sections of code that can be interrupted should be bracketed between cli()/sei()
     @param b the record that should be pushed at the rear of the FIFO queue
 */
 static inline void fifo_push(byte b) {
@@ -252,9 +240,7 @@ static inline void fifo_push(byte b) {
     @details The fifo_xxx series of variables and functions implement a FIFO
 queue which is used to pass "raw" button presses and release from the interrupt
 handler to the main application thread. The particular implementation has been
-chosen so that push and pull() can run concurrently as long as the FIFO never
-gets full. The size of the FIFO has been dimensioned to ensure this is true with
-normal use of the application (see comments inside the fifo_pull() function)
+chosen to optimize fifo_push, so it can be used efficiently in an interrupt handler.
 
     File static scope is used rather than a class as this seem to generate the
 smallest and fastest interrupt handler.
@@ -263,13 +249,8 @@ smallest and fastest interrupt handler.
 to serve the other interrupts, in particular the SPI handler which need to be
 served quickly to avoid losing data from the K197.
 
-Note that this function is not thread safe with respect to other pull()
-instances. It is thread safe with regard to push(), as long as the FIFO is not
-full AND GPIOR is used for fifo_front/fifo_rear(1 cycle access). 
-If the FIFO is full, there is always a race condition with fifo_push(), wich
-could result in the last record pushed being lost. 
-
-If the race condition can be a problem, the function clal must be bracketed with cli()/sei()
+   Note that this function is not thread safe with respect to other fifo_xxx functions. 
+   The call to this function should be bracketed between cli()/sei()
 
     @return the record just pulled from the front of the queue (or fifo_NO_DATA
 if the queue is empty).
