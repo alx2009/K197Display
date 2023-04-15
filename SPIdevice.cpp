@@ -172,11 +172,16 @@ bool SPIdevice::hasNewData() {
       @brief process a new reading that has just been received via SPI and
    return a copy of the SPI data buffer
 
-      If a number != 9 is returned, indicates that the data was NOT correctly
+     @details If a number != 9 is returned, indicates that the data was NOT correctly
    transmitted
 
+   Note that this method will block until hasNewData() returns true.
+   If the caller doesn't want to block execution, it has to check hasNewData() before calling getNewData()
+
+   After this function returns the status of the 
+
       @param data byte array that will receive the copy of the data. MUST have
-   room for at least 9 elements!
+   room for at least PACKET elements!
       @return the number of bytes copied into data.
 */
 byte SPIdevice::getNewData(byte *data) {

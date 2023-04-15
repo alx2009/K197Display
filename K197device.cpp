@@ -133,7 +133,7 @@ bool checkMessage4overrange(const char *message) {
    a copy of the SPI data buffer
 
       Similar to getNewReading() except it also returns a copy of the SPI data
-   bufer. The only reason to use this function is to help in troubleshooting,
+   buffer. The only reason to use this function is to help in troubleshooting,
       e.g. to print the SPI data buffer to Serial. For normal purposes it is
    enough to call getNewReading() and access the decoded information via the
    other member functions
