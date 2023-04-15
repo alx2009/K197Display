@@ -98,7 +98,7 @@ private:
   void updateSplitScreen();
   void updateGraphScreen();
   void drawGraphScreenNormalPanel(u8g2_uint_t topln_x);
-  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax, u8g2_uint_t bx);
+  void drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_uint_t topln_x, u8g2_uint_t ax, u8g2_uint_t bx);
   void drawMarker(u8g2_uint_t x, u8g2_uint_t y,
                   char marker_type = UImanager::MARKER);
 
@@ -329,7 +329,7 @@ private:
         bool logTamb : 1;              ///< store menu option value
         bool logStat : 1;              ///< store menu option value
         bool gr_yscale_show0 : 1;      ///< store menu option value
-        bool gr_xscale_roll_mode : 1;  ///< store menu option value
+        bool unused_no_1 : 1;          ///< backward compatibility
         bool gr_xscale_autosample : 1; ///< store menu option value
         bool logError : 1;             ///< store menu option value
         bool logOvrange : 1;           ///< store menu option value

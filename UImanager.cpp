@@ -681,7 +681,6 @@ DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis",
 DEF_MENU_BOOL(gr_yscale_show0, 15, "Show y=0"); ///< Menu input
 
 DEF_MENU_SEPARATOR(graphSeparator2, 15, "< X axis >"); ///< Menu separator
-DEF_MENU_BOOL(gr_xscale_roll_mode, 15, "Roll mode");   ///< Menu input
 DEF_MENU_BOOL_ACT(gr_xscale_autosample, 15, "Auto sample",
                   k197dev.setAutosample(getValue());); ///< Menu input
 DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
@@ -691,7 +690,7 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
 
 UImenuItem *graphMenuItems[] = {
        &graphSeparator0, &opt_gr_type, &graphSeparator1, &gr_yscale_full_range,
-       &opt_gr_yscale, &gr_yscale_show0, &graphSeparator2, &gr_xscale_roll_mode,
+       &opt_gr_yscale, &gr_yscale_show0, &graphSeparator2,
        &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu
     }; ///< Collects all items in the graph menu
 
@@ -735,7 +734,6 @@ void UImanager::setupMenus() {
   UIgraphMenu.selectFirstItem();
 
   gr_yscale_full_range.setValue(true); gr_yscale_full_range.change();
-  gr_xscale_roll_mode.setValue(true);
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
   permadata::retrieve_from_EEPROM(true);
@@ -901,7 +899,7 @@ void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle) {
 //  Graph screen handling
 // ***************************************************************************************
 
-static k197graph_type k197graph;
+//static k197graph_type k197graph;
 //                           0   1   2   3   4   5   6
 static const char prefix[] = {
     'n', 'u', 'm', ' ', 'k', 'M', 'G'}; ///< Lookup table for unit prefixes
@@ -1033,19 +1031,12 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
 }
 
 /*!
-   \def IS_DISPLAY_ROLL_MODE()
-
-     @brief  utility macro, used to improve readibility of if statements
-*/
-#define IS_DISPLAY_ROLL_MODE()                                                 \
-  (xscale == 1) && (k197graph.npoints == k197graph_type::x_size) &&            \
-      gr_xscale_roll_mode.getValue()
-
-/*!
     @brief  update the display, used when in graph mode
    screen.
 */
 void UImanager::updateGraphScreen() {
+  k197graph_type k197graph;
+  
   bool hold = k197dev.getDisplayHold();
     
   // Get graph data
@@ -1086,37 +1077,20 @@ void UImanager::updateGraphScreen() {
   printYLabel(k197graph.y1);
   u8g2_uint_t topln_x = u8g2.tx;
 
-  if (IS_DISPLAY_ROLL_MODE()) { // Draw the graph in roll mode
-    if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS ||
+  if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS ||
         k197graph.npoints < 2) {
       for (int i = 0; i < k197graph.npoints; i++) {
         u8g2.drawPixel(i, k197graph.y_size - k197graph.point[k197graph.idx(i)]);
       }
-    } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2
+  } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2
       for (int i = 0; i < (k197graph.npoints - 1); i++) {
         u8g2.drawLine(i, k197graph.y_size - k197graph.point[k197graph.idx(i)],
                       i + 1,
                       k197graph.y_size - k197graph.point[k197graph.idx(i + 1)]);
       }
-    }
-    // drawMarker(k197graph.x_size,
-    // k197graph.y_size-k197graph.point[k197graph.current_idx]);
-  } else { // Draw the graph in overwrite mode
-    if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS ||
-        k197graph.npoints < 2) {
-      for (int i = 0; i < k197graph.npoints; i++) {
-        u8g2.drawPixel(xscale * i, k197graph.y_size - k197graph.point[i]);
-      }
-    } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2
-      for (int i = 0; i < (k197graph.npoints - 1); i++) {
-        u8g2.drawLine(xscale * i, k197graph.y_size - k197graph.point[i],
-                      xscale * (i + 1),
-                      k197graph.y_size - k197graph.point[i + 1]);
-      }
-    }
-    drawMarker(xscale * k197graph.current_idx,
-               k197graph.y_size - k197graph.point[k197graph.current_idx]);
   }
+  // drawMarker(k197graph.x_size,
+  // k197graph.y_size-k197graph.point[k197graph.current_idx]); 
 
   u8g2_uint_t ax =
       cursor_a > k197graph.npoints ? k197graph.npoints - 1 : cursor_a;
@@ -1124,24 +1098,18 @@ void UImanager::updateGraphScreen() {
       cursor_b > k197graph.npoints ? k197graph.npoints - 1 : cursor_b;
 
   if (areCursorsVisible() && k197graph.npoints > 0) {
-    if (IS_DISPLAY_ROLL_MODE()) { // Draw the cursors in roll mode
       drawMarker(xscale * ax,
                  k197graph.y_size - k197graph.point[k197graph.idx(ax)],
                  CURSOR_A);
       drawMarker(xscale * bx,
                  k197graph.y_size - k197graph.point[k197graph.idx(bx)],
-                 CURSOR_B);
-    } else { // Draw the cursors in overwrite mode
-      drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
-      drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B);
-    }
+                 CURSOR_B); 
   }
   if (areCursorsVisible() && k197graph.npoints > 0) {
-    if (IS_DISPLAY_ROLL_MODE()) { // Translate considering we are in roll mode
-      ax = k197graph.idx(ax);
-      bx = k197graph.idx(bx);
-    }
-    drawGraphScreenCursorPanel(topln_x, ax, bx);
+    // Translate considering we are always in roll mode
+    ax = k197graph.idx(ax);
+    bx = k197graph.idx(bx);
+    drawGraphScreenCursorPanel(&k197graph, topln_x, ax, bx);
   } else {
     drawGraphScreenNormalPanel(topln_x);
   }
@@ -1216,7 +1184,7 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
     @param ax the graph index corresponding to cursor A
     @param bx the graph index corresponding to cursor B
 */
-void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, 
+void UImanager::drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_uint_t topln_x, 
                                            u8g2_uint_t ax, u8g2_uint_t bx) {
   // temporary buffer used for number formatting
   char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
@@ -1250,9 +1218,9 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
-      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints);
-  DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
-      DebugOut.print(F(", s=")); DebugOut.println(k197graph.nsamples_graph);
+      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph_ptr->npoints);
+  DebugOut.print(F(", i=")); DebugOut.print(k197graph_ptr->current_idx);
+      DebugOut.print(F(", s=")); DebugOut.println(k197graph_ptr->nsamples_graph);
       DebugOut.print(F("A =")); DebugOut.print(cursor_a); DebugOut.print(F(", B
   =")); DebugOut.println(cursor_b); DebugOut.print(F("OLD ax="));
   DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
@@ -1260,8 +1228,8 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
 
   // for the next calculations, we need the logical index, regardless how the
   // graph is plot
-  u8g2_uint_t logic_ax = k197graph.logic_index(ax);
-  u8g2_uint_t logic_bx = k197graph.logic_index(bx);
+  u8g2_uint_t logic_ax = k197graph_ptr->logic_index(ax);
+  u8g2_uint_t logic_bx = k197graph_ptr->logic_index(bx);
   uint16_t deltax =
       logic_ax > logic_bx ? logic_ax - logic_bx : logic_bx - logic_ax;
 
@@ -1283,10 +1251,10 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Dt"));
   u8g2.print(CH_SPACE);
-  if (k197graph.nsamples_graph == 0) {
+  if (k197graph_ptr->nsamples_graph == 0) {
     u8g2.print(float(deltax) / 3.0, 2);
   } else {
-    u8g2.print(deltax * k197graph.nsamples_graph / 3.0);
+    u8g2.print(deltax * k197graph_ptr->nsamples_graph / 3.0);
   }
   u8g2.print(CH_SPACE);
   u8g2.print('s');
@@ -1463,7 +1431,7 @@ void permadata::copyFromUI() {
   bool_options.logTamb = logTamb.getValue();
   bool_options.logStat = logStat.getValue();
   bool_options.gr_yscale_show0 = gr_yscale_show0.getValue();
-  bool_options.gr_xscale_roll_mode = gr_xscale_roll_mode.getValue();
+  bool_options.unused_no_1 = 1; // Backward compatibility for removed option
   bool_options.gr_xscale_autosample = gr_xscale_autosample.getValue();
   bool_options.logError = logError.getValue();
   bool_options.logOvrange = logOvrange.getValue();
@@ -1503,7 +1471,7 @@ void permadata::copyToUI(bool restore_screen_mode) {
 
   gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
   opt_gr_yscale.setValue((k197graph_yscale_opt)byte_options.opt_gr_yscale);
-  gr_xscale_roll_mode.setValue(bool_options.gr_xscale_roll_mode);
+  // option unused_no_1 is of course not used anymore
   gr_xscale_autosample.setValue(bool_options.gr_xscale_autosample);
   gr_xscale_autosample.change();
   gr_yscale_full_range.setValue(bool_options.gr_yscale_full_range);
