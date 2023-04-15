@@ -51,7 +51,7 @@
 #include "debugUtil.h"
 #include "pinout.h"
 
-#define nbyte GPIOR1 //uncomment to use GPIOR1 to speed up interrupt handler slightly
+//#define nbyte GPIOR1 //uncomment to use GPIOR1 to speed up interrupt handler slightly
 #ifndef nbyte
 static byte nbyte=0x00; ///< keep track of characters received from the SPI client
 #endif
