@@ -98,7 +98,7 @@ private:
   void updateSplitScreen();
   void updateGraphScreen();
   void drawGraphScreenNormalPanel(u8g2_uint_t topln_x);
-  void drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_uint_t topln_x, u8g2_uint_t ax, u8g2_uint_t bx);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax, u8g2_uint_t bx);
   void drawMarker(u8g2_uint_t x, u8g2_uint_t y,
                   char marker_type = UImanager::MARKER);
 

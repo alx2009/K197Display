@@ -899,7 +899,7 @@ void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle) {
 //  Graph screen handling
 // ***************************************************************************************
 
-//static k197graph_type k197graph;
+static k197graph_type k197graph;
 //                           0   1   2   3   4   5   6
 static const char prefix[] = {
     'n', 'u', 'm', ' ', 'k', 'M', 'G'}; ///< Lookup table for unit prefixes
@@ -1034,9 +1034,7 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
     @brief  update the display, used when in graph mode
    screen.
 */
-void UImanager::updateGraphScreen() {
-  k197graph_type k197graph;
-  
+void UImanager::updateGraphScreen() {  
   bool hold = k197dev.getDisplayHold();
     
   // Get graph data
@@ -1109,7 +1107,7 @@ void UImanager::updateGraphScreen() {
     // Translate considering we are always in roll mode
     ax = k197graph.idx(ax);
     bx = k197graph.idx(bx);
-    drawGraphScreenCursorPanel(&k197graph, topln_x, ax, bx);
+    drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
     drawGraphScreenNormalPanel(topln_x);
   }
@@ -1184,7 +1182,7 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
     @param ax the graph index corresponding to cursor A
     @param bx the graph index corresponding to cursor B
 */
-void UImanager::drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_uint_t topln_x, 
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, 
                                            u8g2_uint_t ax, u8g2_uint_t bx) {
   // temporary buffer used for number formatting
   char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
@@ -1218,9 +1216,9 @@ void UImanager::drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_u
   u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
-      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph_ptr->npoints);
-  DebugOut.print(F(", i=")); DebugOut.print(k197graph_ptr->current_idx);
-      DebugOut.print(F(", s=")); DebugOut.println(k197graph_ptr->nsamples_graph);
+      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints);
+  DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
+      DebugOut.print(F(", s=")); DebugOut.println(k197graph.nsamples_graph);
       DebugOut.print(F("A =")); DebugOut.print(cursor_a); DebugOut.print(F(", B
   =")); DebugOut.println(cursor_b); DebugOut.print(F("OLD ax="));
   DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
@@ -1228,8 +1226,8 @@ void UImanager::drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_u
 
   // for the next calculations, we need the logical index, regardless how the
   // graph is plot
-  u8g2_uint_t logic_ax = k197graph_ptr->logic_index(ax);
-  u8g2_uint_t logic_bx = k197graph_ptr->logic_index(bx);
+  u8g2_uint_t logic_ax = k197graph.logic_index(ax);
+  u8g2_uint_t logic_bx = k197graph.logic_index(bx);
   uint16_t deltax =
       logic_ax > logic_bx ? logic_ax - logic_bx : logic_bx - logic_ax;
 
@@ -1251,10 +1249,10 @@ void UImanager::drawGraphScreenCursorPanel(k197graph_type *k197graph_ptr, u8g2_u
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Dt"));
   u8g2.print(CH_SPACE);
-  if (k197graph_ptr->nsamples_graph == 0) {
+  if (k197graph.nsamples_graph == 0) {
     u8g2.print(float(deltax) / 3.0, 2);
   } else {
-    u8g2.print(deltax * k197graph_ptr->nsamples_graph / 3.0);
+    u8g2.print(deltax * k197graph.nsamples_graph / 3.0);
   }
   u8g2.print(CH_SPACE);
   u8g2.print('s');
