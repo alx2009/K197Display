@@ -64,6 +64,7 @@ static byte SPIflags=0x00; ///< Various flags used in interupt handlers
 
 volatile byte spiBuffer[PACKET_DATA]; ///< buffer used to receive data from SPI
 
+#ifdef DEVICE_USE_INTERRUPT
 /*!
   @brief  Interrupt handler, called when the SS pin changes (only when
  DEVICE_USE_INTERRUPT is defined)
@@ -76,6 +77,7 @@ ISR(SPI1_PORT_vect) {                // __vector_30
     nbyte = 0;
   }
 }
+#endif //DEVICE_USE_INTERRUPT
 
 /*!
     @brief  setup the SPI peripheral. Must be called first, before any other
@@ -215,6 +217,14 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
 /*!
     @brief  Interrupt handler, called for SPI1 events (only when
    DEVICE_USE_INTERRUPT is defined)
+
+   @details there is a weakness here, in that we assume we can read data fast enough that the
+   MB_CD_bm has not changed status after the data is sent. If this is not true we may lose one or more data bytes.
+   This will result in less than 9 data byteas read, leading to the data set being discarded.
+   The K197 timing is slow enough that this is not normally a problem, except
+   in specific circumstances (e.g. writing to EEPROM) when losing data is acceptable.
+   Note however that this also mean using buffered SPI mode doesn't really make a big difference because by the same
+   line of reasoning we should always read a byte before the next one is received... but it doesn't hurt.
 */
 ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
