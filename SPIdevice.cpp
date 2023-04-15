@@ -68,6 +68,9 @@ volatile byte spiBuffer[PACKET_DATA]; ///< buffer used to receive data from SPI
 /*!
   @brief  Interrupt handler, called when the SS pin changes (only when
  DEVICE_USE_INTERRUPT is defined)
+ @details we assume that the interrupt is called before a SPI data is ready 
+ (resetting nbyte to zero while we are reading commands has no effect since they are anyway discarded by the SPI interrupt handler).
+ Because the K197 send a number of command bytes first, this assumption is always satisfied.
 */
 ISR(SPI1_PORT_vect) {                // __vector_30
   SPI1_VPORT.INTFLAGS |= SPI1_SS_bm; // clears interrupt flag
