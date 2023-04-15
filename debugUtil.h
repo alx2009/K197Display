@@ -41,7 +41,7 @@
 */
 /**************************************************************************/
 
-#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
+//#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
 // sections of code
 
 /**************************************************************************/
