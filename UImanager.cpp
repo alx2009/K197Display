@@ -640,14 +640,13 @@ DEF_MENU_BOOL(logTimestamp, 15, "Log tstamp");               ///< Menu input
 DEF_MENU_BOOL(logTamb, 15, "Incl. Tamb");                    ///< Menu input
 DEF_MENU_BOOL(logStat, 15, "Incl. Statistics");              ///< Menu input
 DEF_MENU_BOOL(logError, 15, "Log errors");                   ///< Menu input
-DEF_MENU_BOOL(logOvrange, 15, "Log ov.range");               ///< Menu input
 DEF_MENU_SEPARATOR(logSeparator1, 15, "< Statistics >");     ///< Menu separator
 DEF_MENU_BYTE_ACT(logStatSamples, 15, "Num. Samples",
                   k197dev.setNsamples(getValue());); ///< Menu input
 
 UImenuItem *logMenuItems[] = {
     &logSeparator0,  &logEnable, &logSkip, &logSplitUnit,
-    &logTimestamp,   &logTamb,   &logStat, &logError, &logOvrange, &logSeparator1,
+    &logTimestamp,   &logTamb,   &logStat, &logError, &logSeparator1,
     &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
 
 // Graph menu
@@ -817,11 +816,7 @@ void UImanager::logData() {
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
     return;
   if ( !k197dev.isNumeric() ) {
-      if ( k197dev.isOvrange() ) { 
-          if ( !logOvrange.getValue() ) return;
-      } else {
-          if ( !logError.getValue() ) return;
-      }
+     if ( !logError.getValue() ) return;
   }
     
   if (logskip_counter < logSkip.getValue()) {
@@ -1432,7 +1427,7 @@ void permadata::copyFromUI() {
   bool_options.unused_no_1 = 1; // Backward compatibility for removed option
   bool_options.gr_xscale_autosample = gr_xscale_autosample.getValue();
   bool_options.logError = logError.getValue();
-  bool_options.logOvrange = logOvrange.getValue();
+  bool_options.unused_no_2 = false;
   bool_options.gr_yscale_full_range = gr_yscale_full_range.getValue();
   byte_options.contrastCtrl = contrastCtrl.getValue();
   byte_options.logSkip = logSkip.getValue();
@@ -1463,7 +1458,7 @@ void permadata::copyToUI(bool restore_screen_mode) {
   logTamb.setValue(bool_options.logTamb);
   logStat.setValue(bool_options.logStat);
   logError.setValue(bool_options.logError);
-  logOvrange.setValue(bool_options.logOvrange);
+  // option unused_no_2 is of course not used anymore 
   logStatSamples.setValue(byte_options.logStatSamples); 
   k197dev.setNsamples(byte_options.logStatSamples);
 

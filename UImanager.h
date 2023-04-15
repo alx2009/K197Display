@@ -332,7 +332,7 @@ private:
         bool unused_no_1 : 1;          ///< backward compatibility
         bool gr_xscale_autosample : 1; ///< store menu option value
         bool logError : 1;             ///< store menu option value
-        bool logOvrange : 1;           ///< store menu option value
+        bool unused_no_2 : 1;          ///< backward compatibility
         bool gr_yscale_full_range : 1; ///< store menu option value
       };
     } __attribute__((packed)); ///<
