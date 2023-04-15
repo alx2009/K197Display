@@ -19,7 +19,9 @@
 #include "debugUtil.h"
 #include <Arduino.h>
 
+#ifdef CHECK_STACK_SIZE
 #include <FreeStack.h>
+#endif
 
 // static const float vstep = 10.24 / 4096.0; // conversion from ADC reading to
 // Volts (assuming 1.024V reference and 12 bit resolution)
@@ -208,6 +210,7 @@ void dxUtilClass::checkTemperature(bool newline) {
     DebugOut.println();
 }
 
+#ifdef CHECK_STACK_SIZE
 /*!
     @brief  check the stack size
     @return current amount of free stack space in bytes
@@ -247,3 +250,5 @@ void dxUtilClass::reportStack(bool reportAlways) {
     DebugOut.print(minStack);
   }
 }
+
+#endif //CHECK_FREE_STACK undefined
