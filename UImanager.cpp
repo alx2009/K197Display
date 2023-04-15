@@ -775,12 +775,12 @@ inline void logU2U() {
       @brief  format a number
       @details format a float so that it has the right lenght and the maximum
    number of decimal digitas allowed in the available display space
-      @param buf a buffer where the formatted string should be written
+      @param buf a buffer where the formatted string should be written (size>=9)
       @param f the number to be formatted
       @return a nul terminated char array with the formatted number (same as
    buf)
 */
-const char *UImanager::formatNumber(char buf[K197_RAW_MSG_SIZE + 1], float f) {
+const char *UImanager::formatNumber(char *buf, float f) {
   if (f > 999999.0)
     f = 999999.0;
   else if (f < -999999.0)
@@ -797,6 +797,7 @@ const char *UImanager::formatNumber(char buf[K197_RAW_MSG_SIZE + 1], float f) {
     ndec = 2;
   else if (f_abs <= 99999.9)
     ndec = 1;
+  // else we leave ndec=0  
   return dtostrf(f, K197_RAW_MSG_SIZE, ndec, buf);
 }
 
