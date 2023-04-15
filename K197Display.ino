@@ -41,11 +41,12 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// -
+// Minor improvement: print "hold" consistently in graph mode (with and without cursors)
 //
 // Bug to fix:
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
-// Sometime the graph resets for annunciator/unit reset (need more troubleshooting)
+// Sometime the graph resets for annunciator/unit reset. Connected to partial data read from K197, the unit is empty. 
+//   It should be possible to fix flagging measurement without a proper unit as invalid
 //
 // When less data received from SPI, isCacheInvalid() is called twice at the exactly ame time (in ms)...
 //
@@ -94,7 +95,7 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
-  dxUtil.reportStack();
+  REPORT_FREE_STACK();
   Serial.print(F(" Max loop (us): "));
   Serial.println(uiman.looptimerMax);
   uiman.looptimerMax = 0;
@@ -116,7 +117,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 }
 
 #define INPUT_BUFFER_SIZE                                                      \
-  30 ///< size of the input buffer when reading from Serial
+  10 ///< size of the input buffer when reading from Serial
 
 /*!
       @brief error message for invalid command to Serial
@@ -143,8 +144,8 @@ void cmdLog() { uiman.setLogging(!uiman.isLogging()); }
    the Arduibno GUI)
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
-  dxUtil.checkFreeStack();
-  static char buf[INPUT_BUFFER_SIZE];
+  CHECK_FREE_STACK();
+  char buf[INPUT_BUFFER_SIZE];
   size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
   if (i == 0) { // no characters read
@@ -194,7 +195,7 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 */
 void myButtonCallback(K197UIeventsource eventSource,
                       K197UIeventType eventType) {
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
   if (uiman.handleUIEvent(eventSource,
                           eventType)) { // UI related event, no need to do more
     //DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
@@ -317,7 +318,7 @@ void setup() {
 
   delay(100);
 
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 
   // Setup watchdog
   _PROTECTED_WRITE(
@@ -370,7 +371,7 @@ void loop() {
       uiman.logData();
       PROFILE_stop(DebugOut.PROFILE_DISPLAY);
       PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in logData()"));
-      dxUtil.checkFreeStack();
+      CHECK_FREE_STACK();
       __asm__ __volatile__("wdr" ::);
     }
     PROFILE_start(DebugOut.PROFILE_DISPLAY);
