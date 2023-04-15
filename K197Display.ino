@@ -145,7 +145,7 @@ void cmdLog() { uiman.setLogging(!uiman.isLogging()); }
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
   CHECK_FREE_STACK();
-  char buf[INPUT_BUFFER_SIZE];
+  char buf[INPUT_BUFFER_SIZE+1];
   size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
   if (i == 0) { // no characters read
