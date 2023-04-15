@@ -1076,7 +1076,6 @@ void UImanager::updateGraphScreen() {
   u8g2.setCursor(k197graph.x_size + 2,
                  k197graph.y_size - u8g2.getMaxCharHeight());
   printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? i1 / 3 : (i1 / 3) * k197graph.nsamples_graph);
-  u8g2_uint_t botln_x = u8g2.tx;
   u8g2.setCursor(k197graph.x_size + 2, 0);
   printYLabel(k197graph.y1);
   u8g2_uint_t topln_x = u8g2.tx;
@@ -1136,9 +1135,9 @@ void UImanager::updateGraphScreen() {
       ax = k197graph.idx(ax);
       bx = k197graph.idx(bx);
     }
-    drawGraphScreenCursorPanel(topln_x, botln_x, ax, bx);
+    drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
-    drawGraphScreenNormalPanel(topln_x, botln_x);
+    drawGraphScreenNormalPanel(topln_x);
   }
   CHECK_FREE_STACK();
 }
@@ -1147,15 +1146,13 @@ void UImanager::updateGraphScreen() {
     @brief  draw a small panel showing the measurement value
     @details this method is called from updateGraphScreen().
     Used when in graph mode screen when the cursors are hidden
-    The top and bottom line include the axis labels, which have variable lenght
-    and are printed by updateGraphScreen(). The start cooordinate for those
-   lines is passed in the two arguments topln_x and botln_x
+    The top line include the axis labels, which has variable lenght
+    and is printed by updateGraphScreen(). The start cooordinate for this
+   line is passed in the argument topln_x
     @param topln_x the first usable x coordinates of the top line of the panel
-    @param botln_x the first usable x coordinates of the bottom line of the
    panel
 */
-void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x,
-                                           u8g2_uint_t botln_x) {
+void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
   bool hold = k197dev.getDisplayHold();
 
   u8g2_uint_t x = 185 + 10;
@@ -1203,18 +1200,16 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x,
     @brief  draw a small panel showing the cursor values
     @details this method is called from updateGraphScreen().
     Used when in graph mode screen when the cursors are visible
-    The top and bottom line include the axis labels, which have variable lenght
-    and are printed by updateGraphScreen(). The start cooordinate for those
-   lines is passed in the two arguments topln_x and botln_x
+    The top line includes the axis label, which has variable lenght
+    and is printed by updateGraphScreen(). The start cooordinate for this
+   line is passed in the argument topln_x
     @param topln_x the first usable x coordinates of the top line of the panel
-    @param botln_x the first usable x coordinates of the bottom line of the
    panel
     @param ax the graph index corresponding to cursor A
     @param bx the graph index corresponding to cursor B
 */
-void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
-                                           u8g2_uint_t botln_x, u8g2_uint_t ax,
-                                           u8g2_uint_t bx) {
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, 
+                                           u8g2_uint_t ax, u8g2_uint_t bx) {
   char buf[K197_RAW_MSG_SIZE + 1];
   bool hold = k197dev.getDisplayHold();
   
