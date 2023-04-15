@@ -99,7 +99,7 @@ void SPIdevice::setup() {
   // Set SPI Mode
   SPI1.CTRLB =
       SPI_BUFEN_bm |
-      SPI_MODE_0_gc; // Other flags: SPI_BUFEN=1 (normal mode). SPI_BUFWR=0 (not
+      SPI_MODE_0_gc; // SPI_BUFEN=1 (normal mode). SPI_BUFWR=0 (not
                      // need to transmit); SPI_SSD not used when SPI_MASTER=0
 
 #ifdef DEVICE_USE_INTERRUPT
@@ -115,7 +115,7 @@ void SPIdevice::setup() {
   cli(); // we want interrupts to fire after they are properly configured
 
   // enable interrupts
-  SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used when SPI_BUFEN=0
+  SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used
 
 #ifndef CORE_ATTACH_NONE // Manual handling of pin interrupts possible
 #error "attachInterrupt must be set to \"only enabled ports\" in the Tools menu"
