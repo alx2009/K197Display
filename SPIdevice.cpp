@@ -77,7 +77,9 @@ ISR(SPI1_PORT_vect) {                // __vector_30
   if (SPI1_VPORT.IN & SPI1_SS_bm) {  // device de-selected
     SPIflags |= SPIdone;
   } else { // device selected
+    cli();
     nbyte = 0;
+    sei();
   }
 }
 #endif //DEVICE_USE_INTERRUPT
@@ -193,9 +195,11 @@ byte SPIdevice::getNewData(byte *data) {
     ;
   }
   memcpy(data, (void *)spiBuffer, PACKET_DATA);
+  cli(); 
   SPIflags &= (~SPIdone);
   returnvalue = nbyte;
   nbyte = 0;
+  sei();
   return returnvalue;
 }
 
@@ -228,6 +232,9 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
    in specific circumstances (e.g. writing to EEPROM) when losing data is acceptable.
    Note however that this also mean using buffered SPI mode doesn't really make a big difference because by the same
    line of reasoning we should always read a byte before the next one is received... but it doesn't hurt.
+
+   Note that in setup() we have set this vecotor as the High-Priority Interrupt.
+   So while we execute no other task can have access to the data we use. 
 */
 ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
