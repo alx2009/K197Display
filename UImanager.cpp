@@ -228,6 +228,9 @@ void UImanager::updateDisplay(bool stepDoodle) {
    This is by design so that it is possible to see the current value without exiting the hold mode
 */
 void UImanager::updateSplitScreen() {
+  // temporary buffer used for number formatting
+  char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
+
   u8g2_uint_t x = 140;
   u8g2_uint_t y = 5;
   u8g2.setFont(u8g2_font_8x13_mr);
@@ -245,7 +248,6 @@ void UImanager::updateSplitScreen() {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   if (k197dev.isNumeric()) {
-    char buf[K197_RAW_MSG_SIZE + 1];
     u8g2.print(formatNumber(buf, k197dev.getValue()));
   } else
     u8g2.print(k197dev.getRawMessage());
@@ -394,6 +396,9 @@ void UImanager::updateNormalScreen() {
    updateDisplay().
 */
 void UImanager::updateMinMaxScreen() {
+  // temporary buffer used for number formatting
+  char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
+
   u8g2.setFont(
       u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
   const unsigned int xraw = 130;  // x coordinate for raw_msg
@@ -453,7 +458,6 @@ void UImanager::updateMinMaxScreen() {
   u8g2.print(F("Min "));
 
   u8g2.setFont(u8g2_font_9x15_m_symbols);
-  char buf[K197_RAW_MSG_SIZE + 1];
   x = u8g2.tx;
   y = 3;
   u8g2.setCursor(x, y);
@@ -807,6 +811,9 @@ const char *UImanager::formatNumber(char *buf, float f) {
    datalogging is disabled or in no connection has been detected
 */
 void UImanager::logData() {
+  // temporary buffer used for number formatting
+  char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
+
   if (k197dev.isCal()) // No logging while in Cal mode
     return;
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
@@ -830,7 +837,6 @@ void UImanager::logData() {
     Serial.print(F(" ms; "));
   }
   if (k197dev.isNumeric()) {
-    char buf[K197_RAW_MSG_SIZE + 1];
     Serial.print(formatNumber(buf, k197dev.getValue()));
   } else
     Serial.print(k197dev.getRawMessage());
@@ -846,7 +852,6 @@ void UImanager::logData() {
     Serial.print(unit);
   }
   if (logStat.getValue()) {
-    char buf[K197_RAW_MSG_SIZE + 1];
     Serial.print(F("; "));
     Serial.print(formatNumber(buf, k197dev.getMin()));
     logU2U();
@@ -1154,6 +1159,9 @@ void UImanager::updateGraphScreen() {
    panel
 */
 void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
+  // temporary buffer used for number formatting
+  char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
+
   bool hold = k197dev.getDisplayHold();
 
   u8g2_uint_t x = 185 + 10;
@@ -1177,7 +1185,6 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_8x13_mr);
   if (k197dev.isNumeric(hold)) {
-    char buf[K197_RAW_MSG_SIZE + 1];
     u8g2.print(formatNumber(buf, k197dev.getValue(hold)));
   } else {
     u8g2.print(k197dev.getRawMessage(hold));
@@ -1211,7 +1218,9 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
 */
 void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, 
                                            u8g2_uint_t ax, u8g2_uint_t bx) {
-  char buf[K197_RAW_MSG_SIZE + 1];
+  // temporary buffer used for number formatting
+  char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
+
   bool hold = k197dev.getDisplayHold();
   
   u8g2.setCursor(topln_x + 1, 0);
