@@ -91,8 +91,8 @@ u8g2(U8G2_R0, OLED_SS
      /*,reset_pin*/); ///< u8g2 object. See pinout.h for pin definition.
 #endif
 
-#define U8LOG_WIDTH 28                            ///< Size of the log window
-#define U8LOG_HEIGHT 9                            ///< Height of the log window
+#define U8LOG_WIDTH 25                            ///< Size of the log window
+#define U8LOG_HEIGHT 5                            ///< Height of the log window
 uint8_t u8log_buffer[U8LOG_WIDTH * U8LOG_HEIGHT]; ///< buffer for the log window
 U8G2LOG u8g2log;                                  ///< the log window
 
