@@ -41,6 +41,7 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
+// Add asserts in key points
 // Minor improvement: print "hold" consistently in graph mode (with and without cursors)
 //
 // Bug to fix:
