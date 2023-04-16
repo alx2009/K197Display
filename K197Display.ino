@@ -41,19 +41,21 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Add asserts in key points
-// Minor improvement: print "hold" consistently in graph mode (with and without cursors)
+// Minor improvement: check if there is space for printing "hold" consistently in graph mode (with and without cursors)
 // Minor improvement: option to force symmetric scale should only work when the measurement can be negative
 //
 // Bug to fix:
+// The graph is not scaled (zoomed) correctly in the x direction when <180 points... xscale is not used. 
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value.
-//  Processing of the graph seem to slow down in this state. This cause double clicks to be misuinterpreted and 
-//  eventually leads to data loss with graph reset (see also next bug). The reset of the graph seem to solve the problem. 
-//  If the cursor is moved over the trouble spot, the cursor position is moved automatically after a very short time (may also be due to
-//  slow processing resulting in a long click)
+//    Processing of the graph seem to slow down in this state. This cause double clicks to be misuinterpreted and 
+//    eventually leads to data loss with graph reset (see also next bug). The reset of the graph seem to solve the problem. 
+//    If the cursor is moved over the trouble spot, the cursor position is moved automatically after a very short time (may also be due to
+//    slow processing resulting in a long click)
+// The cause of the slow has been localized to the line draw function when the y coordinate is way off screen.
+// In turn this is due to fillGraphDisplayData not correctly calculating the scale. 
+// Then ymin is not less or equalt to the graph minimum. This throws off the calculation of point[i], causing points to be mapped below screen
+//
 //   ==> need further troubleshooting
-// Sometime the graph resets for annunciator/unit reset. Connected to partial data read from K197, the unit is empty. 
-//   It should be possible to fix flagging measurement without a proper unit as invalid
 //
 // When less data received from SPI, isCacheInvalid() is called twice at the exactly the same time (in ms)...
 //
