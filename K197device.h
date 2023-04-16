@@ -247,7 +247,7 @@ enum k197graph_yscale_opt {
 
 /**************************************************************************/
 /*!
-   @brief  auxiliary class to store the graph
+   @brief  auxiliary class to store the graph for display purposes
 
    @details This class is used to pass enough information to represent
    the data stored in the cache as a graph and display it on a oled screen
