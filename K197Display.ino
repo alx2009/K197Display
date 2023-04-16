@@ -42,7 +42,6 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 // Minor improvement: print "hold" consistently in graph mode (with and without cursors)
-// Remove leftover code for marker in overwrite mode
 //
 // Bug to fix:
 // Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value.

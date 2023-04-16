@@ -966,7 +966,6 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
 /*!
     @brief draw a marker at a specific point in the graph
     @details: can print one of the following marker types:
-    - MARKER
     - CURSOR_A
     - CURSOR_B
     Note that the font used to print the identity of the cursor marker (A or B)
@@ -987,10 +986,6 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
                        ? k197graph_type::y_size
                        : y + marker_size;
   switch (marker_type) {
-  case UImanager::MARKER:
-    u8g2.drawLine(x0, y, x1, y);
-    u8g2.drawLine(x, y0, x, y1);
-    break;
   case UImanager::CURSOR_A:
     u8g2.drawLine(x0, y0, x, y);
     u8g2.drawLine(x, y, x1, y1);
