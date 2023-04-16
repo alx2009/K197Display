@@ -743,7 +743,7 @@ void k197graph_label_type::setScaleMultiplierDown(
  @param grmax the maximum y value in the graph
  @param yopt the required options for the scale
 */
-void k197graph_type::setScale(float grmin, float grmax,
+void k197_display_graph_type::setScale(float grmin, float grmax,
                               k197graph_yscale_opt yopt) {
   // Autoscale -  First we find the order of magnitude (power of 10)
   y0.setLog10Ceiling(grmin);
@@ -797,9 +797,9 @@ void k197graph_type::setScale(float grmin, float grmax,
 }
 
 /*!
- @brief fills a k197graph_type data structure with the values currently stored
+ @brief fills a k197_display_graph_type data structure with the values currently stored
  in the cache
- @details The scale k197graph_type data structure is used to display the graph
+ @details The scale k197_display_graph_type data structure is used to display the graph
  on a oled The function concverts the high resolution floating point numbers
  from the voltmeter stored in the cache into integer values representing the
  coordinates of the pixels in the olde display, together with other information
@@ -808,7 +808,7 @@ void k197graph_type::setScale(float grmin, float grmax,
  @param yopt the required options for the scale
  @param hold if true returns the value at the time hold mode was last entered
 */
-void K197device::fillGraphDisplayData(k197graph_type *graphdata,
+void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
                                       k197graph_yscale_opt yopt, bool hold) {
   float * graph = hold ? cache.hold.graph : cache.graph;
   byte gr_size = hold ? cache.hold.gr_size : cache.gr_size;

@@ -894,7 +894,7 @@ void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle) {
 //  Graph screen handling
 // ***************************************************************************************
 
-static k197graph_type k197graph;
+static k197_display_graph_type k197graph;
 //                           0   1   2   3   4   5   6
 static const char prefix[] = {
     'n', 'u', 'm', ' ', 'k', 'M', 'G'}; ///< Lookup table for unit prefixes
@@ -976,14 +976,14 @@ static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
 */
 void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
   static const u8g2_uint_t marker_size = 7;
-  // k197graph_type::x_size
+  // k197_display_graph_type::x_size
   u8g2_uint_t x0 = x < marker_size ? 0 : x - marker_size;
-  u8g2_uint_t x1 = k197graph_type::x_size < (x + marker_size)
-                       ? k197graph_type::x_size
+  u8g2_uint_t x1 = k197_display_graph_type::x_size < (x + marker_size)
+                       ? k197_display_graph_type::x_size
                        : x + marker_size;
   u8g2_uint_t y0 = y < marker_size ? 0 : y - marker_size;
-  u8g2_uint_t y1 = k197graph_type::y_size < (y + marker_size)
-                       ? k197graph_type::y_size
+  u8g2_uint_t y1 = k197_display_graph_type::y_size < (y + marker_size)
+                       ? k197_display_graph_type::y_size
                        : y + marker_size;
   switch (marker_type) {
   case UImanager::CURSOR_A:
@@ -991,7 +991,7 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
     u8g2.drawLine(x, y, x1, y1);
     u8g2.drawLine(x0, y1, x, y);
     u8g2.drawLine(x, y, x1, y0);
-    if (int(y1) > (k197graph_type::y_size - u8g2.getMaxCharHeight())) {
+    if (int(y1) > (k197_display_graph_type::y_size - u8g2.getMaxCharHeight())) {
       u8g2.setCursor(x0,
                      y0 - u8g2.getMaxCharHeight()); // Position above the marker
     } else {
@@ -1006,7 +1006,7 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
     u8g2.drawLine(x, y0, x, y1);
     u8g2.drawFrame(x0, y0, x1 - x0, y1 - y0);
     bool actv = getActiveCursor() == marker_type;
-    if (int(y1) > (k197graph_type::y_size - u8g2.getMaxCharHeight())) {
+    if (int(y1) > (k197_display_graph_type::y_size - u8g2.getMaxCharHeight())) {
       u8g2.setCursor(x1 - u8g2.getMaxCharWidth() * (actv ? 2 : 1),
                      y0 - u8g2.getMaxCharHeight()); // Position above the marker
     } else {

@@ -253,7 +253,7 @@ enum k197graph_yscale_opt {
    the data stored in the cache as a graph and display it on a oled screen
 */
 /**************************************************************************/
-struct k197graph_type {
+struct k197_display_graph_type {
   static const byte x_size = 180; ///< x size of the graph area in pixels
   static const byte y_size = 63;  ///< y size of the graph area in pixels
   byte point[x_size];             ///< circular buffer, store all graph points
@@ -498,11 +498,11 @@ private:
     float min = 0.0;     ///< keep track of the minimum
     float max = 0.0;     ///< keep track of the maximum
 
-    float graph[max_graph_size];        ///< stores gr_size records
+    float graph[max_graph_size];        ///< stores up to gr_size records
                                         ///< when gr_size = max_graph_size
                                         ///< becomes a circular buffer
     byte gr_index = max_graph_size - 1; ///< index to the most recent record
-    byte gr_size = 0;  ///< amount of data in graph (0-max_graph_size)
+    byte gr_size = 0;  ///< amount of data currently stored in graph (0-max_graph_size)
     byte nskip = 0;    ///< Skip counter for rolling average
     byte nsamples = 3; ///< Number of samples to use for rolling average
 
@@ -575,7 +575,7 @@ private:
   void updateCache();
 
 public:
-  void fillGraphDisplayData(k197graph_type *graphdata,
+  void fillGraphDisplayData(k197_display_graph_type *graphdata,
                             k197graph_yscale_opt yopt, bool hold=false);
   void resetStatistics();
   void rescaleStatistics(float fconv);

@@ -177,14 +177,14 @@ public:
   };
   /*!
      @brief  set the cursor position
-     @details: enforce the range 0 - k197graph_type::x_size
+     @details: enforce the range 0 - k197_display_graph_type::x_size
      @param  which_cursor the cursor whose position shall be set (CURSOR_A or
      CURSOR_B)
      @param  new_position position shall be set
   */
   void setCursorPosition(char which_cursor, byte new_position) {
-    if (new_position >= k197graph_type::x_size)
-      new_position = k197graph_type::x_size - 1;
+    if (new_position >= k197_display_graph_type::x_size)
+      new_position = k197_display_graph_type::x_size - 1;
     if (which_cursor == CURSOR_A) {
       cursor_a = new_position;
     } else {
@@ -195,7 +195,7 @@ public:
   /*!
      @brief  increment the active cursor position
      @details the cursor position will not be incremented past the maximum value
-     (k197graph_type::x_size-1) or less than zero
+     (k197_display_graph_type::x_size-1) or less than zero
      @param increment the number to be added to the current position (use a
      negative increment to decrement)
   */
@@ -204,8 +204,8 @@ public:
     byte oldvalue = isA ? cursor_a : cursor_b;
     byte newvalue = oldvalue + increment;
     if (increment > 0) { // make sure we increment within boundary
-      if ((newvalue < oldvalue) || (newvalue >= k197graph_type::x_size))
-        newvalue = k197graph_type::x_size - 1;
+      if ((newvalue < oldvalue) || (newvalue >= k197_display_graph_type::x_size))
+        newvalue = k197_display_graph_type::x_size - 1;
     } else { // make sure we decrement
       if (newvalue > oldvalue)
         newvalue = 0;
