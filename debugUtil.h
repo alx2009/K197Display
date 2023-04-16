@@ -44,6 +44,8 @@
 //#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
 // sections of code
 
+#define RUNTIME_ASSERTS 1 ///< when defined, add additional runtime checks
+
 /**************************************************************************/
 /*!
    @brief class implementing an object used as debug output
@@ -176,7 +178,7 @@ public:
 };
 
 extern debugUtil
-    DebugOut; ///< this is the predefined oubject that is used with print(),
+    DebugOut; ///< this is the predefined object that is used with print(),
               ///< etc. (similar to how Serial is used for debug output)
 
 #ifdef PROFILE_TIMER
@@ -194,5 +196,15 @@ extern debugUtil
 #define PROFILE_print(...)   ///< Does nothing when not profiling
 #define PROFILE_println(...) ///< Does nothing when not profiling
 #endif                       // PROFILE_TIMER
+
+#ifdef RUNTIME_ASSERTS
+#define RT_ASSERT(condition, message_string) if (!(condition)) {DebugOut.println(F(message_string));}
+#define RT_ASSERT_EXT(condition, action) if (!(condition)) {action;}
+#define RT_ASSERT_EXT2(condition, action1, action2) if (!(condition)) {action1; action2;}
+#else
+#define RT_ASSERT(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT_EXT(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT_EXT2(...) ///< Does nothing with real time assets disabled
+#endif //RUNTIME_ASSERTS 
 
 #endif // DEBUGUTIL_H__
