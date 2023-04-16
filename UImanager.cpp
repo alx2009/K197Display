@@ -1029,6 +1029,7 @@ void UImanager::updateGraphScreen() {
     
   // Get graph data
   k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue(), hold);
+  RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
 
   // autoscale x axis
   uint16_t i1 = 16;
@@ -1039,6 +1040,7 @@ void UImanager::updateGraphScreen() {
   // DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", gr_size
   // ")); DebugOut.println(k197graph.gr_size);
   byte xscale = k197graph.x_size / i1;
+  RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
 
   // Draw the axis
   // u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); //
@@ -1051,11 +1053,14 @@ void UImanager::updateGraphScreen() {
                     k197graph.x_size); // zero axis
 
   u8g2.setFont(u8g2_font_6x12_mr);
+  /*
+  // It shouldn't be necessary anymore to clean the area, since we now clean the entire screen...
   // Clear the space normally occupied by the axis labels
   u8g2.setDrawColor(0);
   u8g2.drawBox(k197graph.x_size + 2, k197graph.y_size - u8g2.getMaxCharHeight(),
                256, k197graph.y_size);
   u8g2.drawBox(k197graph.x_size + 2, 0, 256, u8g2.getMaxCharHeight());
+  */
   // Draw axis labels
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
@@ -1065,13 +1070,17 @@ void UImanager::updateGraphScreen() {
   printYLabel(k197graph.y1);
   u8g2_uint_t topln_x = u8g2.tx;
 
-  if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS ||
-        k197graph.gr_size < 2) {
+  // Draw the graph
+  if ( (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS) ||
+        (k197graph.gr_size < 2) ) {
       for (int i = 0; i < k197graph.gr_size; i++) {
+        RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2a");
         u8g2.drawPixel(i, k197graph.y_size - k197graph.point[i]);
       }
   } else { // OPT_GRAPH_TYPE_LINES && k197graph.gr_size>=2
       for (int i = 0; i < (k197graph.gr_size - 1); i++) {
+        RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2b");
+        RT_ASSERT(k197graph.point[i + 1]<=k197graph.y_size, "!updGrDsp2c");
         u8g2.drawLine(i, k197graph.y_size - k197graph.point[i],
                       i + 1,
                       k197graph.y_size - k197graph.point[i + 1]);
@@ -1164,6 +1173,9 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
 
   bool hold = k197dev.getDisplayHold();
+
+  RT_ASSERT(ax<k197dev.getGraphSize(hold), "!AX");
+  RT_ASSERT(bx<k197dev.getGraphSize(hold), "!AX");
   
   u8g2.setCursor(topln_x + 1, 0);
   u8g2.setFont(u8g2_font_9x15_m_symbols);

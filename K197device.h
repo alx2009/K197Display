@@ -24,6 +24,7 @@
 #include "SPIdevice.h"
 #include <Arduino.h>
 #include <ctype.h> // isDigit()
+#include "DebugUtil.h"
 
 // define bitmaps for the various annunciators
 
@@ -307,12 +308,15 @@ struct k197_stored_graph_type {
       @param y the value to append
     */
     void append(float y) {
+        RT_ASSERT(gr_size <= max_graph_size, "!appnd1");
+        RT_ASSERT( (gr_size==0) || (gr_index < gr_size), "!appnd2");
         gr_index++;
         if (gr_index >= max_graph_size)
           gr_index = 0;
         graph[gr_index] = y;
         if (gr_size < max_graph_size)
           gr_size++;      
+
     };
 
     /*!
@@ -322,7 +326,7 @@ struct k197_stored_graph_type {
     */
     inline float get(unsigned int position) {
          if (gr_size==0) return 0.0;
-         //TODO ASSERT
+         RT_ASSERT_ACT(  position<gr_size,  DebugOut.print(F("!getp=")); DebugOut.println(position); );
          return graph[ (position + gr_index + 1) % gr_size ];
     };
     
@@ -336,6 +340,8 @@ struct k197_stored_graph_type {
       }
       gr_index = source->gr_index; 
       gr_size = source->gr_size;  
+      RT_ASSERT(gr_size<=max_graph_size, "!copy1");
+      RT_ASSERT(gr_index<gr_size, "!copy2");
     }
 
     /*!
@@ -349,7 +355,7 @@ struct k197_stored_graph_type {
           clear();
           return;
         }
-        //TODO: add ASSERT
+        RT_ASSERT(num_points<max_graph_size, "!copy(b,n)");
         memcpy(graph, buffer, num_points * sizeof(float));
         gr_index = num_points-1; 
         gr_size = num_points;  
@@ -395,9 +401,10 @@ struct k197_stored_graph_type {
     float calcAverage(byte first_point, byte num_points) {
       if (gr_size == 0)
         return 0.0;
-      //TODO: add ASSERT
+      RT_ASSERT(first_point<gr_size, "!calcA1");
       float acc = 0.0;
       byte last_point=first_point+num_points-1;
+      RT_ASSERT(last_point<gr_size, "!calcA2");
       for (byte i = first_point; i <= last_point; i++) {
          acc += get(i);
       }
@@ -730,6 +737,15 @@ public:
   uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
 
   /*!
+      @brief get the graph size (number of data points in the graph)
+      @param hold if true returns the value at the time hold mode was last entered
+      @return the number of data points in the graph
+  */
+  byte getGraphSize(bool hold=false) {
+    return hold ? cache.hold.graph.getSize() : cache.graph.getSize();
+  };
+
+  /*!
       @brief get graph value at point n
       @param n the requested point
       @param hold if true returns the value at the time hold mode was last entered
@@ -783,6 +799,12 @@ public:
   float getMax(bool hold=false) {
     return hold ? cache.hold.max : cache.max;
   };
+
+    /*!
+      @brief  returns the maximum value
+      @param hold if true returns the value at the time hold mode was last entered
+      @return maximum value
+  */
 
 public:
   // annunciators0

@@ -222,7 +222,7 @@ byte K197device::getNewReading(byte *data) {
   if (isTKModeActive() && flags.msg_is_num) {
     tkConvertV2C();
   }
-  updateCache();
+  if (n==9) updateCache(); // Avoid updating the cache if data was not read correctly
   return n;
 }
 
@@ -814,17 +814,36 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
   // DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9);
 
   for (int i = 0; i < gr_size; i++) {
-    if (i >= graphdata->x_size) { // should be impossible but just to be safe
-      //DebugOut.print(F("i="));
-      //DebugOut.print(i);
-      //DebugOut.print(F(", c="));
-      //DebugOut.print(gr_size);
-      //DebugOut.print(F(", g="));
-      //DebugOut.print(graphdata->x_size);
-      DebugOut.println(F("gr size!"));
-      break;
-    }
+    RT_ASSERT_ACT(i < graphdata->x_size, 
+                   //DebugOut.print(F("i="));
+                   //DebugOut.print(i);
+                   //DebugOut.print(F(", c="));
+                   //DebugOut.print(gr_size);
+                   //DebugOut.print(F(", g="));
+                   //DebugOut.print(graphdata->x_size);
+                   DebugOut.println(F("!fillGraph1"));
+                   break;)
+    RT_ASSERT(i<graph->getSize(), "fillGraph2");
     graphdata->point[i] = (graph->get(i) - ymin) * scale_factor + 0.5;
+    /*
+     * 22:06:04.182 -> i=1, y=-0.01, min=-0.01, scale=3150.00 !fillGraph2
+     * 22:06:04.182 -> i=2, y=-0.01, min=-0.01, scale=3150.00 !fillGraph2
+     * 22:06:04.182 -> i=3, y=-0.04, min=-0.01, scale=3150.00 !fillGraph2
+     */
+    RT_ASSERT_ACT( graphdata->point[i] <= graphdata->y_size, 
+                   DebugOut.print(F("i="));
+                   DebugOut.print(i);
+                   DebugOut.print(F(", y="));
+                   DebugOut.print(graph->get(i),6);
+                   DebugOut.print(F(", min="));
+                   DebugOut.print(ymin,6);
+                   DebugOut.print(F(", scale="));
+                   DebugOut.print(scale_factor,6);
+                   DebugOut.println(F(" !fillGraph2"));)
+    if (graphdata->point[i] > graphdata->y_size) { // Can only be to bugs or rounding...
+        //force within display area, otherwise u8g2 would slow down hence data loss, etc. etc. 
+        graphdata->point[i] = graphdata->y_size;    
+    }
   }
   if (graphdata->y0.isNegative() &&
       graphdata->y1.isPositive()) { // 0 is included in the graph
@@ -886,6 +905,8 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
                               1l + nskip_graph / nsamples_new_positive;
   if (gr_size_new > graph.max_graph_size)
     gr_size_new = graph.max_graph_size;
+  RT_ASSERT(gr_size_new<=graph.max_graph_size, "rsmpl1a");
+  RT_ASSERT(gr_size_new>0, "rsmpl1b");
   float buffer[gr_size_new];
   // DebugOut.print(F("gr_size_new=")); DebugOut.println(gr_size_new);
 
@@ -900,6 +921,8 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
           DebugOut.println("Error: new_idx 1");
           break;
         }
+        RT_ASSERT(new_idx<gr_size_new, "rsmpl2");
+        RT_ASSERT(old_idx<graph.getSize(), "rsmpl3");
         buffer[new_idx] = graph.get(old_idx);
         new_idx++;
       }
@@ -912,9 +935,11 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
   } else { // Add more data to match the new sample rate
     // DebugOut.print(F(" < ")); DebugOut.flush();
     unsigned int old_idx = gr_size - 1;
-    int new_idx = gr_size_new - 1;
+    unsigned int new_idx = gr_size_new - 1;
 
     for (unsigned int n = 0; n < (nskip_graph / nsamples_new_positive); n++) {
+      RT_ASSERT(new_idx<gr_size_new, "rsmpl4");
+      RT_ASSERT(gr_size - 1<graph.getSize(), "rsmpl5");
       buffer[new_idx] = graph.get(gr_size - 1);
       new_idx--;
     }
@@ -923,11 +948,13 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
 
     // Resample with shorter period. Old data may be lost here if there is no
     // room
-    for (; new_idx >= 0; new_idx--) {
+    for (int i=new_idx; i >= 0; new_idx--, i--) {
       if (new_idx * nsamples_new_positive < old_idx * nsamples_old_positive) {
         if (old_idx > 0)
           old_idx--;
       }
+      RT_ASSERT(new_idx<gr_size_new, "rsmpl6");
+      RT_ASSERT(old_idx<graph.getSize(), "rsmpl7");
       buffer[new_idx] = graph.get(old_idx);
     }
     // Adjust cache size
