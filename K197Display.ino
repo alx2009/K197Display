@@ -45,11 +45,16 @@ moving to inline assembler and naked interrupt handlers
 // Remove leftover code for marker in overwrite mode
 //
 // Bug to fix:
-// Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value (need more troubleshooting)
+// Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value.
+//  Processing of the graph seem to slow down in this state. This cause double clicks to be misuinterpreted and 
+//  eventually leads to data loss with graph reset (see also next bug). The reset of the graph seem to solve the problem. 
+//  If the cursor is moved over the trouble spot, the cursor position is moved automatically after a very short time (may also be due to
+//  slow processing resulting in a long click)
+//   ==> need further troubleshooting
 // Sometime the graph resets for annunciator/unit reset. Connected to partial data read from K197, the unit is empty. 
 //   It should be possible to fix flagging measurement without a proper unit as invalid
 //
-// When less data received from SPI, isCacheInvalid() is called twice at the exactly ame time (in ms)...
+// When less data received from SPI, isCacheInvalid() is called twice at the exactly the same time (in ms)...
 //
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
