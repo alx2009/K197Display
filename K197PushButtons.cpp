@@ -213,9 +213,9 @@ static inline bool fifo_isFull() {
   if (val == fifo_NO_DATA) {
       return false;
   }
-  DebugOut.print(F("+idx=")); DebugOut.print(idx); 
-  DebugOut.print(F(", val=")); DebugOut.print(val); 
-  DebugOut.print(F(", X=")); DebugOut.println(fifo_NO_DATA); 
+  //DebugOut.print(F("+idx=")); DebugOut.print(idx); 
+  //DebugOut.print(F(", val=")); DebugOut.print(val); 
+  //DebugOut.print(F(", X=")); DebugOut.println(fifo_NO_DATA); 
   return  true;
 }
 
@@ -443,7 +443,7 @@ void k197ButtonCluster::checkNew() {
   }
   cli();
   bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
-  if (b || (!fifo_isEmpty()) ) {
+  /*if (b || (!fifo_isEmpty()) ) {
     if (b) {
        DebugOut.print(b);
        DebugOut.print(F(" idx=")); DebugOut.print((fifo_rear + 1) % fifo_MAX_RECORDS); 
@@ -455,7 +455,7 @@ void k197ButtonCluster::checkNew() {
       DebugOut.print(fifo_records[i], HEX); DebugOut.print(CH_SPACE);
     }
     DebugOut.println();
-  }
+  }*/
   byte x = fifo_pull();
   sei();
   if (b) {

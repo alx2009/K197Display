@@ -251,45 +251,179 @@ enum k197graph_yscale_opt {
 
    @details This class is used to pass enough information to represent
    the data stored in the cache as a graph and display it on a oled screen
+   Note that data is not stored as a circular buffer, when gr_size>0
+   point[0] is always the oldest, point[gr_size-1] is always the latest acquired
 */
 /**************************************************************************/
 struct k197_display_graph_type {
   static const byte x_size = 180; ///< x size of the graph area in pixels
   static const byte y_size = 63;  ///< y size of the graph area in pixels
-  byte point[x_size];             ///< circular buffer, store all graph points
-  byte current_idx = 0x00;        ///< index of the last point to be acquired
-  byte npoints = 0x00; ///< number of points in the graph (always < x_size)
+  byte point[x_size];             ///< point[0] is the oldest
+  byte gr_size = 0x00; ///< number of points in the graph (always < x_size)
   uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
   k197graph_label_type y1;     ///< upper label y axis
   k197graph_label_type y0;     ///< lower label y axis
   byte y_zero = 0x00; ///< the point value for 0, if included in the graph
 
   void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+};
 
-  /*!
-    @brief get the array index from the logical index
-    @details the logical index is 0 for the oldest record and increases as we
-    get towards newer records The array index is the index in the circular
-    buffer graph[] corresponding to the logical index This function should not
-    be called if the graph is empty (npoints=0);
-    @param logic_index the logical index (range: 0 - npoints-1)
-    @return arry index (range: 0 - npoints-1)
-  */
-  inline uint16_t idx(uint16_t logic_index) {
-    return (logic_index + int(current_idx) + 1) % npoints;
-  };
-  /*!
-    @brief get the logical index from the array index
-    @details the logical index is 0 for the oldest record and increases as we
-    get towards newer records The array index is the index in the circular
-    buffer graph[] corresponding to the logical index This function should not
-    be called if the graph is empty (npoints=0);
-    @param idx the logical index (range: 0 - npoints-1)
-    @return the logical index (range: 0 - npoints-1)
-  */
-  inline uint16_t logic_index(uint16_t idx) {
-    return (int(npoints) + idx - int(current_idx) - 1) % npoints;
-  };
+/**************************************************************************/
+/*!
+   @brief  auxiliary class to store the graph in the device
+
+   @details This class is used to store the graph in the device. Key API in short:
+   - clear() clears the graph
+   - append() append a single value (removing the oldest one if needed to make room)
+   - get() returns the record at a specific position (position=0 means oldest record)
+   - copy() copy from another object of the same type
+   
+*/
+/**************************************************************************/
+struct k197_stored_graph_type {
+  public:
+    static const byte max_graph_size =
+      180; ///< maximum number of measurements that can be stored
+
+  private:
+    float graph[max_graph_size];        ///< stores up to gr_size records
+                                        ///< when gr_size = max_graph_size
+                                        ///< becomes a circular buffer
+    byte gr_index = max_graph_size - 1; ///< index to the most recent record
+    byte gr_size = 0;  ///< amount of data currently stored in graph (0-max_graph_size)
+
+  public:
+   /*!
+      @brief  empty the graph 
+   */
+    void clear() {
+        gr_index = max_graph_size - 1;
+        gr_size = 0;
+    };
+
+   /*!
+      @brief  append a new value to the graph
+      @details the oldest value will be removed if there is no space available
+      @param y the value to append
+    */
+    void append(float y) {
+        gr_index++;
+        if (gr_index >= max_graph_size)
+          gr_index = 0;
+        graph[gr_index] = y;
+        if (gr_size < max_graph_size)
+          gr_size++;      
+    };
+
+    /*!
+      @brief  get a specific value
+      @param position required position. Range: 0 to gr_size-1. 0 is the oldes value, gr_zize-1 is the newest value.
+      @return the value at the required position or 0.0 if the graph is empty
+    */
+    inline float get(unsigned int position) {
+         if (gr_size==0) return 0.0;
+         //TODO ASSERT
+         return graph[ (position + gr_index + 1) % gr_size ];
+    };
+    
+    /*!
+      @brief copy all data from another k197_stored_graph_type
+      @param source the object to copy from.
+    */
+    void copy(k197_stored_graph_type *source) {
+      if (source->gr_size>0) {
+          memcpy(graph, source->graph, source->gr_size * sizeof(float));
+      }
+      gr_index = source->gr_index; 
+      gr_size = source->gr_size;  
+    }
+
+    /*!
+      @brief copy all data from a float array
+      @details num_points == 0 has the same effect as clear()
+      @param buffer the pointer to the float array
+      @param num_points the number of values to copy (starting from buffer[0].  
+    */
+    void copy(float buffer[], byte num_points) {
+        if (num_points==0) {
+          clear();
+          return;
+        }
+        //TODO: add ASSERT
+        memcpy(graph, buffer, num_points * sizeof(float));
+        gr_index = num_points-1; 
+        gr_size = num_points;  
+    }
+    /*!
+      @brief return the number of data points in the graph
+      @return the number of data points.
+    */
+    inline byte getSize() {return gr_size;};
+
+    /*!
+      @brief compute tha maximum value in the graph
+      @return  maximum value or 0.0 if the graph is empty.
+    */
+    float calcMin() {
+      if (gr_size==0) return 0.0;
+      float min = graph[0];
+      for (byte i = 1; i < gr_size; i++) {
+        if (graph[i]<min) min = graph[i];
+      }
+      return min;
+    }
+
+    /*!
+      @brief compute tha minimum value in the graph
+      @return  minimum value or 0.0 if the graph is empty.
+    */
+    float calcMax() {
+      if (gr_size==0) return 0.0;
+      float max = graph[0];
+      for (byte i = 1; i < gr_size; i++) {
+        if (graph[i]>max) max = graph[i];
+      }
+      return max;      
+    }
+    
+    /*!
+      @brief compute tha average value in the graph
+      @param i the first point to consider
+      @param num_pts the number of points to consider 
+      @return the computed average value or 0.0 if the graph is empty.
+    */
+    float calcAverage(byte first_point, byte num_points) {
+      if (gr_size == 0)
+        return 0.0;
+      //TODO: add ASSERT
+      float acc = 0.0;
+      byte last_point=first_point+num_points-1;
+      for (byte i = first_point; i <= last_point; i++) {
+         acc += get(i);
+      }
+      return num_points == 0 ? acc : acc / num_points;
+    }
+    
+    /*!
+      @brief  rescale graph data
+      @details every point in the graph is multiplied by fconv
+      @param fconv the conversion factor 
+    */
+    void rescale(float fconv) {
+      // DebugOut.println(F("rescaleGraph"));
+      for (int i = 0; i < gr_size; i++) {
+        graph[i] *= fconv;
+      }  
+    }
+
+    /*!
+      @brief  check if the graph is full
+      @details a full graph has reached its maximum size. Note that oit is still possible to append data, see append()
+      @return true if the graph includes max_graph_size points
+    */
+    bool isFull() {
+       return gr_size == max_graph_size ?  true : false; 
+    }
 };
 
 /**************************************************************************/
@@ -477,8 +611,6 @@ public:
   void debugPrint();
 
 private:
-  static const byte max_graph_size =
-      180; ///< maximum number of measurements that can be cached
   static const byte max_graph_period =
       210; ///< maximum number of seconds between samples
   /*!
@@ -498,11 +630,8 @@ private:
     float min = 0.0;     ///< keep track of the minimum
     float max = 0.0;     ///< keep track of the maximum
 
-    float graph[max_graph_size];        ///< stores up to gr_size records
-                                        ///< when gr_size = max_graph_size
-                                        ///< becomes a circular buffer
-    byte gr_index = max_graph_size - 1; ///< index to the most recent record
-    byte gr_size = 0;  ///< amount of data currently stored in graph (0-max_graph_size)
+    k197_stored_graph_type graph;   ///< stores the graph
+
     byte nskip = 0;    ///< Skip counter for rolling average
     byte nsamples = 3; ///< Number of samples to use for rolling average
 
@@ -511,37 +640,18 @@ private:
     bool autosample_graph = false; ///< if true set nsamples_graph automatically
 
     /*!
-      @brief get the array index from logical index
-      @details the logical index is 0 for the oldest record and increases as we
-      get towards newer records The array index is the index in the circular
-      buffer graph[] corresponding to the logical index This function should not
-      be called if the graph is empty (gr_size=0);
-      @param logic_index the logical index (range: 0 - gr_size-1)
-      @return arry index (range: 0 - gr_size-1)
-    */
-    inline uint16_t grGetArrayIdx(uint16_t logic_index) {
-      return (logic_index + gr_index + 1) % gr_size;
-    };
-
-    /*!
       @brief add one sample to graph
       @details Only one out of every nsamples is stored
       @param x the value to add (or skip, depending on nsamples and nskip_graph)
     */
     void add2graph(float x) {
       if (nskip_graph == 0) {
-        gr_index++;
-        if (gr_index >= max_graph_size)
-          gr_index = 0;
-        graph[gr_index] = x;
-        if (gr_size < max_graph_size)
-          gr_size++;
+        graph.append(x);
       }
       if (++nskip_graph >= nsamples_graph)
         nskip_graph = 0;
     };
     void resetGraph();
-    void rescaleGraph(float fconv);
     void resampleGraph(uint16_t nsamples_new);
     
   public:
@@ -563,9 +673,7 @@ private:
       bool isNumeric=false; ///< holds true if numeric
 
       //The following data is needed to hold the entire graph
-      float graph[max_graph_size];        ///< holds cache.graph
-      byte gr_index = max_graph_size - 1; ///< holds gr_index
-      byte gr_size = 0;  ///< holds gr_size
+      k197_stored_graph_type graph; ///<Holds the graph
       uint16_t nsamples_graph=0; ///<Holds the sample time
     } hold; ///< store values to be displayed in hold mode
   } cache; ///< cache measured values and related status information
@@ -628,10 +736,9 @@ public:
       @return the value of the graph at point n
   */
   float getGraphValue(byte n, bool hold=false) {
-    if (hold) return n >= cache.hold.gr_size ? 0.0 : cache.hold.graph[n];
-    return n >= cache.gr_size ? 0.0 : cache.graph[n];
+     return hold ? cache.hold.graph.get(n) : cache.graph.get(n);
   };
-  float getGraphAverage(byte n0, byte n1, bool hold=false);
+  float getGraphAverage(byte first_point, byte num_points, bool hold=false);
 
   /*!
       @brief  set the autosample flag

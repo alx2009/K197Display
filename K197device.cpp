@@ -430,9 +430,7 @@ void K197device::debugPrint() {
       cache.hold.isNumeric=flags.msg_is_num;
 
       //copy current graph data to cache.hold
-      memcpy(cache.hold.graph, cache.graph, cache.gr_size * sizeof(float));
-      cache.hold.gr_index = cache.gr_index; 
-      cache.hold.gr_size = cache.gr_size;  
+      cache.hold.graph.copy(&(cache.graph));
       cache.hold.nsamples_graph = cache.nsamples_graph;       
     }
     flags.hold = newValue; 
@@ -540,8 +538,7 @@ void K197device::updateCache() {
   cache.pow10 = pow10;
   if (getAutosample() &&
       cache.nskip_graph == 0) { // Autosample is on and a sample is ready
-    if (cache.gr_size ==
-        max_graph_size) { // And no room left for an extra sample
+    if ( cache.graph.isFull() ) { // And no room left for an extra sample
       uint16_t graphPeriod = getGraphPeriod();
       if (graphPeriod <
           max_graph_period) { //   And we have room to increase graphPeriod
@@ -574,14 +571,14 @@ void K197device::resetStatistics() {
 /*!
     @brief  rescale all statistics (min, average, max) & graph data
     @details average, max and min are multiplied by fconv
-    then rescaleGraph(fconv) is invoked
+    then graph.rescale(fconv) is invoked
     @param fconv the 
  */
 void K197device::rescaleStatistics(float fconv) {
   cache.average *= fconv;
   cache.min *= fconv;
   cache.max *= fconv;
-  cache.rescaleGraph(fconv);
+  cache.graph.rescale(fconv);
 }
 
 // ***************************************************************************************
@@ -593,23 +590,10 @@ void K197device::rescaleStatistics(float fconv) {
 */
 void K197device::k197_cache_struct::resetGraph() {
   DebugOut.println(F("resetGraph"));
-  gr_index = max_graph_size - 1;
-  gr_size = 0x00;
+  graph.clear();
   nskip_graph = 0x00;
   if (autosample_graph) { // if autosample is set then...
     nsamples_graph = 0;   // set fastest sampling period
-  }
-}
-
-/*!
-    @brief  rescale graph data
-    @details every point in the graph is multipleied by fconv
-    @param fconv the conversion factor 
- */
-void K197device::k197_cache_struct::rescaleGraph(float fconv) {
-  // DebugOut.println(F("rescaleGraph"));
-  for (int i = 0; i < gr_size; i++) {
-      graph[i] *= fconv;
   }
 }
 
@@ -802,7 +786,7 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
  @details The scale k197_display_graph_type data structure is used to display the graph
  on a oled The function concverts the high resolution floating point numbers
  from the voltmeter stored in the cache into integer values representing the
- coordinates of the pixels in the olde display, together with other information
+ coordinates of the pixels in the oled display, together with other information
  that is needed to display the graph (e.g. the axis labels)
  @param graphdata pointer to the data structure to fill
  @param yopt the required options for the scale
@@ -810,21 +794,13 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
 */
 void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
                                       k197graph_yscale_opt yopt, bool hold) {
-  float * graph = hold ? cache.hold.graph : cache.graph;
-  byte gr_size = hold ? cache.hold.gr_size : cache.gr_size;
+  k197_stored_graph_type *graph = hold ? &cache.hold.graph : &cache.graph;
+  byte gr_size = graph->getSize();
   
   // find max and min in the data set
-  float grmin =
-      gr_size > 0 ? graph[0] : 0.0; ///< keep track of the minimum
-  float grmax = grmin;                          ///< keep track of the maximum
+  float grmin = graph->calcMin();
+  float grmax = graph->calcMax();
   
-  for (int i = 1; i < gr_size; i++) {
-    if (graph[i] < grmin)
-      grmin = graph[i];
-    if (graph[i] > grmax)
-      grmax = graph[i];
-  }
-
   graphdata->setScale(grmin, grmax, yopt);
   float ymin = graphdata->y0.getValue();
   float ymax = graphdata->y1.getValue();
@@ -848,7 +824,7 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
       DebugOut.println(F("gr size!"));
       break;
     }
-    graphdata->point[i] = (graph[i] - ymin) * scale_factor + 0.5;
+    graphdata->point[i] = (graph->get(i) - ymin) * scale_factor + 0.5;
   }
   if (graphdata->y0.isNegative() &&
       graphdata->y1.isPositive()) { // 0 is included in the graph
@@ -857,8 +833,7 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
     graphdata->y_zero = 0;
   }
   // DebugOut.print(F(", yzero=")); DebugOut.println(graphdata->y_zero, 9);
-  graphdata->current_idx = hold ? cache.hold.gr_index : cache.gr_index;
-  graphdata->npoints = gr_size;
+  graphdata->gr_size = gr_size;
   graphdata->nsamples_graph = hold ? cache.hold.nsamples_graph : cache.nsamples_graph;
 } 
 
@@ -884,20 +859,9 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
    @param num_pts the number of points to average [range: 0 - gr_size-1]
    @return the requested average value (or 0.0 if num_pts==0 or gr_size==0)
 */
-float K197device::getGraphAverage(byte idx, byte num_pts, bool hold) {
-  float * graph = hold ? cache.hold.graph : cache.graph;
-  byte gr_size = hold ? cache.hold.gr_size : cache.gr_size;
-
-  if (gr_size == 0)
-    return 0.0;
-  float acc = 0.0;
-  for (byte i = 0; i < num_pts; i++) {
-    if (idx >= cache.gr_size)
-      idx = 0;
-    acc += graph[idx];
-    idx++;
-  }
-  return num_pts == 0 ? acc : acc / num_pts;
+float K197device::getGraphAverage(byte first_point, byte num_points, bool hold) {
+  return hold ? cache.hold.graph.calcAverage(first_point, num_points)
+              : cache.graph.calcAverage(first_point, num_points);
 }
 
 /*!
@@ -908,11 +872,11 @@ float K197device::getGraphAverage(byte idx, byte num_pts, bool hold) {
 */
 void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
   // DebugOut.print(F("Resample graph: "));
+  byte gr_size = graph.getSize();
   if (gr_size == 0 || nsamples_new == nsamples_graph) {
     // DebugOut.println("not needed");
     return;
   }
-  // if (nsamples_new == 0) nsamples_new = 1;
   // DebugOut.print(F("begin...")); DebugOut.flush();
   uint16_t nsamples_old_positive = nsamples_graph == 0 ? 1 : nsamples_graph;
   uint16_t nsamples_new_positive = nsamples_new == 0 ? 1 : nsamples_new;
@@ -920,8 +884,8 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
   unsigned long gr_size_new = long(gr_size - 1) * long(nsamples_old_positive) /
                                   long(nsamples_new_positive) +
                               1l + nskip_graph / nsamples_new_positive;
-  if (gr_size_new > max_graph_size)
-    gr_size_new = max_graph_size;
+  if (gr_size_new > graph.max_graph_size)
+    gr_size_new = graph.max_graph_size;
   float buffer[gr_size_new];
   // DebugOut.print(F("gr_size_new=")); DebugOut.println(gr_size_new);
 
@@ -936,7 +900,7 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
           DebugOut.println("Error: new_idx 1");
           break;
         }
-        buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
+        buffer[new_idx] = graph.get(old_idx);
         new_idx++;
       }
     }
@@ -944,18 +908,17 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
       DebugOut.println("Error: new_idx 2");
     }
     // Adjust cache size. Note that nskip_graph does not need to change
-    gr_index = new_idx - 1;
     gr_size = new_idx;
   } else { // Add more data to match the new sample rate
     // DebugOut.print(F(" < ")); DebugOut.flush();
     unsigned int old_idx = gr_size - 1;
     int new_idx = gr_size_new - 1;
 
-    // Adjust nskip_graph
     for (unsigned int n = 0; n < (nskip_graph / nsamples_new_positive); n++) {
-      buffer[new_idx] = graph[grGetArrayIdx(gr_size - 1)];
+      buffer[new_idx] = graph.get(gr_size - 1);
       new_idx--;
     }
+    // Adjust nskip_graph
     nskip_graph = nskip_graph % nsamples_new_positive;
 
     // Resample with shorter period. Old data may be lost here if there is no
@@ -965,18 +928,14 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
         if (old_idx > 0)
           old_idx--;
       }
-      buffer[new_idx] = graph[grGetArrayIdx(old_idx)];
+      buffer[new_idx] = graph.get(old_idx);
     }
     // Adjust cache size
-    gr_index = gr_size_new - 1;
     gr_size = gr_size_new;
   }
   CHECK_FREE_STACK(); // We may be using quite a bit of stack for the buffer
 
-  // Copy the buffer back to the cache
-  for (int i = 0; i < gr_size; i++) {
-    graph[i] = buffer[i];
-  }
+  graph.copy(buffer, gr_size); // Copy the buffer back to the cache
   nsamples_graph = nsamples_new;
   // DebugOut.println(F("...end")); DebugOut.flush();
 }

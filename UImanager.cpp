@@ -1032,12 +1032,12 @@ void UImanager::updateGraphScreen() {
 
   // autoscale x axis
   uint16_t i1 = 16;
-  while (i1 < k197graph.npoints)
+  while (i1 < k197graph.gr_size)
     i1 *= 2;
   if (i1 > k197graph.x_size)
     i1 = k197graph.x_size;
-  // DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", npoints
-  // ")); DebugOut.println(k197graph.npoints);
+  // DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", gr_size
+  // ")); DebugOut.println(k197graph.gr_size);
   byte xscale = k197graph.x_size / i1;
 
   // Draw the axis
@@ -1066,40 +1066,26 @@ void UImanager::updateGraphScreen() {
   u8g2_uint_t topln_x = u8g2.tx;
 
   if (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS ||
-        k197graph.npoints < 2) {
-      for (int i = 0; i < k197graph.npoints; i++) {
-        u8g2.drawPixel(i, k197graph.y_size - k197graph.point[k197graph.idx(i)]);
+        k197graph.gr_size < 2) {
+      for (int i = 0; i < k197graph.gr_size; i++) {
+        u8g2.drawPixel(i, k197graph.y_size - k197graph.point[i]);
       }
-  } else { // OPT_GRAPH_TYPE_LINES && k197graph.npoints>=2
-      for (int i = 0; i < (k197graph.npoints - 1); i++) {
-        u8g2.drawLine(i, k197graph.y_size - k197graph.point[k197graph.idx(i)],
+  } else { // OPT_GRAPH_TYPE_LINES && k197graph.gr_size>=2
+      for (int i = 0; i < (k197graph.gr_size - 1); i++) {
+        u8g2.drawLine(i, k197graph.y_size - k197graph.point[i],
                       i + 1,
-                      k197graph.y_size - k197graph.point[k197graph.idx(i + 1)]);
+                      k197graph.y_size - k197graph.point[i + 1]);
       }
   }
-  // drawMarker(k197graph.x_size,
-  // k197graph.y_size-k197graph.point[k197graph.current_idx]); 
 
-  u8g2_uint_t ax =
-      cursor_a > k197graph.npoints ? k197graph.npoints - 1 : cursor_a;
-  u8g2_uint_t bx =
-      cursor_b > k197graph.npoints ? k197graph.npoints - 1 : cursor_b;
-
-  if (areCursorsVisible() && k197graph.npoints > 0) {
-      drawMarker(xscale * ax,
-                 k197graph.y_size - k197graph.point[k197graph.idx(ax)],
-                 CURSOR_A);
-      drawMarker(xscale * bx,
-                 k197graph.y_size - k197graph.point[k197graph.idx(bx)],
-                 CURSOR_B); 
-  }
-  if (areCursorsVisible() && k197graph.npoints > 0) {
-    // Translate considering we are always in roll mode
-    ax = k197graph.idx(ax);
-    bx = k197graph.idx(bx);
-    drawGraphScreenCursorPanel(topln_x, ax, bx);
+  if (areCursorsVisible() && k197graph.gr_size > 0) {
+      u8g2_uint_t ax = cursor_a > k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
+      u8g2_uint_t bx = cursor_b > k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
+      drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
+      drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B); 
+      drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
-    drawGraphScreenNormalPanel(topln_x);
+      drawGraphScreenNormalPanel(topln_x);
   }
   CHECK_FREE_STACK();
 }
@@ -1206,7 +1192,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
-      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.npoints);
+      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.gr_size);
   DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
       DebugOut.print(F(", s=")); DebugOut.println(k197graph.nsamples_graph);
       DebugOut.print(F("A =")); DebugOut.print(cursor_a); DebugOut.print(F(", B
@@ -1214,20 +1200,16 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
   }*/
 
-  // for the next calculations, we need the logical index, regardless how the
-  // graph is plot
-  u8g2_uint_t logic_ax = k197graph.logic_index(ax);
-  u8g2_uint_t logic_bx = k197graph.logic_index(bx);
   uint16_t deltax =
-      logic_ax > logic_bx ? logic_ax - logic_bx : logic_bx - logic_ax;
+      ax > bx ? ax - bx : bx - ax;
 
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Avg"));
   u8g2.print(CH_SPACE);
-  // u8g2.print(k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax+1),
+  // u8g2.print(k197dev.getGraphAverage(ax < bx ? ax : bx, deltax+1),
   // 6);
   u8g2.print(formatNumber(
-      buf, k197dev.getGraphAverage(logic_ax < logic_bx ? ax : bx, deltax+1, hold)));
+      buf, k197dev.getGraphAverage(ax < bx ? ax : bx, deltax+1, hold)));
 
   /*if (GPIOR3 & 0x10) {   // debug flag is set
       GPIOR3 &= (~0x10); // reset flag: we print only once
@@ -1364,7 +1346,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
         return true; // Skip normal handling in the main sketch
       } else if (eventType == UIeventDoubleClick) {
         pushbuttons.cancelClickREL();
-        DebugOut.println(F("REL dblclk"));
+        //DebugOut.println(F("REL dblclk"));
         k197dev.resetStatistics();
         return true; // Skip normal handling in the main sketch
       }

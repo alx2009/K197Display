@@ -203,10 +203,10 @@ void myButtonCallback(K197UIeventsource eventSource,
   CHECK_FREE_STACK();
   if (uiman.handleUIEvent(eventSource,
                           eventType)) { // UI related event, no need to do more
-    DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
-    DebugOut.print(F(" "));
-    k197ButtonCluster::DebugOut_printEventName(eventType);
-    DebugOut.println(F("Btn handled by UI"));
+    //DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    //DebugOut.print(F(" "));
+    //k197ButtonCluster::DebugOut_printEventName(eventType);
+    //DebugOut.println(F("Btn handled by UI"));
     return;
   }
   if (k197dev.isNotCal() && uiman.isSplitScreen())
@@ -216,7 +216,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   // mode)
   if ((eventSource == K197key_REL || eventSource == K197key_DB) &&
       pushbuttons.isSimultaneousPress(K197key_REL, K197key_DB)) {
-    DebugOut.print(F("REL+DB"));
+    //DebugOut.print(F("REL+DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_REL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
@@ -227,10 +227,10 @@ void myButtonCallback(K197UIeventsource eventSource,
     return;
   }
 
-  DebugOut.print(F("Btn "));
+  //DebugOut.print(F("Btn "));
   switch (eventSource) {
   case K197key_STO:
-    DebugOut.print(F("STO"));
+    //DebugOut.print(F("STO"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -238,7 +238,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_RCL:
-    DebugOut.print(F("RCL"));
+    //DebugOut.print(F("RCL"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -248,7 +248,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long
     // press from a (short) click
-    DebugOut.print(F("REL"));
+    //DebugOut.print(F("REL"));
     if (k197dev.isNotCal() && eventType == UIeventClick) {
       pushbuttons.clickREL();
     }
@@ -259,7 +259,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_DB:
-    DebugOut.print(F("DB"));
+    //DebugOut.print(F("DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -267,9 +267,9 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   }
-  DebugOut.print(F(" "));
-  k197ButtonCluster::DebugOut_printEventName(eventType);
-  DebugOut.println();
+  //DebugOut.print(F(" "));
+  //k197ButtonCluster::DebugOut_printEventName(eventType);
+  //DebugOut.println();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
