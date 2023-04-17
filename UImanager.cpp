@@ -1088,8 +1088,8 @@ void UImanager::updateGraphScreen() {
   }
 
   if (areCursorsVisible() && k197graph.gr_size > 0) {
-      u8g2_uint_t ax = cursor_a > k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
-      u8g2_uint_t bx = cursor_b > k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
+      u8g2_uint_t ax = cursor_a >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
+      u8g2_uint_t bx = cursor_b >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
       drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
       drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B); 
 
