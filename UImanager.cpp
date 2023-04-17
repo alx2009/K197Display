@@ -1041,25 +1041,17 @@ void UImanager::updateGraphScreen() {
   byte xscale = k197graph.x_size / i1;
   RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
 
-  // Draw the axis
-  // u8g2.drawLine(0, k197graph.y_size, k197graph.x_size, k197graph.y_size); //
+  // Y axis
+  u8g2.drawLine(k197graph.x_size,k197graph.y_size,k197graph.x_size,0); 
+
   // X axis
-  u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size,
-                0); // Y axis
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() &&
-      k197graph.y1.isPositive())
+      k197graph.y1.isPositive()) {
     drawDottedHLine(0, k197graph.y_size - k197graph.y_zero,
                     k197graph.x_size); // zero axis
-
+  }
   u8g2.setFont(u8g2_font_6x12_mr);
-  /*
-  // It shouldn't be necessary anymore to clean the area, since we now clean the entire screen...
-  // Clear the space normally occupied by the axis labels
-  u8g2.setDrawColor(0);
-  u8g2.drawBox(k197graph.x_size + 2, k197graph.y_size - u8g2.getMaxCharHeight(),
-               256, k197graph.y_size);
-  u8g2.drawBox(k197graph.x_size + 2, 0, 256, u8g2.getMaxCharHeight());
-  */
+
   // Draw axis labels
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
@@ -1086,6 +1078,7 @@ void UImanager::updateGraphScreen() {
       }
   }
 
+  // Information panel
   if (areCursorsVisible() && k197graph.gr_size > 0) {
       u8g2_uint_t ax = cursor_a >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
       u8g2_uint_t bx = cursor_b >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
