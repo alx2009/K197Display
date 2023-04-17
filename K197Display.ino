@@ -46,8 +46,7 @@ moving to inline assembler and naked interrupt handlers
 // Minor improvement: turn on the led when on hold (it is easy to miss the annunciator)
 //
 // Bug to fix:
-// No graph x scaling when the buffer is half full...
-// Sometime the cursor is set to a position that exceeds the graph...
+// incorrect label for x axis, 42s shown instead of 60s...
 //
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
