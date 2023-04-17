@@ -1037,8 +1037,7 @@ void UImanager::updateGraphScreen() {
     i1 *= 2;
   if (i1 > k197graph.x_size)
     i1 = k197graph.x_size;
-  // DebugOut.print(F("i1 ")); DebugOut.print(i1); DebugOut.print(F(", gr_size
-  // ")); DebugOut.println(k197graph.gr_size);
+
   byte xscale = k197graph.x_size / i1;
   RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
 
@@ -1065,7 +1064,7 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
                  k197graph.y_size - u8g2.getMaxCharHeight());
-  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? i1 / 3 : (i1 / 3) * k197graph.nsamples_graph);
+  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? 60/xscale : (60/xscale) * k197graph.nsamples_graph);
   u8g2.setCursor(k197graph.x_size + 2, 0);
   printYLabel(k197graph.y1);
   u8g2_uint_t topln_x = u8g2.tx;
