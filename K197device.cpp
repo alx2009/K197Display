@@ -728,7 +728,7 @@ void k197graph_label_type::setScaleMultiplierDown(
  @param yopt the required options for the scale
 */
 void k197_display_graph_type::setScale(float grmin, float grmax,
-                              k197graph_yscale_opt yopt) {
+                              k197graph_yscale_opt yopt RT_ASSERT_ADD_PARAM(bool debug_flag) ) {
   // Autoscale -  First we find the order of magnitude (power of 10)
   y0.setLog10Ceiling(grmin);
   y1.setLog10Ceiling(grmax);
@@ -748,10 +748,17 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
       y0.setValue(-1, SCALE_LOG_MIN);
     }
   }
+  RT_ASSERT_ADD_STATEMENTS( 
+    if (debug_flag) { 
+        DebugOut.print(F("y0: ")); y0.debug_print(); DebugOut.print(F(" abs=")); y0.abs().debug_print(); DebugOut.println();
+        DebugOut.print(F("y1: ")); y1.debug_print(); DebugOut.print(F(" abs=")); y1.abs().debug_print(); DebugOut.println();
+    }                
+  )
 
   // apply y scale options
   if (yopt == k197graph_yscale_zero ||
       yopt == k197graph_yscale_0sym) { // Make sure the value 0 is included
+    RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("zero")) );
     if (y0.isPositive())
       y0.reset();
     if (y1.isNegative())
@@ -759,6 +766,7 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
   }
   if (yopt == k197graph_yscale_prefsym ||
       yopt == k197graph_yscale_0sym) {        // Make symmetric if 0 is included
+    RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("prefsym")) );
     if (y0.isNegative() && y1.isPositive()) { // zero is included in the graph
       if (y0.abs() > y1)
         y1.setValue(-y0);
@@ -767,17 +775,24 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
     }
   } else if (yopt == k197graph_yscale_forcesym) { // Make symmetric even if 0
                                                   // not included
+    RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("forcesym")) );
     if (y1.isPositive() && y0.isPositive()) {     // all values are above 0
       y0.setValue(-y1);
     } else if (y1.isNegative() && y0.isNegative()) { // all values are below 0
       y1.setValue(-y0);
-    } else {
+    } else { // y0 negative and y1 positive
       if (y0.abs() > y1)
         y1.setValue(-y0);
       else
         y0.setValue(-y1);
     }
   }
+  RT_ASSERT_ADD_STATEMENTS( 
+    if (debug_flag) { 
+      DebugOut.print(F("y0: ")); y0.debug_print(); DebugOut.println();
+      DebugOut.print(F("y1: ")); y1.debug_print(); DebugOut.println();
+    }                
+  )
 }
 
 /*!
@@ -804,17 +819,24 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
   graphdata->setScale(grmin, grmax, yopt);
   float ymin = graphdata->y0.getValue();
   float ymax = graphdata->y1.getValue();
+  RT_ASSERT_ADD_STATEMENTS(bool runAgain=false;)
   RT_ASSERT_ACT( ymin <= grmin, 
                  DebugOut.print(F(", ymin="));
                  DebugOut.print(ymin,6);
                  DebugOut.print(F(" > grmin="));
-                 DebugOut.println(grmin,6); )
+                 DebugOut.println(grmin,6);
+                 runAgain=true;)
   RT_ASSERT_ACT( ymax >= grmax, 
                  DebugOut.print(F(", ymax="));
                  DebugOut.print(ymax,6);
                  DebugOut.print(F(" < grmax="));
-                 DebugOut.println(grmax,6); )
-
+                 DebugOut.println(grmax,6);
+                 runAgain=true;)
+  RT_ASSERT_ADD_STATEMENTS(
+    if (runAgain) {
+       graphdata->setScale(grmin, grmax, yopt, true);   
+    }
+  )
   float scale_factor = float(graphdata->y_size) / (ymax - ymin);
   // DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9);
 

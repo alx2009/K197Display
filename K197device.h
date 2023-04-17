@@ -169,6 +169,12 @@ struct k197graph_label_type {
     ++pow10;
     return *this;
   };
+
+  RT_ASSERT_ADD_STATEMENTS(
+      void debug_print() {
+           DebugOut.print(mult); DebugOut.print(F(" * 10^")); DebugOut.print(pow10);
+      }
+  )
 };
 
 // Overloading common functions and operators useful in autoscaling
@@ -266,7 +272,7 @@ struct k197_display_graph_type {
   k197graph_label_type y0;     ///< lower label y axis
   byte y_zero = 0x00; ///< the point value for 0, if included in the graph
 
-  void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+  void setScale(float grmin, float grmax, k197graph_yscale_opt yopt RT_ASSERT_ADD_PARAM(bool debug_flag=false) );
 };
 
 /**************************************************************************/

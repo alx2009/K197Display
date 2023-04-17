@@ -201,10 +201,13 @@ extern debugUtil
 #define RT_ASSERT(condition, message_string) if (!(condition)) {DebugOut.println(F(message_string));}
 #define RT_ASSERT_ACT(condition, action) if (!(condition)) {action;}
 #define RT_ASSERT_ACT2(condition, action1, action2) if (!(condition)) {action1; action2;}
+#define RT_ASSERT_ADD_PARAM(param) , param
+#define RT_ASSERT_ADD_STATEMENTS(statement) statement
 #else
 #define RT_ASSERT(...) ///< Does nothing with real time assets disabled
 #define RT_ASSERT_ACT(...) ///< Does nothing with real time assets disabled
 #define RT_ASSERT_ACT2(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ADD_STATEMENTS(...) ///< Does nothing with real time assets disabled
 #endif //RUNTIME_ASSERTS 
 
 #endif // DEBUGUTIL_H__
