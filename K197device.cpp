@@ -804,42 +804,28 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
   graphdata->setScale(grmin, grmax, yopt);
   float ymin = graphdata->y0.getValue();
   float ymax = graphdata->y1.getValue();
-
-  // DebugOut.print(F("grmax="));DebugOut.print(grmax, 9);
-  // DebugOut.print(F(", ymax=")); DebugOut.println(ymax, 9);
-  // DebugOut.print(F("grmin="));DebugOut.print(grmin, 9);
-  // DebugOut.print(F(", ymin=")); DebugOut.println(ymin, 9);
+  RT_ASSERT_ACT( ymin <= grmin, 
+                 DebugOut.print(F(", ymin="));
+                 DebugOut.print(ymin,6);
+                 DebugOut.print(F(" > grmin="));
+                 DebugOut.println(grmin,6); )
+  RT_ASSERT_ACT( ymax >= grmax, 
+                 DebugOut.print(F(", ymax="));
+                 DebugOut.print(ymax,6);
+                 DebugOut.print(F(" < grmax="));
+                 DebugOut.println(grmax,6); )
 
   float scale_factor = float(graphdata->y_size) / (ymax - ymin);
   // DebugOut.print(F("Scale=")); DebugOut.print(scale_factor, 9);
 
   for (int i = 0; i < gr_size; i++) {
-    RT_ASSERT_ACT(i < graphdata->x_size, 
-                   //DebugOut.print(F("i="));
-                   //DebugOut.print(i);
-                   //DebugOut.print(F(", c="));
-                   //DebugOut.print(gr_size);
-                   //DebugOut.print(F(", g="));
-                   //DebugOut.print(graphdata->x_size);
-                   DebugOut.println(F("!fillGraph1"));
-                   break;)
-    RT_ASSERT(i<graph->getSize(), "fillGraph2");
-    graphdata->point[i] = (graph->get(i) - ymin) * scale_factor + 0.5;
-    /*
-     * 22:06:04.182 -> i=1, y=-0.01, min=-0.01, scale=3150.00 !fillGraph2
-     * 22:06:04.182 -> i=2, y=-0.01, min=-0.01, scale=3150.00 !fillGraph2
-     * 22:06:04.182 -> i=3, y=-0.04, min=-0.01, scale=3150.00 !fillGraph2
-     */
-    RT_ASSERT_ACT( graphdata->point[i] <= graphdata->y_size, 
-                   DebugOut.print(F("i="));
-                   DebugOut.print(i);
-                   DebugOut.print(F(", y="));
-                   DebugOut.print(graph->get(i),6);
-                   DebugOut.print(F(", min="));
-                   DebugOut.print(ymin,6);
-                   DebugOut.print(F(", scale="));
-                   DebugOut.print(scale_factor,6);
-                   DebugOut.println(F(" !fillGraph2"));)
+    RT_ASSERT(i < graphdata->x_size, "!fg2a");
+    if (i>=graphdata->x_size) {
+        break; // protect from mem. corruption, only in case of a bug!
+    }
+    RT_ASSERT(i<graph->getSize(), "fg2b");
+    RT_ASSERT( graphdata->point[i] <= graphdata->y_size, "fg2c");
+    graphdata->point[i] = (graph->get(i) - ymin) * scale_factor + 0.5;     
     if (graphdata->point[i] > graphdata->y_size) { // Can only be to bugs or rounding...
         //force within display area, otherwise u8g2 would slow down hence data loss, etc. etc. 
         graphdata->point[i] = graphdata->y_size;    
