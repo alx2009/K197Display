@@ -1143,7 +1143,6 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
   }
 
   // Draw AUTO & HOLD at about the same height as the Y label
-
   u8g2.setFont(u8g2_font_5x7_mr);
   x = topln_x + 5;
   y = 1;
