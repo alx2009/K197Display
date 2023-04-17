@@ -139,7 +139,7 @@ struct k197graph_label_type {
   */
   k197graph_label_type abs() const { ///<
                                      ///<
-    return k197graph_label_type(mult > 0 ? mult : mult, pow10);
+    return k197graph_label_type(mult > 0 ? mult : -mult, pow10);
   };
 
   // overloading operators used in label scaling
