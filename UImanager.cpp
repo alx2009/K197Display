@@ -1092,6 +1092,15 @@ void UImanager::updateGraphScreen() {
       u8g2_uint_t bx = cursor_b > k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
       drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
       drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B); 
+
+      RT_ASSERT_ACT(ax<k197dev.getGraphSize(hold), 
+          DebugOut.print(F("!AX ")); DebugOut.print(ax);
+          DebugOut.print(F(", A: ")); DebugOut.print(cursor_a);
+          DebugOut.print(F(", xscale=")); DebugOut.println(xscale);)
+      RT_ASSERT_ACT(bx<k197dev.getGraphSize(hold), 
+          DebugOut.print(F("!BX ")); DebugOut.print(bx);
+          DebugOut.print(F(", B: ")); DebugOut.print(cursor_b);
+          DebugOut.print(F(", xscale=")); DebugOut.println(xscale);)
       drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
       drawGraphScreenNormalPanel(topln_x);
@@ -1174,9 +1183,6 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
 
   bool hold = k197dev.getDisplayHold();
 
-  RT_ASSERT(ax<k197dev.getGraphSize(hold), "!AX");
-  RT_ASSERT(bx<k197dev.getGraphSize(hold), "!AX");
-  
   u8g2.setCursor(topln_x + 1, 0);
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.print(k197dev.getUnit(true, hold));

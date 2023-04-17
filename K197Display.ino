@@ -41,23 +41,13 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Minor improvement: check if there is space for printing "hold" consistently in graph mode (with and without cursors)
 // Minor improvement: option to force symmetric scale should only work when the measurement can be negative
+// Minor improvement: whenever there is a change wait for one update before resetting the graph
+// Minor improvement: turn on the led when on hold (it is easy to miss the annunciator)
 //
 // Bug to fix:
-// The graph is not scaled (zoomed) correctly in the x direction when <180 points... xscale is not used. 
-// Autoscaling y axis is not always working, sometime the graph is out of scale even 20% of scale value.
-//    Processing of the graph seem to slow down in this state. This cause double clicks to be misuinterpreted and 
-//    eventually leads to data loss with graph reset (see also next bug). The reset of the graph seem to solve the problem. 
-//    If the cursor is moved over the trouble spot, the cursor position is moved automatically after a very short time (may also be due to
-//    slow processing resulting in a long click)
-// The cause of the slow has been localized to the line draw function when the y coordinate is way off screen.
-// In turn this is due to fillGraphDisplayData not correctly calculating the scale. 
-// Then ymin is not less or equalt to the graph minimum. This throws off the calculation of point[i], causing points to be mapped below screen
-// Problem further located to the second part of the setScale funcion, when we apply scaling options
-//   ==> need further troubleshooting
-//
-// When less data received from SPI, isCacheInvalid() is called twice at the exactly the same time (in ms)...
+// No graph x scaling when the buffer is half full...
+// Sometime the cursor is set to a position that exceeds the graph...
 //
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+

@@ -332,7 +332,9 @@ struct k197_stored_graph_type {
     */
     inline float get(unsigned int position) {
          if (gr_size==0) return 0.0;
-         RT_ASSERT_ACT(  position<gr_size,  DebugOut.print(F("!getp=")); DebugOut.println(position); );
+         RT_ASSERT_ACT(  position<gr_size,  
+                         DebugOut.print(F("!getp=")); DebugOut.print(position);
+                         DebugOut.print(F(" sz=")); DebugOut.print(gr_size); );
          return graph[ (position + gr_index + 1) % gr_size ];
     };
     
