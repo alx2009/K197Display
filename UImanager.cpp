@@ -1075,14 +1075,14 @@ void UImanager::updateGraphScreen() {
         (k197graph.gr_size < 2) ) {
       for (int i = 0; i < k197graph.gr_size; i++) {
         RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2a");
-        u8g2.drawPixel(i, k197graph.y_size - k197graph.point[i]);
+        u8g2.drawPixel(i*xscale, k197graph.y_size - k197graph.point[i]);
       }
   } else { // OPT_GRAPH_TYPE_LINES && k197graph.gr_size>=2
       for (int i = 0; i < (k197graph.gr_size - 1); i++) {
         RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2b");
         RT_ASSERT(k197graph.point[i + 1]<=k197graph.y_size, "!updGrDsp2c");
-        u8g2.drawLine(i, k197graph.y_size - k197graph.point[i],
-                      i + 1,
+        u8g2.drawLine(i*xscale, k197graph.y_size - k197graph.point[i],
+                      (i + 1)*xscale,
                       k197graph.y_size - k197graph.point[i + 1]);
       }
   }
@@ -1096,11 +1096,11 @@ void UImanager::updateGraphScreen() {
       RT_ASSERT_ACT(ax<k197dev.getGraphSize(hold), 
           DebugOut.print(F("!AX ")); DebugOut.print(ax);
           DebugOut.print(F(", A: ")); DebugOut.print(cursor_a);
-          DebugOut.print(F(", xscale=")); DebugOut.println(xscale);)
+          DebugOut.print(F(", size=")); DebugOut.println(k197dev.getGraphSize(hold));)
       RT_ASSERT_ACT(bx<k197dev.getGraphSize(hold), 
           DebugOut.print(F("!BX ")); DebugOut.print(bx);
           DebugOut.print(F(", B: ")); DebugOut.print(cursor_b);
-          DebugOut.print(F(", xscale=")); DebugOut.println(xscale);)
+          DebugOut.print(F(", size=")); DebugOut.println(k197dev.getGraphSize(hold));)
       drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
       drawGraphScreenNormalPanel(topln_x);
