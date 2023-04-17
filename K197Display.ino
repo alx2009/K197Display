@@ -54,7 +54,7 @@ moving to inline assembler and naked interrupt handlers
 // The cause of the slow has been localized to the line draw function when the y coordinate is way off screen.
 // In turn this is due to fillGraphDisplayData not correctly calculating the scale. 
 // Then ymin is not less or equalt to the graph minimum. This throws off the calculation of point[i], causing points to be mapped below screen
-//
+// Problem further located to the second part of the setScale funcion, when we apply scaling options
 //   ==> need further troubleshooting
 //
 // When less data received from SPI, isCacheInvalid() is called twice at the exactly the same time (in ms)...
