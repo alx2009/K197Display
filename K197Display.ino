@@ -46,6 +46,7 @@ moving to inline assembler and naked interrupt handlers
 // Minor improvement: turn on the led when on hold (it is easy to miss the annunciator)
 //
 // Bug to fix:
+// In hold mode, the graph Y labels are affected by the range selected 
 //
 // Latest benchmark (loop time must be kept below 300ms to avoid losing data):
 // loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
