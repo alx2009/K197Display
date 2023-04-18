@@ -435,7 +435,10 @@ void K197device::debugPrint() {
 
       //copy current graph data to cache.hold
       cache.hold.graph.copy(&(cache.graph));
-      cache.hold.nsamples_graph = cache.nsamples_graph;       
+      cache.hold.nsamples_graph = cache.nsamples_graph;
+      digitalWriteFast(LED_BUILTIN, HIGH);       
+    } else {
+      digitalWriteFast(LED_BUILTIN, LOW);       
     }
     flags.hold = newValue; 
   };
@@ -517,13 +520,23 @@ bool K197device::isCacheInvalid(char munit, int8_t pow10) {
  */
 void K197device::updateCache() {
   if (!isNumeric())
-    return; // No point updating statistics now
+    return; // No point updating statistics or graph now
   char munit = getMainUnit();
   int8_t pow10 = getUnitPow10();
   
   if (isCacheInvalid(munit, pow10)) { // Something important changed, reset stats
+    if (munit == CH_SPACE) return; // This is not a stable masurement, ignore
+    if (cache.numInvalid==0) { // This is the first invalid reading
+        cache.numInvalid++;   // Take note we had an invalid result
+        if (cache.nskip_graph != 0) { // We do our best to keep up with the sampling rate
+          if (++cache.nskip_graph >= cache.nsamples_graph) // Step the counter anyway
+            cache.nskip_graph = 0;
+        }
+        return;         // Return without updating statistics/graph
+    }
     resetStatistics();
   } else {
+    cache.numInvalid=0; // reset counter for next time
     if (cache.pow10 != pow10) {
         rescaleStatistics(getPrefixConversionFactor(cache.pow10, pow10)); 
     }

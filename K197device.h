@@ -633,6 +633,7 @@ private:
    */
   struct k197_cache_struct {
   public:
+    byte numInvalid=0; ///< Keep track of the times the cache is found to be invalid
     float avg_factor = 1.0 / 3.0; ///< Factor used in average calculation
     bool tkMode = false;          ///< caches tkMode from previous measurement
     float msg_value = 0.0; ///< caches msg_value from previous measurement

@@ -42,8 +42,6 @@ moving to inline assembler and naked interrupt handlers
 /**************************************************************************/
 // TODO wish list:
 // Minor improvement: option to force symmetric scale should only work when the measurement can be negative
-// Minor improvement: whenever there is a change wait for one update before resetting the graph
-// Minor improvement: turn on the led when on hold (it is easy to miss the annunciator)
 //
 // Bug to fix:
 //
