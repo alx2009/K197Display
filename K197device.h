@@ -592,7 +592,7 @@ public:
   const __FlashStringHelper *
   getUnit(bool include_dB = false, bool hold=false); // Note: includes UTF-8 characters
   char getMainUnit();
-  int8_t getUnitPow10();
+  int8_t getUnitPow10(bool hold=false);
 
   /*!
       @brief  check if overange is detected
@@ -684,6 +684,7 @@ private:
       float max = 0.0;     ///< holds cache.max
       const __FlashStringHelper * unit=NULL;
       const __FlashStringHelper * unit_with_db=NULL;
+      int8_t pow10=0;      ///< holds the exponent (corresponding to m, K, etc.)
       bool isTKModeActive=false; ///< holds true if temperature
       bool isNumeric=false; ///< holds true if numeric
 

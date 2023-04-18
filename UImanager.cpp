@@ -930,8 +930,8 @@ static inline int8_t getZeroes(int8_t pow10) {
     @brief  Utility function, print the label for the Y axis
     @param l the label to print
 */
-static void printYLabel(k197graph_label_type l) {
-  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10();
+static void printYLabel(k197graph_label_type l, bool hold) {
+  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
   u8g2.print(l.mult);
 
   int8_t nzeroes = getZeroes(pow10_effective);
@@ -947,12 +947,12 @@ static void printYLabel(k197graph_label_type l) {
     @param l the label to print for the Y axis
     @param nseconds the value in seconds to print for the X axis
 */
-static void printXYLabel(k197graph_label_type l, uint16_t nseconds) {
+static void printXYLabel(k197graph_label_type l, uint16_t nseconds, bool hold) {
   // DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
   u8g2.print(nseconds);
   u8g2.print(F("s/"));
 
-  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10();
+  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
   u8g2.print(l.mult);
 
   int8_t nzeroes = getZeroes(pow10_effective);
@@ -1056,9 +1056,9 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
                  k197graph.y_size - u8g2.getMaxCharHeight());
-  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? 60/xscale : (60/xscale) * k197graph.nsamples_graph);
+  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? 60/xscale : (60/xscale) * k197graph.nsamples_graph, hold);
   u8g2.setCursor(k197graph.x_size + 2, 0);
-  printYLabel(k197graph.y1);
+  printYLabel(k197graph.y1, hold);
   u8g2_uint_t topln_x = u8g2.tx;
 
   // Draw the graph

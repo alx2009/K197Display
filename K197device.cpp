@@ -349,7 +349,10 @@ char K197device::getMainUnit() {
    is returned (10^0=1).
     @returns the exponent corresponding to the SI multiplier
 */
-int8_t K197device::getUnitPow10() {
+int8_t K197device::getUnitPow10(bool hold) {
+  if (hold) {
+    return cache.hold.pow10;
+  }
   if (isV()) { // Voltage units
     if (flags.tkMode && ismV() && isDC())
       return 0;
@@ -426,6 +429,7 @@ void K197device::debugPrint() {
       cache.hold.max = cache.max;     
       cache.hold.unit=getUnit();
       cache.hold.unit_with_db=getUnit(true);
+      cache.hold.pow10 = cache.pow10;     
       cache.hold.isTKModeActive=isTKModeActive();
       cache.hold.isNumeric=flags.msg_is_num;
 
