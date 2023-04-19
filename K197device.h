@@ -250,6 +250,7 @@ enum k197graph_yscale_opt {
       0x02,                     ///< If graph cross zero, the scale is symmetric
   k197graph_yscale_0sym = 0x03, ///< combine the previous two
   k197graph_yscale_forcesym = 0x04, ///< Always use a symmetric scale
+  k197graph_yscale_0forcesym = 0x05, ///< combine 0 + forcesym
 };
 
 /**************************************************************************/
@@ -272,7 +273,7 @@ struct k197_display_graph_type {
   k197graph_label_type y0;     ///< lower label y axis
   byte y_zero = 0x00; ///< the point value for 0, if included in the graph
 
-  void setScale(float grmin, float grmax, k197graph_yscale_opt yopt RT_ASSERT_ADD_PARAM(bool debug_flag=false) );
+  void setScale(float grmin, float grmax, k197graph_yscale_opt yopt, bool canBeNegative RT_ASSERT_ADD_PARAM(bool debug_flag=false) );
 };
 
 /**************************************************************************/
@@ -683,6 +684,7 @@ private:
       float average = 0.0; ///< holds cache.average
       float min = 0.0;     ///< holds cache.min
       float max = 0.0;     ///< holds cache.max
+      char munit=CH_SPACE;
       const __FlashStringHelper * unit=NULL;
       const __FlashStringHelper * unit_with_db=NULL;
       int8_t pow10=0;      ///< holds the exponent (corresponding to m, K, etc.)
@@ -938,6 +940,9 @@ public:
       @return returns true if on, false otherwise
   */
   inline bool isOmega() { return (annunciators8 & K197_Omega_bm) != 0; };
+  inline bool isOmega(bool hold) {
+      if (hold) return   (annunciators8 & K197_Omega_bm) != 0;
+  }
   /*!
       @brief  test if "A" is on
       @return returns true if on, false otherwise
@@ -948,6 +953,13 @@ public:
       @return returns true if on, false otherwise
   */
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
+
+  inline bool valueCanBeNegative(bool hold=false) {
+      if (isREL(hold)) return true; // Relative values can always be negative
+      if (isAC(hold)) return false; // AC cannot be negative (unless isREL())
+      if (hold) return cache.hold.munit == 'O' ? false : true; //Ohm cannot be negative
+      return cache.munit == 'O' ? false : true;                // Ditto
+  }
 
   // Extra modes/annnunciators not available on original K197
 

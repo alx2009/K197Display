@@ -41,7 +41,6 @@ moving to inline assembler and naked interrupt handlers
 */
 /**************************************************************************/
 // TODO wish list:
-// Minor improvement: option to force symmetric scale should only work when the measurement can be negative
 //
 // Bug to fix:
 //

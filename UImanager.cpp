@@ -672,10 +672,13 @@ BIND_MENU_OPTION(opt_gr_yscale_0sym, k197graph_yscale_0sym,
                  "0+symm"); ///< Menu input
 BIND_MENU_OPTION(opt_gr_yscale_forcesym, k197graph_yscale_forcesym,
                  "Force symm."); ///< Menu input
+BIND_MENU_OPTION(opt_gr_yscale_0forcesym, k197graph_yscale_0forcesym,
+                 "0+force symm."); ///< Menu input
 DEF_MENU_ENUM_INPUT(k197graph_yscale_opt, opt_gr_yscale, 15, "Y axis",
                     OPT(opt_gr_yscale_max), OPT(opt_gr_yscale_zero),
                     OPT(opt_gr_yscale_prefsym), OPT(opt_gr_yscale_0sym),
-                    OPT(opt_gr_yscale_forcesym)); ///< Menu input
+                    OPT(opt_gr_yscale_forcesym),
+                    OPT(opt_gr_yscale_0forcesym)); ///< Menu input
 
 DEF_MENU_BOOL(gr_yscale_show0, 15, "Show y=0"); ///< Menu input
 

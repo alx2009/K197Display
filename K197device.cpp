@@ -428,6 +428,7 @@ void K197device::debugPrint() {
       cache.hold.min = cache.min;     
       cache.hold.max = cache.max;     
       cache.hold.unit=getUnit();
+      cache.hold.munit=cache.munit;
       cache.hold.unit_with_db=getUnit(true);
       cache.hold.pow10 = cache.pow10;     
       cache.hold.isTKModeActive=isTKModeActive();
@@ -745,7 +746,7 @@ void k197graph_label_type::setScaleMultiplierDown(
  @param yopt the required options for the scale
 */
 void k197_display_graph_type::setScale(float grmin, float grmax,
-                              k197graph_yscale_opt yopt RT_ASSERT_ADD_PARAM(bool debug_flag) ) {
+                              k197graph_yscale_opt yopt, bool canBeNegative RT_ASSERT_ADD_PARAM(bool debug_flag) ) {
   // Autoscale -  First we find the order of magnitude (power of 10)
   y0.setLog10Ceiling(grmin);
   y1.setLog10Ceiling(grmax);
@@ -774,15 +775,16 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
 
   // apply y scale options
   if (yopt == k197graph_yscale_zero ||
-      yopt == k197graph_yscale_0sym) { // Make sure the value 0 is included
+      yopt == k197graph_yscale_0sym ||
+      yopt == k197graph_yscale_0forcesym) { // Make sure the value 0 is included
     RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("zero")) );
     if (y0.isPositive())
       y0.reset();
     if (y1.isNegative())
       y1.reset();
   }
-  if (yopt == k197graph_yscale_prefsym ||
-      yopt == k197graph_yscale_0sym) {        // Make symmetric if 0 is included
+  if (canBeNegative && (yopt == k197graph_yscale_prefsym ||
+      yopt == k197graph_yscale_0sym) ) {        // Make symmetric if 0 is included
     RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("prefsym")) );
     if (y0.isNegative() && y1.isPositive()) { // zero is included in the graph
       if (y0.abs() > y1)
@@ -790,7 +792,8 @@ void k197_display_graph_type::setScale(float grmin, float grmax,
       else
         y0.setValue(-y1);
     }
-  } else if (yopt == k197graph_yscale_forcesym) { // Make symmetric even if 0
+  } else if (canBeNegative && ( (yopt == k197graph_yscale_forcesym)
+                                || (yopt == k197graph_yscale_0forcesym)) ) { // Make symmetric even if 0
                                                   // not included
     RT_ASSERT_ADD_STATEMENTS( if(debug_flag) DebugOut.println(F("forcesym")) );
     if (y1.isPositive() && y0.isPositive()) {     // all values are above 0
@@ -833,7 +836,7 @@ void K197device::fillGraphDisplayData(k197_display_graph_type *graphdata,
   float grmin = graph->calcMin();
   float grmax = graph->calcMax();
   
-  graphdata->setScale(grmin, grmax, yopt);
+  graphdata->setScale(grmin, grmax, yopt, k197dev.valueCanBeNegative(hold));
   float ymin = graphdata->y0.getValue();
   float ymax = graphdata->y1.getValue();
   RT_ASSERT_ADD_STATEMENTS(bool runAgain=false;)
