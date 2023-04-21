@@ -951,19 +951,37 @@ static void printYLabel(k197graph_label_type l, bool hold) {
     @param nseconds the value in seconds to print for the X axis
 */
 static void printXYLabel(k197graph_label_type l, uint16_t nseconds, bool hold) {
-  // DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
-  u8g2.print(nseconds);
-  u8g2.print(F("s/"));
+    // DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
+    bool hasHours=false;
+    bool hasMinutes=false;
+    if (nseconds >= 3600) {
+        u8g2.print(nseconds/3600);  
+        u8g2.print('h'); 
+        nseconds = nseconds%3600;
+        hasHours=true;
+    }
+    if (nseconds >= (hasHours ? 60 : 901) ) {
+        u8g2.print(nseconds/60);
+        u8g2.print('\''); 
+        nseconds = nseconds%60;
+        hasMinutes = true;
+    }
+    if (nseconds>0) {
+        u8g2.print(nseconds);
+        u8g2.print((hasHours || hasMinutes) ? '\"' : 's');
+    }
+    
+    u8g2.print('/'); //separator between x and y labels
+    
+    int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
+    u8g2.print(l.mult);
 
-  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
-  u8g2.print(l.mult);
-
-  int8_t nzeroes = getZeroes(pow10_effective);
-  for (uint8_t i = 0; i < nzeroes; i++) {
+    int8_t nzeroes = getZeroes(pow10_effective);
+    for (uint8_t i = 0; i < nzeroes; i++) {
     u8g2.print('0');
   }
-  // DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
-  u8g2.print(getPrefix(pow10_effective));
+    // DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
+    u8g2.print(getPrefix(pow10_effective));
 }
 
 /*!
