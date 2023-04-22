@@ -30,7 +30,7 @@ is the expected one, and print the information to DebugOut
   - Finally, check for pushbutton events (if there are events, the callback is
 called)
 
-The main loop keeps track of the loop time. The highest observed is displayed 
+The main loop keeps track of the loop time. The highest observed is displayed
 in the serial prompt and then the counter is reset. The reason this is important
 is that loop timemust be kept below 300ms to avoid losing data
 
@@ -38,7 +38,7 @@ is that loop timemust be kept below 300ms to avoid losing data
 fool-proof, but statistically we should print out something if there are
 recurring issues
 
-Currently interrupt handlers are pretty efficient. They could be optimized 
+Currently interrupt handlers are pretty efficient. They could be optimized
 further if the need arise, but it would require moving to inline assembler
 and naked interrupt handlers.
 
@@ -72,6 +72,9 @@ const char CH_SPACE = ' '; ///< using a global constant saves some RAM
 
 bool msg_printout = false; ///< if true prints raw messages to DebugOut
 
+static unsigned long looptimer = 0UL; ///< keep track of loop time
+unsigned long looptimerMax = 0UL;     ///< keep track of max looptimer
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Management of the serial user interface
 ////////////////////////////////////////////////////////////////////////////////////
@@ -83,8 +86,8 @@ void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
   REPORT_FREE_STACK();
   Serial.print(F(" Max loop (us): "));
-  Serial.println(uiman.looptimerMax);
-  uiman.looptimerMax = 0;
+  Serial.println(looptimerMax);
+  looptimerMax = 0;
   Serial.println(F("> "));
 }
 
@@ -318,7 +321,6 @@ byte DMMReading[PACKET_DATA]; ///< buffer used to store the raw data received
 bool collisionStatus =
     false; ///< keep track if a collision was detected by the SPI peripheral
 
-static unsigned long looptimer = 0UL;
 static unsigned long lastUpdate = 0UL;
 
 /*!
@@ -395,6 +397,6 @@ void loop() {
   PROFILE_stop(DebugOut.PROFILE_LOOP);
   PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
   looptimer = micros() - looptimer;
-  if (uiman.looptimerMax < looptimer)
-    uiman.looptimerMax = looptimer;
+  if (looptimerMax < looptimer)
+    looptimerMax = looptimer;
 }

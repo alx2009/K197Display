@@ -78,8 +78,6 @@ public:
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
   static const char MARKER =
       '+'; ///< constant, identifies the latest sample in the graph
-  unsigned long looptimerMax =
-      0UL; ///< used to keep track of the time spent in loop
 
 private:
   byte cursor_a = 60;  ///< Stores cursor A position

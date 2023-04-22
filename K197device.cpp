@@ -967,10 +967,9 @@ void K197device::k197_cache_struct::resampleGraph(uint16_t nsamples_new) {
     unsigned int new_idx = 0;
     for (int old_idx = 0; old_idx < gr_size; old_idx++) {
       if (old_idx * nsamples_old_positive >= new_idx * nsamples_new_positive) {
-        RT_ASSERT_ACT (new_idx >= gr_size_new,
-          DebugOut.println("Error: new_idx 1");
-          break;
-        )
+        RT_ASSERT_ACT(new_idx >= gr_size_new,
+                      DebugOut.println("Error: new_idx 1");
+                      break;)
         RT_ASSERT(new_idx < gr_size_new, "rsmpl2");
         RT_ASSERT(old_idx < graph.getSize(), "rsmpl3");
         buffer[new_idx] = graph.get(old_idx);

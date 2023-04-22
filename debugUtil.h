@@ -237,9 +237,10 @@ extern debugUtil
 */
 #define RT_ASSERT_ADD_STATEMENTS(statement) statement
 #else
-#define RT_ASSERT(...)         ///< Does nothing with real time assets disabled
-#define RT_ASSERT_ACT(...)     ///< Does nothing with real time assets disabled
-#define RT_ASSERT_ADD_PARAM(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT(...)     ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ACT(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ADD_PARAM(                                                   \
+    ...) ///< Does nothing with real time assets disabled
 #define RT_ASSERT_ADD_STATEMENTS(                                              \
     ...) ///< Does nothing with real time assets disabled
 #endif   // RUNTIME_ASSERTS
