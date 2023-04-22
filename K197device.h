@@ -21,6 +21,7 @@
 /**************************************************************************/
 #ifndef K197_DEVICE_H
 #define K197_DEVICE_H
+#include "DebugUtil.h"
 #include "SPIdevice.h"
 #include <Arduino.h>
 #include <ctype.h> // isDigit()
@@ -138,7 +139,7 @@ struct k197graph_label_type {
   */
   k197graph_label_type abs() const { ///<
                                      ///<
-    return k197graph_label_type(mult > 0 ? mult : mult, pow10);
+    return k197graph_label_type(mult > 0 ? mult : -mult, pow10);
   };
 
   // overloading operators used in label scaling
@@ -168,6 +169,12 @@ struct k197graph_label_type {
     ++pow10;
     return *this;
   };
+
+  RT_ASSERT_ADD_STATEMENTS(void debug_print() {
+    DebugOut.print(mult);
+    DebugOut.print(F(" * 10^"));
+    DebugOut.print(pow10);
+  })
 };
 
 // Overloading common functions and operators useful in autoscaling
@@ -242,54 +249,206 @@ enum k197graph_yscale_opt {
   k197graph_yscale_prefsym =
       0x02,                     ///< If graph cross zero, the scale is symmetric
   k197graph_yscale_0sym = 0x03, ///< combine the previous two
-  k197graph_yscale_forcesym = 0x04, ///< Always use a symmetric scale
+  k197graph_yscale_forcesym = 0x04,  ///< Always use a symmetric scale
+  k197graph_yscale_0forcesym = 0x05, ///< combine 0 + forcesym
 };
 
 /**************************************************************************/
 /*!
-   @brief  auxiliary class to store the graph
+   @brief  auxiliary class to store the graph for display purposes
 
    @details This class is used to pass enough information to represent
    the data stored in the cache as a graph and display it on a oled screen
+   Note that data is not stored as a circular buffer, when gr_size>0
+   point[0] is always the oldest, point[gr_size-1] is always the latest acquired
 */
 /**************************************************************************/
-struct k197graph_type {
+struct k197_display_graph_type {
   static const byte x_size = 180; ///< x size of the graph area in pixels
   static const byte y_size = 63;  ///< y size of the graph area in pixels
-  byte point[x_size];             ///< circular buffer, store all graph points
-  byte current_idx = 0x00;        ///< index of the last point to be acquired
-  byte npoints = 0x00; ///< number of points in the graph (always < x_size)
+  byte point[x_size];             ///< point[0] is the oldest
+  byte gr_size = 0x00; ///< number of points in the graph (always < x_size)
   uint16_t nsamples_graph = 0; ///< Number of samples to use for graph
   k197graph_label_type y1;     ///< upper label y axis
   k197graph_label_type y0;     ///< lower label y axis
   byte y_zero = 0x00; ///< the point value for 0, if included in the graph
 
-  void setScale(float grmin, float grmax, k197graph_yscale_opt yopt);
+  void
+  setScale(float grmin, float grmax, k197graph_yscale_opt yopt,
+           bool canBeNegative RT_ASSERT_ADD_PARAM(bool debug_flag = false));
+};
+
+/**************************************************************************/
+/*!
+   @brief  auxiliary class to store the graph in the device
+
+   @details This class is used to store the graph in the device. Key API in
+   short:
+   - clear() clears the graph
+   - append() append a single value (removing the oldest one if needed to make
+   room)
+   - get() returns the record at a specific position (position=0 means oldest
+   record)
+   - copy() copy from another object of the same type
+
+*/
+/**************************************************************************/
+struct k197_stored_graph_type {
+public:
+  static const byte max_graph_size =
+      180; ///< maximum number of measurements that can be stored
+
+private:
+  float graph[max_graph_size];        ///< stores up to gr_size records
+                                      ///< when gr_size = max_graph_size
+                                      ///< becomes a circular buffer
+  byte gr_index = max_graph_size - 1; ///< index to the most recent record
+  byte gr_size =
+      0; ///< amount of data currently stored in graph (0-max_graph_size)
+
+public:
+  /*!
+     @brief  empty the graph
+  */
+  void clear() {
+    gr_index = max_graph_size - 1;
+    gr_size = 0;
+  };
 
   /*!
-    @brief get the array index from the logical index
-    @details the logical index is 0 for the oldest record and increases as we
-    get towards newer records The array index is the index in the circular
-    buffer graph[] corresponding to the logical index This function should not
-    be called if the graph is empty (npoints=0);
-    @param logic_index the logical index (range: 0 - npoints-1)
-    @return arry index (range: 0 - npoints-1)
-  */
-  inline uint16_t idx(uint16_t logic_index) {
-    return (logic_index + int(current_idx) + 1) % npoints;
+     @brief  append a new value to the graph
+     @details the oldest value will be removed if there is no space available
+     @param y the value to append
+   */
+  void append(float y) {
+    RT_ASSERT(gr_size <= max_graph_size, "!appnd1");
+    RT_ASSERT((gr_size == 0) || (gr_index < gr_size), "!appnd2");
+    gr_index++;
+    if (gr_index >= max_graph_size)
+      gr_index = 0;
+    graph[gr_index] = y;
+    if (gr_size < max_graph_size)
+      gr_size++;
   };
+
   /*!
-    @brief get the logical index from the array index
-    @details the logical index is 0 for the oldest record and increases as we
-    get towards newer records The array index is the index in the circular
-    buffer graph[] corresponding to the logical index This function should not
-    be called if the graph is empty (npoints=0);
-    @param idx the logical index (range: 0 - npoints-1)
-    @return the logical index (range: 0 - npoints-1)
+    @brief  get a specific value
+    @param position required position. Range: 0 to gr_size-1. 0 is the oldes
+    value, gr_zize-1 is the newest value.
+    @return the value at the required position or 0.0 if the graph is empty
   */
-  inline uint16_t logic_index(uint16_t idx) {
-    return (int(npoints) + idx - int(current_idx) - 1) % npoints;
+  inline float get(unsigned int position) {
+    if (gr_size == 0)
+      return 0.0;
+    RT_ASSERT_ACT(position < gr_size, DebugOut.print(F("!getp="));
+                  DebugOut.print(position); DebugOut.print(F(" sz="));
+                  DebugOut.print(gr_size););
+    return graph[(position + gr_index + 1) % gr_size];
   };
+
+  /*!
+    @brief copy all data from another k197_stored_graph_type
+    @param source the object to copy from.
+  */
+  void copy(k197_stored_graph_type *source) {
+    if (source->gr_size > 0) {
+      memcpy(graph, source->graph, source->gr_size * sizeof(float));
+    }
+    gr_index = source->gr_index;
+    gr_size = source->gr_size;
+    RT_ASSERT(gr_size <= max_graph_size, "!copy1");
+    RT_ASSERT(gr_index < gr_size, "!copy2");
+  }
+
+  /*!
+    @brief copy all data from a float array
+    @details num_points == 0 has the same effect as clear()
+    @param buffer the pointer to the float array
+    @param num_points the number of values to copy (starting from buffer[0].
+  */
+  void copy(float buffer[], byte num_points) {
+    if (num_points == 0) {
+      clear();
+      return;
+    }
+    RT_ASSERT(num_points < max_graph_size, "!copy(b,n)");
+    memcpy(graph, buffer, num_points * sizeof(float));
+    gr_index = num_points - 1;
+    gr_size = num_points;
+  }
+  /*!
+    @brief return the number of data points in the graph
+    @return the number of data points.
+  */
+  inline byte getSize() { return gr_size; };
+
+  /*!
+    @brief compute tha maximum value in the graph
+    @return  maximum value or 0.0 if the graph is empty.
+  */
+  float calcMin() {
+    if (gr_size == 0)
+      return 0.0;
+    float min = graph[0];
+    for (byte i = 1; i < gr_size; i++) {
+      if (graph[i] < min)
+        min = graph[i];
+    }
+    return min;
+  }
+
+  /*!
+    @brief compute tha minimum value in the graph
+    @return  minimum value or 0.0 if the graph is empty.
+  */
+  float calcMax() {
+    if (gr_size == 0)
+      return 0.0;
+    float max = graph[0];
+    for (byte i = 1; i < gr_size; i++) {
+      if (graph[i] > max)
+        max = graph[i];
+    }
+    return max;
+  }
+
+  /*!
+    @brief compute tha average value in the graph
+    @param first_point the first point to consider
+    @param num_points the number of points to consider
+    @return the computed average value or 0.0 if the graph is empty.
+  */
+  float calcAverage(byte first_point, byte num_points) {
+    if (gr_size == 0)
+      return 0.0;
+    RT_ASSERT(first_point < gr_size, "!calcA1");
+    float acc = 0.0;
+    byte last_point = first_point + num_points - 1;
+    RT_ASSERT(last_point < gr_size, "!calcA2");
+    for (byte i = first_point; i <= last_point; i++) {
+      acc += get(i);
+    }
+    return num_points == 0 ? acc : acc / num_points;
+  }
+
+  /*!
+    @brief  rescale graph data
+    @details every point in the graph is multiplied by fconv
+    @param fconv the conversion factor
+  */
+  void rescale(float fconv) {
+    for (int i = 0; i < gr_size; i++) {
+      graph[i] *= fconv;
+    }
+  }
+
+  /*!
+    @brief  check if the graph is full
+    @details a full graph has reached its maximum size. Note that oit is still
+    possible to append data, see append()
+    @return true if the graph includes max_graph_size points
+  */
+  bool isFull() { return gr_size == max_graph_size ? true : false; }
 };
 
 /**************************************************************************/
@@ -327,6 +486,8 @@ private:
         bool msg_is_num : 1;     ///< true if message is numeric
         bool msg_is_ovrange : 1; ///< true if overange detected
         bool hold : 1;           ///< true if the display is holding the value
+        bool graph_full_range : 1; ///< true> graph rescaled at unit prefix
+                                   ///< change
       };
     } __attribute__((packed)); ///<
   }; ///< Structure designed to pack a number of flags into one byte
@@ -373,7 +534,10 @@ public:
       @brief  constructor for the class. Do not forget that setup() must be
      called before using the other member functions.
   */
-  K197device() { raw_msg[0] = 0; cache.hold.raw_msg[0]=0; };
+  K197device() {
+    raw_msg[0] = 0;
+    cache.hold.raw_msg[0] = 0;
+  };
   bool getNewReading();
   byte getNewReading(byte *data);
 
@@ -386,11 +550,32 @@ public:
   void setDisplayHold(bool newValue);
 
   /*!
+      @brief  check if the graph supports the full dynamic range
+      @details when the full range is supported and a unit prefix changes (e.g.
+     from mV to V) the data stored in the graph are scaled approipriately to
+     match the new unit prefix (in the example above every value would be
+     multiplied by 1000) Note that this can result in a lack of precision for
+     the data already acquired (due to the fact double are not supported by the
+     AVR)
+      @return true if full range supported
+  */
+
+  bool isGraphFullRange() { return flags.graph_full_range; };
+
+  /*!
+      @brief  set wether or not the graph full range is supported
+      @details see isGraphFullRange()
+      @param newValue new Value: true if the full range shall be supported
+  */
+  void setGraphFullRange(bool newValue) { flags.graph_full_range = newValue; };
+
+  /*!
       @brief  Return the raw message
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return last raw message received from the K197/197A
   */
-  const char *getRawMessage(bool hold=false) { 
+  const char *getRawMessage(bool hold = false) {
     return hold ? cache.hold.raw_msg : raw_msg;
   };
 
@@ -410,17 +595,20 @@ public:
 
       @param  char_n the char to check (allowed range: 0 to 7, however 0 always
      return false)
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return true if the last raw_message received from the K197/197A had a
      decimal point at the nth character
   */
-  bool isDecPointOn(byte char_n, bool hold=false) {
+  bool isDecPointOn(byte char_n, bool hold = false) {
     return hold ? bitRead(cache.hold.raw_dp, char_n) : bitRead(raw_dp, char_n);
   };
 
   const __FlashStringHelper *
-  getUnit(bool include_dB = false, bool hold=false); // Note: includes UTF-8 characters
-  int8_t getUnitPow10();
+  getUnit(bool include_dB = false,
+          bool hold = false); // Note: includes UTF-8 characters
+  char getMainUnit();
+  int8_t getUnitPow10(bool hold = false);
 
   /*!
       @brief  check if overange is detected
@@ -437,23 +625,29 @@ public:
 
   /*!
       @brief  check if message is a number
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return true if message is a number (false means something else, like
      "Err", "0L", etc.)
   */
-  bool isNumeric() { return flags.msg_is_num; };
+  bool isNumeric(bool hold = false) {
+    return hold ? cache.hold.isNumeric : flags.msg_is_num;
+  };
 
   /*!
       @brief  returns the measurement value if available
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns the measurement value if available (isNumeric() returns
      true) or 0.0 otherwise
   */
-  float getValue() { return msg_value; };
+  float getValue(bool hold = false) {
+    return hold ? cache.hold.msg_value : msg_value;
+  };
 
   void debugPrint();
 
 private:
-  static const byte max_graph_size =
-      180; ///< maximum number of measurements that can be cached
   static const byte max_graph_period =
       210; ///< maximum number of seconds between samples
   /*!
@@ -461,25 +655,23 @@ private:
    */
   struct k197_cache_struct {
   public:
+    byte numInvalid =
+        0; ///< Keep track of the times the cache is found to be invalid
     float avg_factor = 1.0 / 3.0; ///< Factor used in average calculation
     bool tkMode = false;          ///< caches tkMode from previous measurement
     float msg_value = 0.0; ///< caches msg_value from previous measurement
     byte annunciators0 =
-        0x00; ///< caches annunciators0 from previous measurement
-    byte annunciators7 =
-        0x00; ///< caches annunciators7 from previous measurement
-    byte annunciators8 =
-        0x00; ///< caches annunciators8 from previous measurement
+        0x00;              ///< caches annunciators0 from previous measurement
+    char munit = CH_SPACE; ///< Stores measurement unit (V, A, etc.)
+    int8_t pow10 =
+        0; ///< Stores the exponent corresponding to the prefix (m, K, etc.)
 
     float average = 0.0; ///< keep track of the average
     float min = 0.0;     ///< keep track of the minimum
     float max = 0.0;     ///< keep track of the maximum
 
-    float graph[max_graph_size];        ///< stores gr_size records
-                                        ///< when gr_size = max_graph_size
-                                        ///< becomes a circular buffer
-    byte gr_index = max_graph_size - 1; ///< index to the most recent record
-    byte gr_size = 0;  ///< amount of data in graph (0-max_graph_size)
+    k197_stored_graph_type graph; ///< stores the graph
+
     byte nskip = 0;    ///< Skip counter for rolling average
     byte nsamples = 3; ///< Number of samples to use for rolling average
 
@@ -488,62 +680,56 @@ private:
     bool autosample_graph = false; ///< if true set nsamples_graph automatically
 
     /*!
-      @brief get the array index from logical index
-      @details the logical index is 0 for the oldest record and increases as we
-      get towards newer records The array index is the index in the circular
-      buffer graph[] corresponding to the logical index This function should not
-      be called if the graph is empty (gr_size=0);
-      @param logic_index the logical index (range: 0 - gr_size-1)
-      @return arry index (range: 0 - gr_size-1)
-    */
-    inline uint16_t grGetArrayIdx(uint16_t logic_index) {
-      return (logic_index + gr_index + 1) % gr_size;
-    };
-
-    /*!
       @brief add one sample to graph
       @details Only one out of every nsamples is stored
       @param x the value to add (or skip, depending on nsamples and nskip_graph)
     */
     void add2graph(float x) {
       if (nskip_graph == 0) {
-        gr_index++;
-        if (gr_index >= max_graph_size)
-          gr_index = 0;
-        graph[gr_index] = x;
-        if (gr_size < max_graph_size)
-          gr_size++;
+        graph.append(x);
       }
       if (++nskip_graph >= nsamples_graph)
         nskip_graph = 0;
     };
     void resetGraph();
     void resampleGraph(uint16_t nsamples_new);
-    
+
   public:
     /*!
        @brief structure used to store values to be displayed in hold mode
     */
     struct k197_cache_hold_struct {
-      char raw_msg[K197_RAW_MSG_SIZE]; ///< holds raw_msg
-      byte raw_dp = 0x00; ///< holds raw_dp
-      byte annunciators0 = 0x00; ///< holds annunciators0
-      float tcold = 0.0; ///< holds tcold
-      float average = 0.0; ///< holds cache.average
-      float min = 0.0;     ///< holds cache.min
-      float max = 0.0;     ///< holds cache.max
-      const __FlashStringHelper * unit=NULL;
-      const __FlashStringHelper * unit_with_db=NULL;
-      bool isTKModeActive=false;
-    } hold; ///< store values to be displayed in hold mode
-  } cache; ///< cache measured values and related status information
+      char raw_msg[K197_RAW_MSG_SIZE];        ///< holds raw_msg
+      byte raw_dp = 0x00;                     ///< holds raw_dp
+      byte annunciators0 = 0x00;              ///< holds annunciators0
+      float msg_value;                        ///< holds the measured value
+      float tcold = 0.0;                      ///< holds tcold
+      float average = 0.0;                    ///< holds cache.average
+      float min = 0.0;                        ///< holds cache.min
+      float max = 0.0;                        ///< holds cache.max
+      char munit = CH_SPACE;                  ///< holds cache.munit
+      const __FlashStringHelper *unit = NULL; ///< holds unit string
+      const __FlashStringHelper *unit_with_db =
+          NULL;         ///< holds unit string incl. dB
+      int8_t pow10 = 0; ///< holds the exponent (corresponding to m, K, etc.)
+      bool isTKModeActive = false; ///< holds true if temperature
+      bool isNumeric = false;      ///< holds true if numeric
 
+      // The following data is needed to hold the entire graph
+      k197_stored_graph_type graph; ///< Holds the graph
+      uint16_t nsamples_graph = 0;  ///< Holds the sample time
+    } hold; ///< store values to be displayed in hold mode
+  } cache;  ///< cache measured values and related status information
+
+private:
+  bool isCacheInvalid(char munit, int8_t pow10);
   void updateCache();
 
 public:
-  void fillGraphDisplayData(k197graph_type *graphdata,
-                            k197graph_yscale_opt yopt);
+  void fillGraphDisplayData(k197_display_graph_type *graphdata,
+                            k197graph_yscale_opt yopt, bool hold = false);
   void resetStatistics();
+  void rescaleStatistics(float fconv);
 
   /*!
       @brief  set the number of samples for rolling average calculation
@@ -587,14 +773,26 @@ public:
   uint16_t getGraphPeriod() { return cache.nsamples_graph / 3; };
 
   /*!
+      @brief get the graph size (number of data points in the graph)
+      @param hold if true returns the value at the time hold mode was last
+     entered
+      @return the number of data points in the graph
+  */
+  byte getGraphSize(bool hold = false) {
+    return hold ? cache.hold.graph.getSize() : cache.graph.getSize();
+  };
+
+  /*!
       @brief get graph value at point n
       @param n the requested point
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return the value of the graph at point n
   */
-  float getGraphValue(byte n) {
-    return n >= cache.gr_size ? 0.0 : cache.graph[n];
+  float getGraphValue(byte n, bool hold = false) {
+    return hold ? cache.hold.graph.get(n) : cache.graph.get(n);
   };
-  float getGraphAverage(byte n0, byte n1);
+  float getGraphAverage(byte first_point, byte num_points, bool hold = false);
 
   /*!
       @brief  set the autosample flag
@@ -615,30 +813,35 @@ public:
 
   /*!
       @brief  returns the average value (see also setNsamples())
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return average value
   */
-  float getAverage(bool hold=false) { 
+  float getAverage(bool hold = false) {
     return hold ? cache.hold.average : cache.average;
   };
 
   /*!
       @brief  returns the minimum value
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return minimum value
   */
-  float getMin(bool hold=false) {
-    return hold ? cache.hold.min : cache.min;
-  };
+  float getMin(bool hold = false) { return hold ? cache.hold.min : cache.min; };
 
   /*!
       @brief  returns the maximum value
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return maximum value
   */
-  float getMax(bool hold=false) {
-    return hold ? cache.hold.max : cache.max;
-  };
+  float getMax(bool hold = false) { return hold ? cache.hold.max : cache.max; };
+
+  /*!
+    @brief  returns the maximum value
+    @param hold if true returns the value at the time hold mode was last entered
+    @return maximum value
+*/
 
 public:
   // annunciators0
@@ -650,55 +853,62 @@ public:
 
   /*!
       @brief  test if REL is on
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isREL(bool hold=false) {
-    if (hold) return (cache.hold.annunciators0 & K197_REL_bm) != 0;
+  inline bool isREL(bool hold = false) {
+    if (hold)
+      return (cache.hold.annunciators0 & K197_REL_bm) != 0;
     return (annunciators0 & K197_REL_bm) != 0;
   };
   /*!
       @brief  test if STO is on
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isSTO() {
-     return (annunciators0 & K197_STO_bm) != 0;
-  };
+  inline bool isSTO() { return (annunciators0 & K197_STO_bm) != 0; };
   /*!
       @brief  test if dB is on
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isdB(bool hold=false) {
-    if (hold) return (cache.hold.annunciators0 & K197_dB_bm) != 0;
+  inline bool isdB(bool hold = false) {
+    if (hold)
+      return (cache.hold.annunciators0 & K197_dB_bm) != 0;
     return (annunciators0 & K197_dB_bm) != 0;
   };
   /*!
       @brief  test if AC is on
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isAC(bool hold=false) {
-    if (hold) return (cache.hold.annunciators0 & K197_AC_bm) != 0;
+  inline bool isAC(bool hold = false) {
+    if (hold)
+      return (cache.hold.annunciators0 & K197_AC_bm) != 0;
     return (annunciators0 & K197_AC_bm) != 0;
   };
   /*!
       @brief  test if AC is on
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isDC(bool hold=false) {
-    if (hold) return (cache.hold.annunciators0 & K197_AC_bm) == 0;
+  inline bool isDC(bool hold = false) {
+    if (hold)
+      return (cache.hold.annunciators0 & K197_AC_bm) == 0;
     return (annunciators0 & K197_AC_bm) == 0;
   };
   /*!
       @brief  test if RCL is on
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true if on, false otherwise
   */
-  inline bool isRCL() {
-    return (annunciators0 & K197_RCL_bm) != 0;
-  };
+  inline bool isRCL() { return (annunciators0 & K197_RCL_bm) != 0; };
   /*!
       @brief  test if BAT is on
       @return returns true if on, false otherwise
@@ -763,6 +973,16 @@ public:
   */
   inline bool isOmega() { return (annunciators8 & K197_Omega_bm) != 0; };
   /*!
+      @brief  test if "Ω" is on
+      @param hold if true returns the value at the time hold mode was last
+     entered
+      @return returns true if on, false otherwise
+  */
+  inline bool isOmega(bool hold) {
+    if (hold)
+      return (annunciators8 & K197_Omega_bm) != 0;
+  }
+  /*!
       @brief  test if "A" is on
       @return returns true if on, false otherwise
   */
@@ -772,6 +992,23 @@ public:
       @return returns true if on, false otherwise
   */
   inline bool isRMT() { return (annunciators8 & K197_RMT_bm) != 0; };
+
+  /*!
+      @brief  test if the value of the measurement can be negative with current
+     setup
+      @param hold if true returns the value at the time hold mode was last
+     entered
+      @return returns true if the value can be negative, false otherwise
+  */
+  inline bool valueCanBeNegative(bool hold = false) {
+    if (isREL(hold))
+      return true; // Relative values can always be negative
+    if (isAC(hold))
+      return false; // AC cannot be negative (unless isREL())
+    if (hold)
+      return cache.hold.munit == 'O' ? false : true; // Ohm cannot be negative
+    return cache.munit == 'O' ? false : true;        // Ditto
+  }
 
   // Extra modes/annnunciators not available on original K197
 
@@ -791,21 +1028,25 @@ public:
 
   /*!
       @brief  check if the Thermocuple mode is active now
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return returns true when K Thermocouple mode is enabled and active,
   */
-  bool isTKModeActive(bool hold=false) {
-    if (hold) return cache.hold.isTKModeActive;
+  bool isTKModeActive(bool hold = false) {
+    if (hold)
+      return cache.hold.isTKModeActive;
     return isV() && ismV() && flags.tkMode && isDC();
   }
 
   /*!
       @brief  returns the temperature used for cold junction compensation
-      @param hold if true returns the value at the time hold mode was last entered
+      @param hold if true returns the value at the time hold mode was last
+     entered
       @return temperature in celsius
   */
-  float getTColdJunction(bool hold=false) {
-    if (hold) return cache.hold.tcold;
+  float getTColdJunction(bool hold = false) {
+    if (hold)
+      return cache.hold.tcold;
     return abs(tcold) < 999.99 ? tcold : 999.99; // Keep it in the display range
                                                  // just to be on the safe side
   }

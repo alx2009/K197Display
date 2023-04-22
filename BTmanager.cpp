@@ -57,6 +57,7 @@ void BTmanager::setup() {
 
   if (bt_module_present) {
     Serial.begin(115200);
+    Serial.setTimeout(Serial_timeout);
     DebugOut.useSerial(true);
   } else {
     pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
@@ -83,7 +84,7 @@ void BTmanager::setup() {
 
 */
 BTmanagerResult BTmanager::checkConnection() {
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
   bool bt_module_connected_now;
   if (BT_STATE_VPORT.IN & BT_STATE_bm) { // BT_STATE == HIGH
     bt_module_connected_now = false;     // no connection
@@ -124,11 +125,11 @@ BTmanagerResult BTmanager::checkPresence() {
     return BTmoduleOn; // Nothing to do
   bt_module_present = bt_module_present_now;
   if (bt_module_present) { // Module was turned on after setup().
-    Serial.begin(
-        115200); // Note: If this is the second time Serial.begin is called, a
-                 // bug in Serial may hang the SW, and cause a WDT reset
+    Serial.begin( // Note: If this is the second time Serial.begin is called, a
+        115200);  // bug in Serial may hang the SW, and cause a WDT reset
+    Serial.setTimeout(Serial_timeout);
     DebugOut.useSerial(true);
-    //DebugOut.println(F("BT turned on"));
+    // DebugOut.println(F("BT turned on"));
     return BTmoduleTurnedOn;
   } else { // Module was turned off
     Serial.end();
@@ -136,7 +137,7 @@ BTmanagerResult BTmanager::checkPresence() {
                          USART_TXEN_bm)); // Disable RX and TX for good measure
     pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
     pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
-    //DebugOut.println(F("BT turned off"));
+    // DebugOut.println(F("BT turned off"));
     return BTmoduleTurnedOff;
   }
 #else

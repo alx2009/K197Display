@@ -19,7 +19,9 @@
 #include "debugUtil.h"
 #include <Arduino.h>
 
+#ifdef CHECK_STACK_SIZE
 #include <FreeStack.h>
+#endif
 
 // static const float vstep = 10.24 / 4096.0; // conversion from ADC reading to
 // Volts (assuming 1.024V reference and 12 bit resolution)
@@ -61,26 +63,33 @@ void dxUtilClass::begin() {
    restart of the micro...
 */
 void dxUtilClass::printResetFlags() {
-  bool printed_something=false;
+  bool printed_something = false;
   if (reset_flags & RSTCTRL_UPDIRF_bm) {
-    DebugOut.print(F("UPDI ")); printed_something=true;
+    DebugOut.print(F("UPDI "));
+    printed_something = true;
   }
   if (reset_flags & RSTCTRL_WDRF_bm) {
-    DebugOut.print(F("WDT ")); printed_something=true;
+    DebugOut.print(F("WDT "));
+    printed_something = true;
   }
   if (reset_flags & RSTCTRL_SWRF_bm) {
-    DebugOut.print(F("SW ")); printed_something=true;
+    DebugOut.print(F("SW "));
+    printed_something = true;
   }
   if (reset_flags & RSTCTRL_EXTRF_bm) {
-    DebugOut.print(F("HW ")); printed_something=true;
+    DebugOut.print(F("HW "));
+    printed_something = true;
   }
   if (reset_flags & RSTCTRL_BORF_bm) {
-    DebugOut.print(F("Bwnout ")); printed_something=true;
+    DebugOut.print(F("Bwnout "));
+    printed_something = true;
   }
   if (reset_flags & RSTCTRL_PORF_bm) {
-    DebugOut.print(F("POW ")); printed_something=true;
+    DebugOut.print(F("POW "));
+    printed_something = true;
   }
-  if (printed_something) DebugOut.println(F("Reset"));
+  if (printed_something)
+    DebugOut.println(F("Reset"));
 }
 
 /*!
@@ -208,6 +217,7 @@ void dxUtilClass::checkTemperature(bool newline) {
     DebugOut.println();
 }
 
+#ifdef CHECK_STACK_SIZE
 /*!
     @brief  check the stack size
     @return current amount of free stack space in bytes
@@ -247,3 +257,5 @@ void dxUtilClass::reportStack(bool reportAlways) {
     DebugOut.print(minStack);
   }
 }
+
+#endif // CHECK_FREE_STACK undefined

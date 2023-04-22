@@ -30,32 +30,28 @@ is the expected one, and print the information to DebugOut
   - Finally, check for pushbutton events (if there are events, the callback is
 called)
 
+The main loop keeps track of the loop time. The highest observed is displayed
+in the serial prompt and then the counter is reset. The reason this is important
+is that loop timemust be kept below 300ms to avoid losing data
+
     Note: the way we detect SPI client related problems in loop is not
 fool-proof, but statistically we should print out something if there are
 recurring issues
 
-Currently interrupt handlers are pretty efficient (except the one for the CCL).
-They could be optimized further if the need arise, but it would require
-moving to inline assembler and naked interrupt handlers
+Currently interrupt handlers are pretty efficient. They could be optimized
+further if the need arise, but it would require moving to inline assembler
+and naked interrupt handlers.
 
 */
 /**************************************************************************/
 // TODO wish list:
-// Implement true hold for graph screen
 //
+// Bug to fix:
 //
 // Latest benchmark:
-// loop() ==> 195 ms (normal), 120 ms (minmax), 145 ms (menu), 140 ms (menu+
-// default logging)
-//            195 (normal + max logging), 142 (menu+max logging), 121
-//            (minmax+max logging) 164 ms (normal hold + max logging), 76 ms
-//            (mimmax hold +maxlogging)
-// getNewReading() ==> 135 us
-// updateDisplay() ==> 120 ms (normal, minmax), 150ms (menu)
-// logData() ==> 7us (no logging), 362 us (default log active), 4ms (all
-// options) BT checks ==> 75us (normal, connected), 10 us (options menu)
-// Increasing the OLED SPI clock shaves 13 ms to the loop time (195 ms to 182
-// ms)
+// Release 1.0 candidate: loop time is tipically around 100 ms.
+// Occasionally higher but never observed above 200 ms
+//
 //
 #include "K197device.h"
 
@@ -76,6 +72,9 @@ const char CH_SPACE = ' '; ///< using a global constant saves some RAM
 
 bool msg_printout = false; ///< if true prints raw messages to DebugOut
 
+static unsigned long looptimer = 0UL; ///< keep track of loop time
+unsigned long looptimerMax = 0UL;     ///< keep track of max looptimer
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Management of the serial user interface
 ////////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +84,10 @@ bool msg_printout = false; ///< if true prints raw messages to DebugOut
 */
 void printPrompt() { // Here we want to use Serial, rather than DebugOut
   Serial.println();
-  dxUtil.reportStack();
+  REPORT_FREE_STACK();
   Serial.print(F(" Max loop (us): "));
-  Serial.println(uiman.looptimerMax);
-  uiman.looptimerMax = 0;
+  Serial.println(looptimerMax);
+  looptimerMax = 0;
   Serial.println(F("> "));
 }
 
@@ -107,7 +106,7 @@ void printHelp() { // Here we want to use Serial, rather than DebugOut
 }
 
 #define INPUT_BUFFER_SIZE                                                      \
-  30 ///< size of the input buffer when reading from Serial
+  10 ///< size of the input buffer when reading from Serial
 
 /*!
       @brief error message for invalid command to Serial
@@ -134,8 +133,8 @@ void cmdLog() { uiman.setLogging(!uiman.isLogging()); }
    the Arduibno GUI)
 */
 void handleSerial() { // Here we want to use Serial, rather than DebugOut
-  dxUtil.checkFreeStack();
-  static char buf[INPUT_BUFFER_SIZE];
+  CHECK_FREE_STACK();
+  char buf[INPUT_BUFFER_SIZE + 1];
   size_t i = Serial.readBytesUntil(CH_SPACE, buf, INPUT_BUFFER_SIZE);
   buf[i] = 0;
   if (i == 0) { // no characters read
@@ -185,13 +184,13 @@ void handleSerial() { // Here we want to use Serial, rather than DebugOut
 */
 void myButtonCallback(K197UIeventsource eventSource,
                       K197UIeventType eventType) {
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
   if (uiman.handleUIEvent(eventSource,
                           eventType)) { // UI related event, no need to do more
-    //DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
-    //DebugOut.print(F(" "));
-    //k197ButtonCluster::DebugOut_printEventName(eventType);
-    //DebugOut.println(F("Btn handled by UI"));
+    // DebugOut.print(F("PIN=")); DebugOut.print((uint8_t) eventSource);
+    // DebugOut.print(F(" "));
+    // k197ButtonCluster::DebugOut_printEventName(eventType);
+    // DebugOut.println(F("Btn handled by UI"));
     return;
   }
   if (k197dev.isNotCal() && uiman.isSplitScreen())
@@ -212,10 +211,10 @@ void myButtonCallback(K197UIeventsource eventSource,
     return;
   }
 
-  //DebugOut.print(F("Btn "));
+  // DebugOut.print(F("Btn "));
   switch (eventSource) {
   case K197key_STO:
-    //DebugOut.print(F("STO"));
+    // DebugOut.print(F("STO"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_STO, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -223,7 +222,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_RCL:
-    //DebugOut.print(F("RCL"));
+    // DebugOut.print(F("RCL"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_RCL, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -233,7 +232,7 @@ void myButtonCallback(K197UIeventsource eventSource,
   case K197key_REL:
     // We cannot use UIeventPress for REL because we need to discriminate a long
     // press from a (short) click
-    //DebugOut.print(F("REL"));
+    // DebugOut.print(F("REL"));
     if (k197dev.isNotCal() && eventType == UIeventClick) {
       pushbuttons.clickREL();
     }
@@ -244,7 +243,7 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   case K197key_DB:
-    //DebugOut.print(F("DB"));
+    // DebugOut.print(F("DB"));
     if (eventType == UIeventPress) {
       pinConfigure(MB_DB, PIN_DIR_OUTPUT | PIN_OUT_HIGH);
     } else if (eventType == UIeventRelease) {
@@ -252,9 +251,9 @@ void myButtonCallback(K197UIeventsource eventSource,
     }
     break;
   }
-  //DebugOut.print(F(" "));
-  //k197ButtonCluster::DebugOut_printEventName(eventType);
-  //DebugOut.println();
+  // DebugOut.print(F(" "));
+  // k197ButtonCluster::DebugOut_printEventName(eventType);
+  // DebugOut.println();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +307,7 @@ void setup() {
 
   delay(100);
 
-  dxUtil.checkFreeStack();
+  CHECK_FREE_STACK();
 
   // Setup watchdog
   _PROTECTED_WRITE(
@@ -316,13 +315,12 @@ void setup() {
       WDT_WINDOW_8CLK_gc |
           WDT_PERIOD_8KCLK_gc); // enable the WDT, 8s timeout, minimum window.
 }
-byte DMMReading[PACKET]; ///< buffer used to store the raw data received from
-                         ///< the voltmeter main board
+byte DMMReading[PACKET_DATA]; ///< buffer used to store the raw data received
+                              ///< from the voltmeter main board
 
 bool collisionStatus =
     false; ///< keep track if a collision was detected by the SPI peripheral
 
-static unsigned long looptimer = 0UL;
 static unsigned long lastUpdate = 0UL;
 
 /*!
@@ -352,7 +350,7 @@ void loop() {
       k197dev.debugPrint();
     }
     if (n == 9) {
-      lastUpdate=looptimer;
+      lastUpdate = looptimer;
       PROFILE_start(DebugOut.PROFILE_DISPLAY);
       uiman.updateDisplay();
       PROFILE_stop(DebugOut.PROFILE_DISPLAY);
@@ -361,7 +359,7 @@ void loop() {
       uiman.logData();
       PROFILE_stop(DebugOut.PROFILE_DISPLAY);
       PROFILE_println(DebugOut.PROFILE_DISPLAY, F("Time in logData()"));
-      dxUtil.checkFreeStack();
+      CHECK_FREE_STACK();
       __asm__ __volatile__("wdr" ::);
     }
     PROFILE_start(DebugOut.PROFILE_DISPLAY);
@@ -376,26 +374,29 @@ void loop() {
     collisionStatus = collision;
     DebugOut.println(F("Coll. "));
     if (collisionStatus) {
-      DebugOut.println(F("DETECT"));
+      DebugOut.println(F("DCT"));
     } else {
-      DebugOut.println(F("clear"));
+      DebugOut.println(F("clr"));
     }
   }
   pushbuttons.checkNew();
-  if ( (looptimer-lastUpdate) > (k197dev.isRCL() ? 375000l : 1000000l)) { // K197 is not updating data   
-    uiman.updateDisplay(false); // We still want to update the display but the doodle should stay the same
-    lastUpdate=looptimer;
+  if ((looptimer - lastUpdate) >
+      (k197dev.isRCL() ? 375000l : 1000000l)) { // K197 is not updating data
+    uiman.updateDisplay(false); // We still want to update the display but the
+                                // doodle should stay the same
+    lastUpdate = looptimer;
     BTman.checkPresence();
     if (BTman.checkConnection() == BTmoduleTurnedOff)
       uiman.setLogging(false);
-    if (k197dev.isRCL()) { // In RCL mode it is normal that the K197 is not sending anything
-        __asm__ __volatile__("wdr" ::);
-    } // ELSE if this persists it will cause a watchdog reset 
+    if (k197dev.isRCL()) { // In RCL mode it is normal that the K197 is not
+                           // sending anything
+      __asm__ __volatile__("wdr" ::);
+    } // ELSE if this persists it will cause a watchdog reset
   }
 
   PROFILE_stop(DebugOut.PROFILE_LOOP);
   PROFILE_println(DebugOut.PROFILE_LOOP, F("Time spent in loop()"));
   looptimer = micros() - looptimer;
-  if (uiman.looptimerMax < looptimer)
-    uiman.looptimerMax = looptimer;
+  if (looptimerMax < looptimer)
+    looptimerMax = looptimer;
 }

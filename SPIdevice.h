@@ -24,8 +24,8 @@ extern const char
     CH_SPACE; ///< External constant used whenever we need a ' ' character.
               ///< Having it as global constant saves a few bytes of RAM
 
-#define PACKET 18      ///< our SPI packet is 18 bytes max
-#define PACKET_DATA 17 ///< size of the packet when it contains normal data
+//#define PACKET 18      ///< our SPI packet is 18 bytes max
+#define PACKET_DATA 9 ///< size of the packet when it contains normal data
 
 #define DEVICE_USE_INTERRUPT ///< when defined, the code will use interrupt to
                              ///< interface to the SPI peripheral. Otherwise it

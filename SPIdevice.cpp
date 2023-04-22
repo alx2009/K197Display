@@ -51,25 +51,43 @@
 #include "debugUtil.h"
 #include "pinout.h"
 
-#define nbyte GPIOR1 ///< keep track of characters received from the SPI client
-#define SPIflags GPIOR3 ///< Various flags used in interupt handlers
+//#define nbyte GPIOR1 //uncomment to use GPIOR1 to speed up interrupt handler
+// slightly
+#ifndef nbyte
+static volatile byte nbyte =
+    0x00; ///< keep track of characters received from the SPI client
+#endif
+//#define SPIflags GPIOR3 //uncomment to use GPIOR3 to speed up interrupt
+// handler slightly
+#ifndef SPIflags
+static volatile byte SPIflags =
+    0x00; ///< Various flags used in interupt handlers
+#endif
 #define SPIdone                                                                \
   0x02 ///< flag used to signal that all SPI data have been received
 
-volatile byte spiBuffer[PACKET]; ///< buffer used to receive data from SPI
+volatile byte spiBuffer[PACKET_DATA]; ///< buffer used to receive data from SPI
 
+#ifdef DEVICE_USE_INTERRUPT
 /*!
   @brief  Interrupt handler, called when the SS pin changes (only when
  DEVICE_USE_INTERRUPT is defined)
+ @details we assume that the interrupt is called before a SPI data is ready
+ (resetting nbyte to zero while we are reading commands has no effect since they
+ are anyway discarded by the SPI interrupt handler). Because the K197 send a
+ number of command bytes first, this assumption is always satisfied.
 */
 ISR(SPI1_PORT_vect) {                // __vector_30
   SPI1_VPORT.INTFLAGS |= SPI1_SS_bm; // clears interrupt flag
   if (SPI1_VPORT.IN & SPI1_SS_bm) {  // device de-selected
     SPIflags |= SPIdone;
   } else { // device selected
+    cli();
     nbyte = 0;
+    sei();
   }
 }
+#endif // DEVICE_USE_INTERRUPT
 
 /*!
     @brief  setup the SPI peripheral. Must be called first, before any other
@@ -93,7 +111,7 @@ void SPIdevice::setup() {
   // Set SPI Mode
   SPI1.CTRLB =
       SPI_BUFEN_bm |
-      SPI_MODE_0_gc; // Other flags: SPI_BUFEN=1 (normal mode). SPI_BUFWR=0 (not
+      SPI_MODE_0_gc; // SPI_BUFEN=1 (normal mode). SPI_BUFWR=0 (not
                      // need to transmit); SPI_SSD not used when SPI_MASTER=0
 
 #ifdef DEVICE_USE_INTERRUPT
@@ -109,7 +127,7 @@ void SPIdevice::setup() {
   cli(); // we want interrupts to fire after they are properly configured
 
   // enable interrupts
-  SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used when SPI_BUFEN=0
+  SPI1.INTCTRL = SPI_RXCIE_bm; // Other flags not used
 
 #ifndef CORE_ATTACH_NONE // Manual handling of pin interrupts possible
 #error "attachInterrupt must be set to \"only enabled ports\" in the Tools menu"
@@ -139,7 +157,7 @@ bool SPIdevice::hasNewData() {
     while (SPI1.INTFLAGS & SPI_RXCIF_bm) { // we have new SPI1.DATA
       volatile byte c =
           SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
-      if (nbyte < PACKET) {
+      if (nbyte < PACKET_DATA) {
         if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip
                                         // DO Nothing
         } else {                        // this instead is data
@@ -166,11 +184,15 @@ bool SPIdevice::hasNewData() {
       @brief process a new reading that has just been received via SPI and
    return a copy of the SPI data buffer
 
-      If a number != 9 is returned, indicates that the data was NOT correctly
-   transmitted
+     @details If a number != 9 is returned, indicates that the data was NOT
+   correctly transmitted
+
+   Note that this method will block until hasNewData() returns true.
+   If the caller doesn't want to block execution, it has to check hasNewData()
+   before calling getNewData()
 
       @param data byte array that will receive the copy of the data. MUST have
-   room for at least 9 elements!
+   room for at least PACKET_DATA elements!
       @return the number of bytes copied into data.
 */
 byte SPIdevice::getNewData(byte *data) {
@@ -178,10 +200,12 @@ byte SPIdevice::getNewData(byte *data) {
   while (!hasNewData()) {
     ;
   }
-  memcpy(data, (void *)spiBuffer, PACKET);
+  memcpy(data, (void *)spiBuffer, PACKET_DATA);
+  cli();
   SPIflags &= (~SPIdone);
   returnvalue = nbyte;
   nbyte = 0;
+  sei();
   return returnvalue;
 }
 
@@ -206,12 +230,25 @@ void SPIdevice::debugPrintData(byte *data, byte n) {
 /*!
     @brief  Interrupt handler, called for SPI1 events (only when
    DEVICE_USE_INTERRUPT is defined)
+
+   @details there is a weakness here, in that we assume we can read data fast
+   enough that the MB_CD_bm has not changed status after the data is sent. If
+   this is not true we may lose one or more data bytes. This will result in less
+   than 9 data byteas read, leading to the data set being discarded. The K197
+   timing is slow enough that this is not normally a problem, except in specific
+   circumstances (e.g. writing to EEPROM) when losing data is acceptable. Note
+   however that this also mean using buffered SPI mode doesn't really make a big
+   difference because by the same line of reasoning we should always read a byte
+   before the next one is received... but it doesn't hurt.
+
+   Note that in setup() we have set this vecotor as the High-Priority Interrupt.
+   So while we execute no other task can have access to the data we use.
 */
 ISR(SPI1_INT_vect) { // __vector_37  TODO: read all available bytes in one go
   while (SPI1.INTFLAGS & SPI_RXCIF_bm) {
     volatile byte c =
         SPI1.DATA; // Note: this also clears RXCIF if the buffer is empty
-    if (nbyte >= PACKET) {
+    if (nbyte >= PACKET_DATA) {
       return;
     }
     if (SPI1_VPORT.IN & MB_CD_bm) { // this is a command, skip

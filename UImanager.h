@@ -65,17 +65,19 @@ enum K197screenMode {
 /**************************************************************************/
 class UImanager {
 public:
+  static const u8g2_uint_t display_size_x =
+      256; ///< constant, "doodle" x coordinate
+  static const u8g2_uint_t display_size_y =
+      64; ///< constant, "doodle" y coordinate
   static const u8g2_uint_t doodle_x_coord =
-      256 - 8; ///< constant, "doodle" x coordinate
+      display_size_x - 8; ///< constant, "doodle" x coordinate
   static const u8g2_uint_t doodle_y_coord =
-      64 - 12; ///< constant, "doodle" y coordinate
+      display_size_y - 12; ///< constant, "doodle" y coordinate
 
   static const char CURSOR_A = 'A'; ///< constant, identifies cursor A
   static const char CURSOR_B = 'B'; ///< constant, identifies cursor B
   static const char MARKER =
       '+'; ///< constant, identifies the latest sample in the graph
-  unsigned long looptimerMax =
-      0UL; ///< used to keep track of the time spent in loop
 
 private:
   byte cursor_a = 60;  ///< Stores cursor A position
@@ -88,14 +90,14 @@ private:
                        K197sc_FullScreenBitMask); ///< Keep track of how to
                                                   ///< display stuff...
 
-  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle=true);
+  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle = true);
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
-  void drawGraphScreenNormalPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x);
-  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t botln_x,
-                                  u8g2_uint_t ax, u8g2_uint_t bx);
+  void drawGraphScreenNormalPanel(u8g2_uint_t topln_x);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax,
+                                  u8g2_uint_t bx);
   void drawMarker(u8g2_uint_t x, u8g2_uint_t y,
                   char marker_type = UImanager::MARKER);
 
@@ -144,7 +146,8 @@ public:
      @return true if the screen is in graph mode
   */
   bool isGraphMode() {
-    return !isMenuVisible() && ((screen_mode & K197sc_ScreenModeMask) == K197sc_graph);
+    return !isMenuVisible() &&
+           ((screen_mode & K197sc_ScreenModeMask) == K197sc_graph);
   };
   /*!
      @brief  chek if the cursors are visible
@@ -174,14 +177,14 @@ public:
   };
   /*!
      @brief  set the cursor position
-     @details: enforce the range 0 - k197graph_type::x_size
+     @details: enforce the range 0 - k197_display_graph_type::x_size
      @param  which_cursor the cursor whose position shall be set (CURSOR_A or
      CURSOR_B)
      @param  new_position position shall be set
   */
   void setCursorPosition(char which_cursor, byte new_position) {
-    if (new_position >= k197graph_type::x_size)
-      new_position = k197graph_type::x_size - 1;
+    if (new_position >= k197_display_graph_type::x_size)
+      new_position = k197_display_graph_type::x_size - 1;
     if (which_cursor == CURSOR_A) {
       cursor_a = new_position;
     } else {
@@ -192,7 +195,7 @@ public:
   /*!
      @brief  increment the active cursor position
      @details the cursor position will not be incremented past the maximum value
-     (k197graph_type::x_size-1) or less than zero
+     (k197_display_graph_type::x_size-1) or less than zero
      @param increment the number to be added to the current position (use a
      negative increment to decrement)
   */
@@ -201,8 +204,9 @@ public:
     byte oldvalue = isA ? cursor_a : cursor_b;
     byte newvalue = oldvalue + increment;
     if (increment > 0) { // make sure we increment within boundary
-      if ((newvalue < oldvalue) || (newvalue >= k197graph_type::x_size))
-        newvalue = k197graph_type::x_size - 1;
+      if ((newvalue < oldvalue) ||
+          (newvalue >= k197_display_graph_type::x_size))
+        newvalue = k197_display_graph_type::x_size - 1;
     } else { // make sure we decrement
       if (newvalue > oldvalue)
         newvalue = 0;
@@ -270,7 +274,7 @@ public:
     clearScreen();
   };
 
-  void updateDisplay(bool stepDoodle=true);
+  void updateDisplay(bool stepDoodle = true);
   void updateBtStatus();
 
   void setContrast(uint8_t value);
@@ -326,11 +330,14 @@ private:
         bool logTamb : 1;              ///< store menu option value
         bool logStat : 1;              ///< store menu option value
         bool gr_yscale_show0 : 1;      ///< store menu option value
-        bool gr_xscale_roll_mode : 1;  ///< store menu option value
+        bool unused_no_1 : 1;          ///< backward compatibility
         bool gr_xscale_autosample : 1; ///< store menu option value
+        bool logError : 1;             ///< store menu option value
+        bool unused_no_2 : 1;          ///< backward compatibility
+        bool gr_yscale_full_range : 1; ///< store menu option value
       };
     } __attribute__((packed)); ///<
-  }; ///< Structure designed to pack a number of flags into one byte
+  }; ///< Structure designed to pack a number of flags into two bytes
 
   struct byte_options_struct {
     byte contrastCtrl;   ///< store menu option value

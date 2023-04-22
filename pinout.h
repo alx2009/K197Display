@@ -134,11 +134,16 @@
 // PIN SWAP Options
 #define OLED_SPI_SWAP_OPTION SPI0_SWAP_DEFAULT ///< SPI swap to use for OLED
 
-// Event channels
-#define UI_STO_Event Event2 ///< Event channel for STO pushbutton
-#define UI_RCL_Event Event3 ///< Event channel for RCL pushbutton
-#define UI_REL_Event Event4 ///< Event channel for REL pushbutton
-#define UI_DB_Event Event5  ///< Event channel for DB pushbutton
+// Event channels and other event constants
+
+#define Ch2_UI_STO_Ev_src                                                      \
+  EVSYS_CHANNEL2_PORTD_PIN5_gc ///< PD5 as source for ev. channel 2
+#define Ch3_UI_RCL_Ev_src                                                      \
+  EVSYS_CHANNEL3_PORTD_PIN7_gc ///< PD7 as source for ev. channel 3
+#define Ch4_UI_REL_Ev_src                                                      \
+  EVSYS_CHANNEL4_PORTF_PIN0_gc ///< PF0 as source for ev. channel 4
+#define Ch5_UI_DB_Ev_src                                                       \
+  EVSYS_CHANNEL5_PORTF_PIN1_gc ///< PF1 as source for ev. channel 5
 
 // Other TIMER definitions and checks
 #ifdef MILLIS_USE_TIMERA0
