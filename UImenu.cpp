@@ -358,8 +358,6 @@ static byte calcIncrement(const byte val, const K197UIeventsource eventSource,
     if (newval > val)
       newval = 0;
   }
-  //DebugOut.print(F("New inc: "));
-  //DebugOut.println(newval);
   return newval;
 }
 

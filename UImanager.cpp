@@ -142,17 +142,6 @@ void setup_draw(void) {
   u8g2.setFontRefHeightExtendedText();
   u8g2.setFontDirection(0);
 
-  /*
-    u8g2.setFont(u8g2_font_inr16_mr);
-    DebugOut.print(F("Disp. H="));
-    DebugOut.print(u8g2.getDisplayHeight());
-    DebugOut.print(F(", font h="));
-    DebugOut.print(u8g2.getAscent());
-    DebugOut.print(F("/"));
-    DebugOut.print(u8g2.getDescent());
-    DebugOut.print(F("/"));
-    DebugOut.println(u8g2.getMaxCharHeight());
-  */
   CHECK_FREE_STACK();
 }
 
@@ -164,10 +153,7 @@ void UImanager::setup() {
   pinMode(OLED_MOSI, OUTPUT); // Needed to work around a bug in the micro or
                               // dxCore with certain swap options
   bool pmap = SPI.swap(OLED_SPI_SWAP_OPTION); // See pinout.h for pin definition
-  if (pmap) {
-    // DebugOut.println(F("SPI pin mapping OK!"));
-    // DebugOut.flush();
-  } else {
+  if (!pmap) {
     DebugOut.println(F("SPI map!"));
     DebugOut.flush();
     while (true)
@@ -182,8 +168,6 @@ void UImanager::setup() {
   u8g2.clearBuffer();
   setup_draw();
   u8g2.sendBuffer();
-  //DebugOut.print(F("sizeof(u8g2_uint_t)="));
-  //DebugOut.println(sizeof(u8g2_uint_t));
 
   setupMenus();
 }
@@ -193,16 +177,17 @@ void UImanager::setup() {
 // ***************************************************************************************
 
 /*!
-    @brief  update the display. 
-    @details This function will not cause the K197device object to read new data, it will
-   use whatever data is already stored in the object.
+    @brief  update the display.
+    @details This function will not cause the K197device object to read new
+   data, it will use whatever data is already stored in the object.
 
     Therefore, it should not be called before the first data has been received
    from the K197/197A
 
     If you want to add an initial scren/text, the best way would be to add this
    to setup();
-   @param stepDoodle if true and the doodle animation is enabled, the animation is updated
+   @param stepDoodle if true and the doodle animation is enabled, the animation
+   is updated
 */
 void UImanager::updateDisplay(bool stepDoodle) {
   u8g2.clearBuffer(); // Clear display area
@@ -224,8 +209,9 @@ void UImanager::updateDisplay(bool stepDoodle) {
 /*!
     @brief  update the display, used when in debug and other modes with split
    screen.
-   @details this screen always show the current measured value, even if we are in hold mode
-   This is by design so that it is possible to see the current value without exiting the hold mode
+   @details this screen always show the current measured value, even if we are
+   in hold mode This is by design so that it is possible to see the current
+   value without exiting the hold mode
 */
 void UImanager::updateSplitScreen() {
   // temporary buffer used for number formatting
@@ -294,10 +280,10 @@ void UImanager::updateNormalScreen() {
   bool hold = k197dev.getDisplayHold();
   u8g2.drawStr(xraw, yraw, k197dev.getRawMessage(hold));
   for (byte i = 1; i <= 7; i++) {
-      if (k197dev.isDecPointOn(i, hold)) {
-        u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
-                     yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
-      }
+    if (k197dev.isDecPointOn(i, hold)) {
+      u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
+                   yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
+    }
   }
   // set the unit
   u8g2.setFont(u8g2_font_9x15_m_symbols);
@@ -340,7 +326,7 @@ void UImanager::updateNormalScreen() {
   u8g2.setCursor(x, y);
   if (k197dev.isdB(hold))
     u8g2.print(F("dB"));
-  
+
   y += u8g2.getMaxCharHeight();
   x = 0;
   u8g2.setCursor(x, y);
@@ -348,20 +334,20 @@ void UImanager::updateNormalScreen() {
     u8g2.print(F("HOLD"));
     // not enough space, go to the next line
     x = 0;
-    y = u8g2.tx+u8g2.getMaxCharHeight();
+    y = u8g2.tx + u8g2.getMaxCharHeight();
     u8g2.setCursor(x, y);
   }
   if (k197dev.isSTO()) {
     u8g2.print(F("STO"));
-    x=u8g2.tx+(u8g2.getMaxCharWidth() / 2);
+    x = u8g2.tx + (u8g2.getMaxCharWidth() / 2);
   } else {
-    x=u8g2.tx+(u8g2.getMaxCharWidth() * 7 / 2);    
+    x = u8g2.tx + (u8g2.getMaxCharWidth() * 7 / 2);
   }
   if (!hold) { // then move to Next line now
-    x=0;
-    y += u8g2.getMaxCharHeight();    
+    x = 0;
+    y += u8g2.getMaxCharHeight();
   }
-  u8g2.setCursor(x, y);    
+  u8g2.setCursor(x, y);
   if (k197dev.isRCL())
     u8g2.print(F("RCL"));
 
@@ -380,12 +366,12 @@ void UImanager::updateNormalScreen() {
   y = 2;
   u8g2.setCursor(x, y);
   u8g2.setFont(u8g2_font_5x7_mr);
-  if ( k197dev.isTKModeActive(hold) ) { // Display local temperature
+  if (k197dev.isTKModeActive(hold)) { // Display local temperature
     char buf[K197_RAW_MSG_SIZE + 1];
     dtostrf(k197dev.getTColdJunction(hold), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
     u8g2.print(k197dev.getUnit(hold));
-  } 
+  }
 
   updateBtStatus();
   CHECK_FREE_STACK();
@@ -400,26 +386,26 @@ void UImanager::updateMinMaxScreen() {
   char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
 
   u8g2.setFont(
-      u8g2_font_inr16_mr); // width =25  points (7 characters=175 points)
+      u8g2_font_inr16_mr);        // width =25  points (7 characters=175 points)
   const unsigned int xraw = 130;  // x coordinate for raw_msg
   const unsigned int yraw = 15;   // y coordinate for raw_msg
   const unsigned int dpsz_x = 3;  // decimal point size in x direction
   const unsigned int dpsz_y = 3;  // decimal point size in y direction
   const unsigned int dphsz_x = 2; // decimal point "half size" in x direction
   const unsigned int dphsz_y = 2; // decimal point "half size" in y direction
-  const unsigned int xstat = 28; // x coordinate for the statistics
+  const unsigned int xstat = 28;  // x coordinate for the statistics
   const unsigned int ystat = 5;   // y coordinate for the statistics (1st line)
   const unsigned int xunit = 229; // x coordinate for the unit
   const unsigned int yunit = 20;  // y coordinate for the unit
 
   bool hold = k197dev.getDisplayHold();
-  
+
   u8g2.drawStr(xraw, yraw, k197dev.getRawMessage(hold));
   for (byte i = 1; i <= 7; i++) {
-      if (k197dev.isDecPointOn(i, hold)) {
-        u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
-                     yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
-      }
+    if (k197dev.isDecPointOn(i, hold)) {
+      u8g2.drawBox(xraw + i * u8g2.getMaxCharWidth() - dphsz_x,
+                   yraw + u8g2.getAscent() - dphsz_y, dpsz_x, dpsz_y);
+    }
   }
 
   // set the unit
@@ -488,8 +474,8 @@ void UImanager::updateMinMaxScreen() {
     u8g2.print(F("HOLD"));
 
   // set the other announciators
-  x=0;
-  y=63-u8g2.getMaxCharHeight()-3;
+  x = 0;
+  y = 63 - u8g2.getMaxCharHeight() - 3;
   u8g2.setCursor(x, y);
   if (k197dev.isSTO())
     u8g2.print(F("STO "));
@@ -501,11 +487,11 @@ void UImanager::updateMinMaxScreen() {
     u8g2.print(F("RMT "));
   if (k197dev.isCal())
     u8g2.print(F("Cal "));
-  if(k197dev.isOvrange())
+  if (k197dev.isOvrange())
     u8g2.print(F("ovRange "));
   if (k197dev.isAuto())
     u8g2.print(F("AUTO"));
-    
+
   CHECK_FREE_STACK();
 }
 
@@ -522,7 +508,7 @@ void UImanager::updateBtStatus() {
   u8g2.setFont(u8g2_font_5x7_mr);
   if (BTman.isPresent()) {
     u8g2.print(F("bt "));
-  } 
+  }
   x += u8g2.getStrWidth("   ");
   u8g2.setCursor(x, y);
   bool connected = BTman.isConnected();
@@ -569,7 +555,6 @@ void UImanager::setScreenMode(K197screenMode mode) {
   be no need to call this function elsewhere
 */
 void UImanager::clearScreen() {
-  // DebugOut.print(F("screen_mode=")); DebugOut.println(screen_mode, HEX);
   u8g2.clearBuffer();
   u8g2.sendBuffer();
   CHECK_FREE_STACK();
@@ -596,9 +581,9 @@ DEF_MENU_ACTION(
     uiman.showFullScreen();); ///< Menu close action (used in multiple menus)
 
 // Main menu
-DEF_MENU_SEPARATOR(mainSeparator0, 15, "< Options >"); ///< Menu separator
-DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");     ///< Menu input
-DEF_MENU_BOOL(reassignStoRcl, 15, "Reassign STO/RCL"); ///< Menu input
+DEF_MENU_SEPARATOR(mainSeparator0, 15, "< Options >");       ///< Menu separator
+DEF_MENU_BOOL(additionalModes, 15, "Extra Modes");           ///< Menu input
+DEF_MENU_BOOL(reassignStoRcl, 15, "Reassign STO/RCL");       ///< Menu input
 DEF_MENU_OPEN(btDatalog, 15, "Data logger >>>", &UIlogMenu); ///< Open submenu
 DEF_MENU_OPEN(btGraphOpt, 15, "Graph opt. >>>",
               &UIgraphMenu); ///< Open submenu
@@ -624,12 +609,13 @@ DEF_MENU_ACTION(openLog, 15, "Show log",
                 REPORT_FREE_STACK();
                 DebugOut.println(); uiman.showDebugLog();); ///< show debug log
 DEF_MENU_ACTION(resetAVR, 15, "RESET",
-                  _PROTECTED_WRITE(RSTCTRL.SWRR, 1);); ///< Menu input
+                _PROTECTED_WRITE(RSTCTRL.SWRR, 1);); ///< Menu input
 
 UImenuItem *mainMenuItems[] = {
-    &mainSeparator0, &additionalModes, &reassignStoRcl, &btDatalog,
-    &btGraphOpt,     &showDoodle,      &contrastCtrl,   &exitMenu,
-    &saveSettings,   &reloadSettings,  &openLog, &resetAVR}; ///< Root menu items
+    &mainSeparator0, &additionalModes, &reassignStoRcl,
+    &btDatalog,      &btGraphOpt,      &showDoodle,
+    &contrastCtrl,   &exitMenu,        &saveSettings,
+    &reloadSettings, &openLog,         &resetAVR}; ///< Root menu items
 
 // Logging/statistics menu
 DEF_MENU_SEPARATOR(logSeparator0, 15, "< BT Datalogging >"); ///< Menu separator
@@ -645,9 +631,9 @@ DEF_MENU_BYTE_ACT(logStatSamples, 15, "Num. Samples",
                   k197dev.setNsamples(getValue());); ///< Menu input
 
 UImenuItem *logMenuItems[] = {
-    &logSeparator0,  &logEnable, &logSkip, &logSplitUnit,
-    &logTimestamp,   &logTamb,   &logStat, &logError, &logSeparator1,
-    &logStatSamples, &closeMenu, &exitMenu}; ///< Datalog menu items
+    &logSeparator0, &logEnable, &logSkip,  &logSplitUnit,  &logTimestamp,
+    &logTamb,       &logStat,   &logError, &logSeparator1, &logStatSamples,
+    &closeMenu,     &exitMenu}; ///< Datalog menu items
 
 // Graph menu
 DEF_MENU_SEPARATOR(graphSeparator0, 15,
@@ -690,11 +676,13 @@ DEF_MENU_BYTE_SETGET(gr_sample_time, 15, "Sample time (s)",
                      ,
                      return k197dev.getGraphPeriod();); ///< Menu input
 
-UImenuItem *graphMenuItems[] = {
-       &graphSeparator0, &opt_gr_type, &graphSeparator1, &gr_yscale_full_range,
-       &opt_gr_yscale, &gr_yscale_show0, &graphSeparator2,
-       &gr_xscale_autosample, &gr_sample_time, &closeMenu, &exitMenu
-    }; ///< Collects all items in the graph menu
+UImenuItem *graphMenuItems[] =
+    {&graphSeparator0, &opt_gr_type,
+     &graphSeparator1, &gr_yscale_full_range,
+     &opt_gr_yscale,   &gr_yscale_show0,
+     &graphSeparator2, &gr_xscale_autosample,
+     &gr_sample_time,  &closeMenu,
+     &exitMenu}; ///< Collects all items in the graph menu
 
 /*!
       @brief set the display contrast
@@ -735,7 +723,8 @@ void UImanager::setupMenus() {
   UIgraphMenu.num_items = sizeof(graphMenuItems) / sizeof(UImenuItem *);
   UIgraphMenu.selectFirstItem();
 
-  gr_yscale_full_range.setValue(true); gr_yscale_full_range.change();
+  gr_yscale_full_range.setValue(true);
+  gr_yscale_full_range.change();
   gr_xscale_autosample.setValue(k197dev.getAutosample());
 
   permadata::retrieve_from_EEPROM(true);
@@ -801,7 +790,7 @@ const char *UImanager::formatNumber(char *buf, float f) {
     ndec = 2;
   else if (f_abs <= 99999.9)
     ndec = 1;
-  // else we leave ndec=0  
+  // else we leave ndec=0
   return dtostrf(f, K197_RAW_MSG_SIZE, ndec, buf);
 }
 
@@ -818,10 +807,11 @@ void UImanager::logData() {
     return;
   if ((!logEnable.getValue()) || (!BTman.validconnection()))
     return;
-  if ( !k197dev.isNumeric() ) {
-     if ( !logError.getValue() ) return;
+  if (!k197dev.isNumeric()) {
+    if (!logError.getValue())
+      return;
   }
-    
+
   if (logskip_counter < logSkip.getValue()) {
     logskip_counter++;
     return;
@@ -888,7 +878,8 @@ void UImanager::displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle) {
     return;
   u8g2.setFont(u8g2_font_9x15_m_symbols);
   u8g2.drawGlyph(x, y, ((u8g2_uint_t)0x25f4) + phase);
-  if (!stepDoodle) return;
+  if (!stepDoodle)
+    return;
   if (--phase > 3)
     phase = 3;
 }
@@ -922,10 +913,6 @@ static inline char getPrefix(int8_t pow10) {
     @return the unit prefix for that range of powers
 */
 static inline int8_t getZeroes(int8_t pow10) {
-  // int8_t nz = pow10 >=0 ? pow10 % 3 : 2+((pow10+1)%3);
-  // DebugOut.print(F("pow10="));DebugOut.println(pow10);
-  // DebugOut.print(F("nz="));DebugOut.println(nz);
-  // return nz;
   return pow10 >= 0 ? pow10 % 3 : 2 + ((pow10 + 1) % 3);
 }
 
@@ -941,7 +928,6 @@ static void printYLabel(k197graph_label_type l, bool hold) {
   for (uint8_t i = 0; i < nzeroes; i++) {
     u8g2.print('0');
   }
-  // DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
   u8g2.print(getPrefix(pow10_effective));
 }
 
@@ -951,37 +937,36 @@ static void printYLabel(k197graph_label_type l, bool hold) {
     @param nseconds the value in seconds to print for the X axis
 */
 static void printXYLabel(k197graph_label_type l, uint16_t nseconds, bool hold) {
-    // DebugOut.print(F("printXYLabel nseconds=")); DebugOut.println(nseconds);
-    bool hasHours=false;
-    bool hasMinutes=false;
-    if (nseconds >= 3600) {
-        u8g2.print(nseconds/3600);  
-        u8g2.print('h'); 
-        nseconds = nseconds%3600;
-        hasHours=true;
-    }
-    if (nseconds >= (hasHours ? 60 : 901) ) {
-        u8g2.print(nseconds/60);
-        u8g2.print('\''); 
-        nseconds = nseconds%60;
-        hasMinutes = true;
-    }
-    if (nseconds>0) {
-        u8g2.print(nseconds);
-        u8g2.print((hasHours || hasMinutes) ? '\"' : 's');
-    }
-    
-    u8g2.print('/'); //separator between x and y labels
-    
-    int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
-    u8g2.print(l.mult);
+  bool hasHours = false;
+  bool hasMinutes = false;
+  if (nseconds >= 3600) {
+    u8g2.print(nseconds / 3600);
+    u8g2.print('h');
+    nseconds = nseconds % 3600;
+    hasHours = true;
+  }
+  if (nseconds >= (hasHours ? 60 : 901)) {
+    u8g2.print(nseconds / 60);
+    u8g2.print('\'');
+    nseconds = nseconds % 60;
+    hasMinutes = true;
+  }
+  if (nseconds > 0) {
+    u8g2.print(nseconds);
+    u8g2.print((hasHours || hasMinutes) ? '\"' : 's');
+  }
 
-    int8_t nzeroes = getZeroes(pow10_effective);
-    for (uint8_t i = 0; i < nzeroes; i++) {
+  u8g2.print('/'); // separator between x and y labels
+
+  int8_t pow10_effective = l.pow10 + k197dev.getUnitPow10(hold);
+  u8g2.print(l.mult);
+
+  int8_t nzeroes = getZeroes(pow10_effective);
+  for (uint8_t i = 0; i < nzeroes; i++) {
     u8g2.print('0');
   }
-    // DebugOut.print(F("pow10_effective="));DebugOut.println(pow10_effective);
-    u8g2.print(getPrefix(pow10_effective));
+
+  u8g2.print(getPrefix(pow10_effective));
 }
 
 /*!
@@ -1045,9 +1030,9 @@ void UImanager::drawMarker(u8g2_uint_t x, u8g2_uint_t y, char marker_type) {
     @brief  update the display, used when in graph mode
    screen.
 */
-void UImanager::updateGraphScreen() {  
+void UImanager::updateGraphScreen() {
   bool hold = k197dev.getDisplayHold();
-    
+
   // Get graph data
   k197dev.fillGraphDisplayData(&k197graph, opt_gr_yscale.getValue(), hold);
   RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
@@ -1063,7 +1048,7 @@ void UImanager::updateGraphScreen() {
   RT_ASSERT(k197graph.gr_size <= k197graph.x_size, "!updGrDsp1");
 
   // Y axis
-  u8g2.drawLine(k197graph.x_size,k197graph.y_size,k197graph.x_size,0); 
+  u8g2.drawLine(k197graph.x_size, k197graph.y_size, k197graph.x_size, 0);
 
   // X axis
   if (gr_yscale_show0.getValue() && k197graph.y0.isNegative() &&
@@ -1077,46 +1062,52 @@ void UImanager::updateGraphScreen() {
   u8g2.setDrawColor(1);
   u8g2.setCursor(k197graph.x_size + 2,
                  k197graph.y_size - u8g2.getMaxCharHeight());
-  printXYLabel(k197graph.y0, k197graph.nsamples_graph == 0 ? 60/xscale : (60/xscale) * k197graph.nsamples_graph, hold);
+  printXYLabel(k197graph.y0,
+               k197graph.nsamples_graph == 0
+                   ? 60 / xscale
+                   : (60 / xscale) * k197graph.nsamples_graph,
+               hold);
   u8g2.setCursor(k197graph.x_size + 2, 0);
   printYLabel(k197graph.y1, hold);
   u8g2_uint_t topln_x = u8g2.tx;
 
   // Draw the graph
-  if ( (opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS) ||
-        (k197graph.gr_size < 2) ) {
-      for (int i = 0; i < k197graph.gr_size; i++) {
-        RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2a");
-        u8g2.drawPixel(i*xscale, k197graph.y_size - k197graph.point[i]);
-      }
+  if ((opt_gr_type.getValue() == OPT_GRAPH_TYPE_DOTS) ||
+      (k197graph.gr_size < 2)) {
+    for (int i = 0; i < k197graph.gr_size; i++) {
+      RT_ASSERT(k197graph.point[i] <= k197graph.y_size, "!updGrDsp2a");
+      u8g2.drawPixel(i * xscale, k197graph.y_size - k197graph.point[i]);
+    }
   } else { // OPT_GRAPH_TYPE_LINES && k197graph.gr_size>=2
-      for (int i = 0; i < (k197graph.gr_size - 1); i++) {
-        RT_ASSERT(k197graph.point[i]<=k197graph.y_size, "!updGrDsp2b");
-        RT_ASSERT(k197graph.point[i + 1]<=k197graph.y_size, "!updGrDsp2c");
-        u8g2.drawLine(i*xscale, k197graph.y_size - k197graph.point[i],
-                      (i + 1)*xscale,
-                      k197graph.y_size - k197graph.point[i + 1]);
-      }
+    for (int i = 0; i < (k197graph.gr_size - 1); i++) {
+      RT_ASSERT(k197graph.point[i] <= k197graph.y_size, "!updGrDsp2b");
+      RT_ASSERT(k197graph.point[i + 1] <= k197graph.y_size, "!updGrDsp2c");
+      u8g2.drawLine(i * xscale, k197graph.y_size - k197graph.point[i],
+                    (i + 1) * xscale,
+                    k197graph.y_size - k197graph.point[i + 1]);
+    }
   }
 
   // Information panel
   if (areCursorsVisible() && k197graph.gr_size > 0) {
-      u8g2_uint_t ax = cursor_a >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
-      u8g2_uint_t bx = cursor_b >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
-      drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
-      drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B); 
+    u8g2_uint_t ax =
+        cursor_a >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_a;
+    u8g2_uint_t bx =
+        cursor_b >= k197graph.gr_size ? k197graph.gr_size - 1 : cursor_b;
+    drawMarker(xscale * ax, k197graph.y_size - k197graph.point[ax], CURSOR_A);
+    drawMarker(xscale * bx, k197graph.y_size - k197graph.point[bx], CURSOR_B);
 
-      RT_ASSERT_ACT(ax<k197dev.getGraphSize(hold), 
-          DebugOut.print(F("!AX ")); DebugOut.print(ax);
-          DebugOut.print(F(", A: ")); DebugOut.print(cursor_a);
-          DebugOut.print(F(", size=")); DebugOut.println(k197dev.getGraphSize(hold));)
-      RT_ASSERT_ACT(bx<k197dev.getGraphSize(hold), 
-          DebugOut.print(F("!BX ")); DebugOut.print(bx);
-          DebugOut.print(F(", B: ")); DebugOut.print(cursor_b);
-          DebugOut.print(F(", size=")); DebugOut.println(k197dev.getGraphSize(hold));)
-      drawGraphScreenCursorPanel(topln_x, ax, bx);
+    RT_ASSERT_ACT(ax < k197dev.getGraphSize(hold), DebugOut.print(F("!AX "));
+                  DebugOut.print(ax); DebugOut.print(F(", A: "));
+                  DebugOut.print(cursor_a); DebugOut.print(F(", size="));
+                  DebugOut.println(k197dev.getGraphSize(hold));)
+    RT_ASSERT_ACT(bx < k197dev.getGraphSize(hold), DebugOut.print(F("!BX "));
+                  DebugOut.print(bx); DebugOut.print(F(", B: "));
+                  DebugOut.print(cursor_b); DebugOut.print(F(", size="));
+                  DebugOut.println(k197dev.getGraphSize(hold));)
+    drawGraphScreenCursorPanel(topln_x, ax, bx);
   } else {
-      drawGraphScreenNormalPanel(topln_x);
+    drawGraphScreenNormalPanel(topln_x);
   }
   CHECK_FREE_STACK();
 }
@@ -1188,8 +1179,8 @@ void UImanager::drawGraphScreenNormalPanel(u8g2_uint_t topln_x) {
     @param ax the graph index corresponding to cursor A
     @param bx the graph index corresponding to cursor B
 */
-void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, 
-                                           u8g2_uint_t ax, u8g2_uint_t bx) {
+void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax,
+                                           u8g2_uint_t bx) {
   // temporary buffer used for number formatting
   char buf[K197_RAW_MSG_SIZE + 1]; // +1 needed to account for '.'
 
@@ -1221,17 +1212,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   // u8g2.print(k197dev.getGraphValue(bx, hold), 6);
   u8g2.print(formatNumber(buf, k197dev.getGraphValue(bx, hold)));
 
-  /*if (GPIOR3 & 0x10) {   // debug flag is set
-      DebugOut.print(F("Graph: N=")); DebugOut.print(k197graph.gr_size);
-  DebugOut.print(F(", i=")); DebugOut.print(k197graph.current_idx);
-      DebugOut.print(F(", s=")); DebugOut.println(k197graph.nsamples_graph);
-      DebugOut.print(F("A =")); DebugOut.print(cursor_a); DebugOut.print(F(", B
-  =")); DebugOut.println(cursor_b); DebugOut.print(F("OLD ax="));
-  DebugOut.print(ax); DebugOut.print(F(", bx=")); DebugOut.println(bx);
-  }*/
-
-  uint16_t deltax =
-      ax > bx ? ax - bx : bx - ax;
+  uint16_t deltax = ax > bx ? ax - bx : bx - ax;
 
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Avg"));
@@ -1239,14 +1220,7 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   // u8g2.print(k197dev.getGraphAverage(ax < bx ? ax : bx, deltax+1),
   // 6);
   u8g2.print(formatNumber(
-      buf, k197dev.getGraphAverage(ax < bx ? ax : bx, deltax+1, hold)));
-
-  /*if (GPIOR3 & 0x10) {   // debug flag is set
-      GPIOR3 &= (~0x10); // reset flag: we print only once
-      DebugOut.print(F("NEW ax=")); DebugOut.print(ax); DebugOut.print(F(",
-  bx=")); DebugOut.print(bx); DebugOut.print(F(", deltax="));
-  DebugOut.println(deltax);
-  }*/
+      buf, k197dev.getGraphAverage(ax < bx ? ax : bx, deltax + 1, hold)));
 
   u8g2.setCursor(183, u8g2.ty + u8g2.getMaxCharHeight() + 2);
   u8g2.print(F("Dt"));
@@ -1260,11 +1234,15 @@ void UImanager::drawGraphScreenCursorPanel(u8g2_uint_t topln_x,
   u8g2.print('s');
 
   if (hold) {
-      u8g2_uint_t x = display_size_x-u8g2.getMaxCharWidth();
-      u8g2.setCursor(x, 7+u8g2.getMaxCharHeight());       u8g2.print('H');
-      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('o');
-      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('l');
-      u8g2.setCursor(x, u8g2.ty+u8g2.getMaxCharHeight()); u8g2.print('d');
+    u8g2_uint_t x = display_size_x - u8g2.getMaxCharWidth();
+    u8g2.setCursor(x, 7 + u8g2.getMaxCharHeight());
+    u8g2.print('H');
+    u8g2.setCursor(x, u8g2.ty + u8g2.getMaxCharHeight());
+    u8g2.print('o');
+    u8g2.setCursor(x, u8g2.ty + u8g2.getMaxCharHeight());
+    u8g2.print('l');
+    u8g2.setCursor(x, u8g2.ty + u8g2.getMaxCharHeight());
+    u8g2.print('d');
   }
 }
 
@@ -1312,23 +1290,23 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
       if (reassignStoRcl.getValue()) {
         if (eventType == UIeventPress) {
           if (k197dev.getDisplayHold()) { // we are currently on hold
-              // At this point we don't know if it will be a short or long press/click
-              // since removing hold is not time critical, we wait until the click event
-              // We will fix things in the following events
-              hold_flag=true;
+            // At this point we don't know if it will be a short or long
+            // press/click since removing hold is not time critical, we wait
+            // until the click event We will fix things in the following events
+            hold_flag = true;
           } else { // we are currently not on hold
-              // At this point we don't know if it will be a short or long press
-              // since hold can be time critical, we set hold mode immediately
-              // We will fix things in the following events
-              hold_flag=false;
-              k197dev.setDisplayHold(true);
+            // At this point we don't know if it will be a short or long press
+            // since hold can be time critical, we set hold mode immediately
+            // We will fix things in the following events
+            hold_flag = false;
+            k197dev.setDisplayHold(true);
           }
           // GPIOR3 |= 0x10; // set debug flag
         } else if (eventType == UIeventLongPress) {
           // if hold was not active before, we need to undo the activation
-          if (hold_flag==false) { // hold was not active before
-             // and then we cancel the hold
-             k197dev.setDisplayHold(false);
+          if (hold_flag == false) { // hold was not active before
+            // and then we cancel the hold
+            k197dev.setDisplayHold(false);
           }
           K197screenMode screen_mode = uiman.getScreenMode();
           if (screen_mode != K197sc_minmax)
@@ -1338,8 +1316,8 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
         } else if (eventType == UIeventClick) {
           // Now we know this was a short click
           if (hold_flag) { // hold was active when button was pressed
-             k197dev.setDisplayHold(false); // so now we need to cancel the hold
-          }            
+            k197dev.setDisplayHold(false); // so now we need to cancel the hold
+          }
         } else if (eventType == UIeventDoubleClick) {
           // NOP
         }
@@ -1376,7 +1354,7 @@ bool UImanager::handleUIEvent(K197UIeventsource eventSource,
         return true; // Skip normal handling in the main sketch
       } else if (eventType == UIeventDoubleClick) {
         pushbuttons.cancelClickREL();
-        //DebugOut.println(F("REL dblclk"));
+        // DebugOut.println(F("REL dblclk"));
         k197dev.resetStatistics();
         return true; // Skip normal handling in the main sketch
       }
@@ -1457,7 +1435,8 @@ void permadata::copyToUI(bool restore_screen_mode) {
   CHECK_FREE_STACK();
   additionalModes.setValue(bool_options.additionalModes);
   reassignStoRcl.setValue(bool_options.reassignStoRcl);
-  showDoodle.setValue(bool_options.showDoodle); showDoodle.change();
+  showDoodle.setValue(bool_options.showDoodle);
+  showDoodle.change();
   logEnable.setValue(bool_options.logEnable);
   logSkip.setValue(byte_options.logSkip);
   logSplitUnit.setValue(bool_options.logSplitUnit);
@@ -1465,8 +1444,8 @@ void permadata::copyToUI(bool restore_screen_mode) {
   logTamb.setValue(bool_options.logTamb);
   logStat.setValue(bool_options.logStat);
   logError.setValue(bool_options.logError);
-  // option unused_no_2 is of course not used anymore 
-  logStatSamples.setValue(byte_options.logStatSamples); 
+  // option unused_no_2 is of course not used anymore
+  logStatSamples.setValue(byte_options.logStatSamples);
   k197dev.setNsamples(byte_options.logStatSamples);
 
   gr_yscale_show0.setValue(bool_options.gr_yscale_show0);
@@ -1497,15 +1476,11 @@ void permadata::copyToUI(bool restore_screen_mode) {
 bool permadata::store_to_EEPROM() {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
     DebugOut.print(F("Data size"));
-    //DebugOut.print(CH_SPACE); DebugOut.print(sizeof(permadata));
-    //DebugOut.print(F(" exceed EEPROM len: "));
-    //DebugOut.print(EEPROM.length());
     return false;
   }
   permadata pdata;
   pdata.copyFromUI();
   EEPROM.put(EEPROM_BASE_ADDRESS, pdata);
-  //DebugOut.println(F("EEPROM ok"));
   return true;
 }
 
@@ -1519,9 +1494,9 @@ bool permadata::store_to_EEPROM() {
 bool permadata::retrieve_from_EEPROM(bool restore_screen_mode) {
   if ((EEPROM_BASE_ADDRESS + sizeof(permadata)) > EEPROM.length()) {
     DebugOut.print(F("Data size"));
-    //DebugOut.print(CH_SPACE); DebugOut.print(sizeof(permadata));
-    //DebugOut.print(F(" exceed "));
-    //DebugOut.println(EEPROM.length());
+    // DebugOut.print(CH_SPACE); DebugOut.print(sizeof(permadata));
+    // DebugOut.print(F(" exceed "));
+    // DebugOut.println(EEPROM.length());
     return false;
   }
   permadata pdata;
@@ -1538,6 +1513,5 @@ bool permadata::retrieve_from_EEPROM(bool restore_screen_mode) {
     return false;
   }
   pdata.copyToUI(restore_screen_mode);
-  //DebugOut.println(F("EEPROM: restore ok"));
   return true;
 }

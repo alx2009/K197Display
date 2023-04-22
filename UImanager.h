@@ -92,13 +92,14 @@ private:
                        K197sc_FullScreenBitMask); ///< Keep track of how to
                                                   ///< display stuff...
 
-  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle=true);
+  void displayDoodle(u8g2_uint_t x, u8g2_uint_t y, bool stepDoodle = true);
   void updateNormalScreen();
   void updateMinMaxScreen();
   void updateSplitScreen();
   void updateGraphScreen();
   void drawGraphScreenNormalPanel(u8g2_uint_t topln_x);
-  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax, u8g2_uint_t bx);
+  void drawGraphScreenCursorPanel(u8g2_uint_t topln_x, u8g2_uint_t ax,
+                                  u8g2_uint_t bx);
   void drawMarker(u8g2_uint_t x, u8g2_uint_t y,
                   char marker_type = UImanager::MARKER);
 
@@ -147,7 +148,8 @@ public:
      @return true if the screen is in graph mode
   */
   bool isGraphMode() {
-    return !isMenuVisible() && ((screen_mode & K197sc_ScreenModeMask) == K197sc_graph);
+    return !isMenuVisible() &&
+           ((screen_mode & K197sc_ScreenModeMask) == K197sc_graph);
   };
   /*!
      @brief  chek if the cursors are visible
@@ -204,7 +206,8 @@ public:
     byte oldvalue = isA ? cursor_a : cursor_b;
     byte newvalue = oldvalue + increment;
     if (increment > 0) { // make sure we increment within boundary
-      if ((newvalue < oldvalue) || (newvalue >= k197_display_graph_type::x_size))
+      if ((newvalue < oldvalue) ||
+          (newvalue >= k197_display_graph_type::x_size))
         newvalue = k197_display_graph_type::x_size - 1;
     } else { // make sure we decrement
       if (newvalue > oldvalue)
@@ -273,7 +276,7 @@ public:
     clearScreen();
   };
 
-  void updateDisplay(bool stepDoodle=true);
+  void updateDisplay(bool stepDoodle = true);
   void updateBtStatus();
 
   void setContrast(uint8_t value);

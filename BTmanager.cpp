@@ -127,9 +127,9 @@ BTmanagerResult BTmanager::checkPresence() {
   if (bt_module_present) { // Module was turned on after setup().
     Serial.begin( // Note: If this is the second time Serial.begin is called, a
         115200);  // bug in Serial may hang the SW, and cause a WDT reset
-    Serial.setTimeout(Serial_timeout);               
+    Serial.setTimeout(Serial_timeout);
     DebugOut.useSerial(true);
-    //DebugOut.println(F("BT turned on"));
+    // DebugOut.println(F("BT turned on"));
     return BTmoduleTurnedOn;
   } else { // Module was turned off
     Serial.end();
@@ -137,7 +137,7 @@ BTmanagerResult BTmanager::checkPresence() {
                          USART_TXEN_bm)); // Disable RX and TX for good measure
     pinConfigure(SERIAL_TX, PIN_DIR_OUTPUT | PIN_OUT_LOW | PIN_INPUT_ENABLE);
     pinConfigure(SERIAL_RX, PIN_DIR_INPUT | PIN_PULLUP_OFF);
-    //DebugOut.println(F("BT turned off"));
+    // DebugOut.println(F("BT turned off"));
     return BTmoduleTurnedOff;
   }
 #else

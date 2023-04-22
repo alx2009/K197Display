@@ -24,7 +24,8 @@
 #include <Arduino.h>
 #include <limits.h> // needed for INT_MAX
 
-//#define CHECK_STACK_SIZE ///< when defined, add the possibility to check stack size
+//#define CHECK_STACK_SIZE ///< when defined, add the possibility to check stack
+// size
 
 /**************************************************************************/
 /*!
@@ -108,15 +109,16 @@ public:
 private:
   int minStack = INT_MAX; ///< keep track of the minimum free stack
   int minFreeStack();
+
 public:
   int checkFreeStack();
   void reportFreeStack(bool reportAlways = true);
-# define CHECK_FREE_STACK() CHECK_FREE_STACK()
-# define REPORT_FREE_STACK(...) dxUtil.reportFreeStack(__VA_ARGS__)
+#define CHECK_FREE_STACK() CHECK_FREE_STACK()
+#define REPORT_FREE_STACK(...) dxUtil.reportFreeStack(__VA_ARGS__)
 #else
-#  define CHECK_FREE_STACK()  ///< Does nothing when not profiling
-#  define REPORT_FREE_STACK(...)  ///< Does nothing when not profiling
-#endif // CHECK_STACK_SIZE
+#define CHECK_FREE_STACK()     ///< Does nothing when not profiling
+#define REPORT_FREE_STACK(...) ///< Does nothing when not profiling
+#endif                         // CHECK_STACK_SIZE
 };
 
 extern dxUtilClass dxUtil; ///< Predefined dxUtilClass object to use

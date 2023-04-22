@@ -47,7 +47,7 @@ unsigned long lastHold[] = {0UL, 0UL, 0UL,
                             0UL}; ///< micros() when last hold event generated
 unsigned long lastReleased[] = {0UL, 0UL, 0UL,
                                 0UL}; ///< micros() when last released
-bool enableDoubleClick[] = {true, true, true, true}; ///< 
+bool enableDoubleClick[] = {true, true, true, true}; ///< enable double click
 
 /*!
     @brief  set a call back for a push button in the cluster
@@ -157,25 +157,28 @@ void k197ButtonCluster::DebugOut_printEventName(K197UIeventType event) {
 #define fifo_NO_DATA                                                           \
   0xff ///< value returned when the fifo is empty (see fifo_pull())
 volatile static byte fifo_records[]{
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-    }; ///< array implementing the FIFO queue, see fifo_pull()
+    0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff}; ///< array implementing the FIFO queue, see fifo_pull()
 #define fifo_MAX_RECORDS                                                       \
   (sizeof(fifo_records) /                                                      \
    sizeof(fifo_records[0])) ///< max number of records in the FIFO queue, see
                             ///< fifo_pull()
 
-volatile static uint8_t fifo_front = 0x01; // index to the front of the queue, see fifo_pull()
-    
+volatile static uint8_t fifo_front =
+    0x01; // index to the front of the queue, see fifo_pull()
+
 //#define fifo_rear GPIOR0 //uncomment to use GPIOR0 to speed up slightly
-#ifndef fifo_rear 
-static volatile byte fifo_rear = 0x00; ///< index to the rear of the queue, see fifo_pull()
+#ifndef fifo_rear
+static volatile byte fifo_rear =
+    0x00; ///< index to the rear of the queue, see fifo_pull()
 #endif
 
 /*!
     @brief  get the number of records actually stored in the FIFO queue (see
    also fifo_pull())
     @details Note that this function is not thread safe with respect to
-   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+   other fifo_xxx functions. The call to this function should be bracketed
+   between cli()/sei()
 
     @return the number of records currently in the FIFO queue
 */
@@ -191,18 +194,22 @@ static inline int fifo_getSize() {
 /*!
     @brief  check if the FIFO is empty
     @details    Note that this function is not thread safe with respect to
-   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+   other fifo_xxx functions. The call to this function should be bracketed
+   between cli()/sei()
 
     @return true if the FIFO queue is empty
 */
 static inline bool fifo_isEmpty() {
-  return fifo_records[fifo_front] == fifo_NO_DATA ?  true : false; // self-explaining :-)
+  return fifo_records[fifo_front] == fifo_NO_DATA
+             ? true
+             : false; // self-explaining :-)
 }
 
 /*!
     @brief  check if the FIFO is full
     @details t   Note that this function is not thread safe with respect to
-   other fifo_xxx functions. The call to this function should be bracketed between cli()/sei()
+   other fifo_xxx functions. The call to this function should be bracketed
+   between cli()/sei()
 
     @return true if the FIFO queue is empty
 */
@@ -211,19 +218,20 @@ static inline bool fifo_isFull() {
   int idx = (fifo_rear + 1) % fifo_MAX_RECORDS;
   byte val = fifo_records[idx];
   if (val == fifo_NO_DATA) {
-      return false;
+    return false;
   }
-  //DebugOut.print(F("+idx=")); DebugOut.print(idx); 
-  //DebugOut.print(F(", val=")); DebugOut.print(val); 
-  //DebugOut.print(F(", X=")); DebugOut.println(fifo_NO_DATA); 
-  return  true;
+  // DebugOut.print(F("+idx=")); DebugOut.print(idx);
+  // DebugOut.print(F(", val=")); DebugOut.print(val);
+  // DebugOut.print(F(", X=")); DebugOut.println(fifo_NO_DATA);
+  return true;
 }
 
 /*!
     @brief push a record at the rear of the FIFO queue (see also fifo_pull())
     @details This function is optimized for use in an interrupt handler.
-    
-    If used both in the handler and outside, calls in sections of code that can be interrupted should be bracketed between cli()/sei()
+
+    If used both in the handler and outside, calls in sections of code that can
+   be interrupted should be bracketed between cli()/sei()
     @param b the record that should be pushed at the rear of the FIFO queue
 */
 static inline void fifo_push(byte b) {
@@ -236,7 +244,8 @@ static inline void fifo_push(byte b) {
     @details The fifo_xxx series of variables and functions implement a FIFO
 queue which is used to pass "raw" button presses and release from the interrupt
 handler to the main application thread. The particular implementation has been
-chosen to optimize fifo_push, so it can be used efficiently in an interrupt handler.
+chosen to optimize fifo_push, so it can be used efficiently in an interrupt
+handler.
 
     File static scope is used rather than a class as this seem to generate the
 smallest and fastest interrupt handler.
@@ -245,8 +254,8 @@ smallest and fastest interrupt handler.
 to serve the other interrupts, in particular the SPI handler which need to be
 served quickly to avoid losing data from the K197.
 
-   Note that this function is not thread safe with respect to other fifo_xxx functions. 
-   The call to this function should be bracketed between cli()/sei()
+   Note that this function is not thread safe with respect to other fifo_xxx
+functions. The call to this function should be bracketed between cli()/sei()
 
     @return the record just pulled from the front of the queue (or fifo_NO_DATA
 if the queue is empty).
@@ -270,14 +279,14 @@ static inline byte fifo_pull() {
 
    The handler simply push the logic level of the relevant pins to the rear of
    the fifo queue (see fifo_push().
-   
+
    Note 2: the current implementation relies on STO being on the same I/O port
-   as RCL, and REL with DB. A future HW revision will move all 4 buttons to the same I/O
-   port, potentially optimizing the interrupt handler further.
+   as RCL, and REL with DB. A future HW revision will move all 4 buttons to the
+   same I/O port, potentially optimizing the interrupt handler further.
 */
-ISR(CCL_CCL_vect) { //__vector_7
-  CCL.INTFLAGS =  CCL.INTFLAGS; // We prefer to enter the interrupts twice
-                                //   rather than missing an event
+ISR(CCL_CCL_vect) {            //__vector_7
+  CCL.INTFLAGS = CCL.INTFLAGS; // We prefer to enter the interrupts twice
+                               //   rather than missing an event
   fifo_push((UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
             (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm)));
 }
@@ -358,65 +367,70 @@ void k197ButtonCluster::setup() {
   EVSYS.CHANNEL4 = Ch4_UI_REL_Ev_src;
   EVSYS.CHANNEL5 = Ch5_UI_DB_Ev_src;
 
-  EVSYS.USERCCLLUT0A = EVSYS_USER_CHANNEL2_gc; // channel 2 ==> CCL LUT0 event input A 
-  EVSYS.USERCCLLUT1A = EVSYS_USER_CHANNEL3_gc; // channel 3 ==> CCL LUT1 event input A 
-  EVSYS.USERCCLLUT2A = EVSYS_USER_CHANNEL4_gc; // channel 4 ==> CCL LUT2 event input A 
-  EVSYS.USERCCLLUT3A = EVSYS_USER_CHANNEL5_gc; // channel 5 ==> CCL LUT3 event input A 
+  EVSYS.USERCCLLUT0A =
+      EVSYS_USER_CHANNEL2_gc; // channel 2 ==> CCL LUT0 event input A
+  EVSYS.USERCCLLUT1A =
+      EVSYS_USER_CHANNEL3_gc; // channel 3 ==> CCL LUT1 event input A
+  EVSYS.USERCCLLUT2A =
+      EVSYS_USER_CHANNEL4_gc; // channel 4 ==> CCL LUT2 event input A
+  EVSYS.USERCCLLUT3A =
+      EVSYS_USER_CHANNEL5_gc; // channel 5 ==> CCL LUT3 event input A
 
   // Makes ure the CCL is disabled before configuration
-  CCL.CTRLA = 0x00; // Disable, nor running in standby
+  CCL.CTRLA = 0x00;     // Disable, nor running in standby
   CCL.LUT0CTRLA = 0x00; // Disable CCL LUT0
   CCL.LUT1CTRLA = 0x00; // Disable CCL LUT0
   CCL.LUT2CTRLA = 0x00; // Disable CCL LUT0
   CCL.LUT3CTRLA = 0x00; // Disable CCL LUT0
 
-  //Make sure the sequencers are disabled
+  // Make sure the sequencers are disabled
   CCL.SEQCTRL0 = 0x00;
   CCL.SEQCTRL0 = 0x00;
 
-  //Make sure Interrupts are disabled
+  // Make sure Interrupts are disabled
   CCL.INTCTRL0 = 0x00;
-  
+
   // Initialize logic block 0
   // ccl0 event a ==> input 0 (STO via Ev. ch 2)
   CCL.TRUTH0 = 0x55; // 0x55;
-  CCL.LUT0CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
-  CCL.LUT0CTRLC = CCL_INSEL2_MASK_gc ;                       
-  CCL.LUT0CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
+  CCL.LUT0CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc;
+  CCL.LUT0CTRLC = CCL_INSEL2_MASK_gc;
+  CCL.LUT0CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm;
 
   // Initialize logic block 1
   // ccl0 event a ==> input 0 (RCL via Ev. ch 3)
   CCL.TRUTH1 = 0x55; // 0x55;
-  CCL.LUT1CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
-  CCL.LUT1CTRLC = CCL_INSEL2_MASK_gc ;                       
-  CCL.LUT1CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
+  CCL.LUT1CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc;
+  CCL.LUT1CTRLC = CCL_INSEL2_MASK_gc;
+  CCL.LUT1CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm;
 
   // Initialize logic block 2
   // ccl0 event a ==> input 0 (REL via Ev. ch 4)
   CCL.TRUTH2 = 0x55; // 0x55;
-  CCL.LUT2CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
-  CCL.LUT2CTRLC = CCL_INSEL2_MASK_gc ;                       
-  CCL.LUT2CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
+  CCL.LUT2CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc;
+  CCL.LUT2CTRLC = CCL_INSEL2_MASK_gc;
+  CCL.LUT2CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm;
 
   // Initialize logic block 3
   // ccl0 event a ==> input 0 (Db via Ev. ch 5)
   CCL.TRUTH3 = 0x55; // 0x55;
-  CCL.LUT3CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc; 
-  CCL.LUT3CTRLC = CCL_INSEL2_MASK_gc ;                       
-  CCL.LUT3CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm ;
+  CCL.LUT3CTRLB = CCL_INSEL1_MASK_gc | CCL_INSEL0_EVENTA_gc;
+  CCL.LUT3CTRLC = CCL_INSEL2_MASK_gc;
+  CCL.LUT3CTRLA = CCL_FILTSEL_FILTER_gc | CCL_CLKSRC_OSC1K_gc | CCL_ENABLE_bm;
 
   // Setup interrupts and then enable the CCL peripheral
-  CCL.INTCTRL0 = CCL_INTMODE0_BOTH_gc | CCL_INTMODE1_BOTH_gc | CCL_INTMODE2_BOTH_gc | CCL_INTMODE3_BOTH_gc;
+  CCL.INTCTRL0 = CCL_INTMODE0_BOTH_gc | CCL_INTMODE1_BOTH_gc |
+                 CCL_INTMODE2_BOTH_gc | CCL_INTMODE3_BOTH_gc;
   CCL.CTRLA = CCL_ENABLE_bm; // Enabled, nor running in standby
 
-  //DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
+  // DebugOut.print(F("CCL.LUT0CTRLA=")); DebugOut.println(CCL.LUT0CTRLA, HEX);
 
   // Initialize buttons initial state. Needed to handle buttons already pressed
   // at startup or reset (e.g. watchdog reset).
   unsigned long now = micros();
   cli();
   byte x = (UI_STO_VPORT.IN & (UI_STO_bm | UI_RCL_bm)) |
-            (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm));
+           (UI_REL_VPORT.IN & (UI_REL_bm | UI_DB_bm));
   sei();
   initButton(0, getButtonState(x & UI_STO_bm), now);
   initButton(1, getButtonState(x & UI_RCL_bm), now);
@@ -442,17 +456,20 @@ void k197ButtonCluster::checkNew() {
     }
   }
   cli();
-  bool b = fifo_isFull(); // We check now because it is unlikely we could detect a full FIFO otherwise...
+  bool b = fifo_isFull(); // We check now because it is unlikely we could detect
+                          // a full FIFO otherwise...
   /*if (b || (!fifo_isEmpty()) ) {
     if (b) {
        DebugOut.print(b);
-       DebugOut.print(F(" idx=")); DebugOut.print((fifo_rear + 1) % fifo_MAX_RECORDS); 
-       DebugOut.print(F(", val=")); DebugOut.println(fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS]); 
+       DebugOut.print(F(" idx=")); DebugOut.print((fifo_rear + 1) %
+  fifo_MAX_RECORDS); DebugOut.print(F(", val="));
+  DebugOut.println(fifo_records[(fifo_rear + 1) % fifo_MAX_RECORDS]);
     }
-    
-    DebugOut.print(F(" front=")); DebugOut.print(fifo_front); DebugOut.print(F(", rear=")); DebugOut.println(fifo_rear); 
-    for (unsigned int i=0; i<fifo_MAX_RECORDS; i++) {
-      DebugOut.print(fifo_records[i], HEX); DebugOut.print(CH_SPACE);
+
+    DebugOut.print(F(" front=")); DebugOut.print(fifo_front);
+  DebugOut.print(F(", rear=")); DebugOut.println(fifo_rear); for (unsigned int
+  i=0; i<fifo_MAX_RECORDS; i++) { DebugOut.print(fifo_records[i], HEX);
+  DebugOut.print(CH_SPACE);
     }
     DebugOut.println();
   }*/
@@ -517,15 +534,19 @@ void k197ButtonCluster::checkNew(uint8_t i, uint8_t btnow, unsigned long now) {
       invoke_callback(i, UIeventRelease);
       if ((now - startPressed[i]) > longPressTime) {
         invoke_callback(i, UIeventLongClick);
-        enableDoubleClick[i] = false; // This will prevent that the next click is recognized as a double click...
+        enableDoubleClick[i] = false; // This will prevent that the next click
+                                      // is recognized as a double click...
       } else if (startPressed[i] - lastReleased[i] < doubleClicktime) {
         invoke_callback(i, UIeventClick);
-        if (enableDoubleClick[i]) invoke_callback(i, UIeventDoubleClick);
-        enableDoubleClick[i] = false; // This prevents a third click to give raise to a further double click...
+        if (enableDoubleClick[i])
+          invoke_callback(i, UIeventDoubleClick);
+        enableDoubleClick[i] = false; // This prevents a third click to give
+                                      // raise to a further double click...
         // DebugOut.print(F("Dbclick time: "));
         // DebugOut.println(now-lastReleased[i]);
       } else {
-        enableDoubleClick[i] = true; // This will enable double click for the next click
+        enableDoubleClick[i] =
+            true; // This will enable double click for the next click
         invoke_callback(i, UIeventClick);
         // DebugOut.print(F("Click time: "));
         // DebugOut.println(now-startPressed[i]);
@@ -576,7 +597,8 @@ void k197ButtonCluster::setupClicktimer() {
       TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm; // Clear interrupt flags
 }
 
-//#define click_counter GPIOR2 //Uncomment to use General Purpose Register GPIOR2 to speed up the interrupt handler (slightly)
+//#define click_counter GPIOR2 //Uncomment to use General Purpose Register
+// GPIOR2 to speed up the interrupt handler (slightly)
 #ifndef click_counter
 static volatile byte click_counter = 0x00;
 #endif
@@ -640,25 +662,25 @@ void k197ButtonCluster::clickREL() {
    new click will be initiated thereafter
 
 */
-void k197ButtonCluster::cancelClickREL() { 
-   cli();
-   click_counter = 0x00;
-   sei();
+void k197ButtonCluster::cancelClickREL() {
+  cli();
+  click_counter = 0x00;
+  sei();
 }
 
 /*!
     @brief  Interrupt handler, called for TCA timer overflow events
     @details This interrupt is called after enough time is passed from the last
    release, so that a new press can be recognized by the k197.
-    - If any click click is scheduled (click_counter>0) the MB_REL port is set to high,
-   and click_counter is decremented
-    - If this was the last scheduled click (click_counter==0) the timer is stopped
-   and for good measure TCA interrupts are disabled.
-   Note that the TCA instance used is defined in pinout.h
+    - If any click click is scheduled (click_counter>0) the MB_REL port is set
+   to high, and click_counter is decremented
+    - If this was the last scheduled click (click_counter==0) the timer is
+   stopped and for good measure TCA interrupts are disabled. Note that the TCA
+   instance used is defined in pinout.h
 */
 ISR(TCA_OVF_vect) {                                 // __vector_9
   AVR_TCA_PORT.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Clear flag
-  if (click_counter > 0) {                // At least one more click to generate
+  if (click_counter > 0) {         // At least one more click to generate
     MB_REL_VPORT.DIR |= MB_REL_bm; // Set REL pin to high
     MB_REL_VPORT.OUT |= MB_REL_bm; // Set REL pin to output
     // VPORTA.OUT |= 0x80;  // Turn on builtin LED

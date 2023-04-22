@@ -44,7 +44,7 @@
 //#define PROFILE_TIMER 1 ///< when defined, add the possibility to profile
 // sections of code
 
-#define RUNTIME_ASSERTS 1 ///< when defined, add additional runtime checks
+//#define RUNTIME_ASSERTS 1 ///< when defined, add additional runtime checks
 
 /**************************************************************************/
 /*!
@@ -198,16 +198,50 @@ extern debugUtil
 #endif                       // PROFILE_TIMER
 
 #ifdef RUNTIME_ASSERTS
-#define RT_ASSERT(condition, message_string) if (!(condition)) {DebugOut.println(F(message_string));}
-#define RT_ASSERT_ACT(condition, action) if (!(condition)) {action;}
-#define RT_ASSERT_ACT2(condition, action1, action2) if (!(condition)) {action1; action2;}
+/*!
+   \def RT_ASSERT(condition, message_string)
+
+     @brief  macro, used for run time assertions
+     @param condition logical condition to check
+     @param message_string message to print if condition is false
+*/
+#define RT_ASSERT(condition, message_string)                                   \
+  if (!(condition)) {                                                          \
+    DebugOut.println(F(message_string));                                       \
+  }
+/*!
+   \def RT_ASSERT_ACT(condition, action)
+
+     @brief  macro, used for run time diagnostics
+     @param condition logical condition to check
+     @param action code to be executed if condition is false
+*/
+#define RT_ASSERT_ACT(condition, action)                                       \
+  if (!(condition)) {                                                          \
+    action;                                                                    \
+  }
+/*!
+   \def RT_ASSERT_ADD_PARAM(param)
+
+     @brief  macro, used to add a parameter to a function conditionally
+     @details the parameter will be included only if RUNTIME_ASSERTS is defined
+     @param param conditional definition of the parameter
+*/
 #define RT_ASSERT_ADD_PARAM(param) , param
+/*!
+   \def RT_ASSERT_ADD_STATEMENTS(statement)
+
+     @brief  macro, used to add code ASSERTS are used
+     @details the code will be included only if RUNTIME_ASSERTS is defined
+     @param statement code to include conditionally
+*/
 #define RT_ASSERT_ADD_STATEMENTS(statement) statement
 #else
-#define RT_ASSERT(...) ///< Does nothing with real time assets disabled
-#define RT_ASSERT_ACT(...) ///< Does nothing with real time assets disabled
-#define RT_ASSERT_ACT2(...) ///< Does nothing with real time assets disabled
-#define RT_ASSERT_ADD_STATEMENTS(...) ///< Does nothing with real time assets disabled
-#endif //RUNTIME_ASSERTS 
+#define RT_ASSERT(...)         ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ACT(...)     ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ADD_PARAM(...) ///< Does nothing with real time assets disabled
+#define RT_ASSERT_ADD_STATEMENTS(                                              \
+    ...) ///< Does nothing with real time assets disabled
+#endif   // RUNTIME_ASSERTS
 
 #endif // DEBUGUTIL_H__
