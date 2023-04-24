@@ -59,7 +59,7 @@ The current SW is implementing the same functions available in the 197/197A (wit
 
 Holding the "REL" button for 0.5 s will show a Options menu to enable the additional functions and various options, as well as data logging to bluetooth serial.
 
-clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode can be entered while in graph mode, but it has no effect (currently, this may change in future revisions). Changing display mode cancel the holding (currently, this may change in future revisions). Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
+clicking the "STO" button holds the value currently displayed (when the option to repurpose STO and RCL is enabled in the options menu). Hold mode is preserved across all display modes. Holding only affects what is displayed, internally statistics are continuosly updated and logging to bluetooth is not affected. A second click exit hold. 
 
 Some commands can be entered via Serial connection (connect via Serial/bluetooth Serial and send "?" for a list)
 
@@ -85,11 +85,11 @@ Two menu items enable storing and retrieving the configuration to the EEPROM. At
 
 Statistics display mode
 -------------
-An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example measurement unit, REL state, AC button, etc.).
+An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example measurement unit, REL state, AC button, etc.) or with double click of the REL button.
 
 Graph display mode
 ------------------
-An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Holding the RCL button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.).
+An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Holding the RCL button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.) or with double click of the REL button.
 
 Sample rate, preferences for auto-scaling and other options can be set in the options menu (Under the sub menu "Graph options"). 
 
@@ -107,22 +107,22 @@ Keyboard:
 ---------
 compared to the original K197, the use of the the pushbuttons on the front panel changes as follows:
 - Holding the REL button will enter the Options menu (note 1)
-- double click of the REL button resets the statistics, but otherwise does not affect the reference value (note 1)
+- Double click of the REL button resets the statistics, but otherwise does not affect the reference value (note 1)
 - Normal STO and RCL functions can be disabled from the options menu. When disabled, the buttons are repurposed as follows:
-  - clicking the STO button once hold the currently displayed measurement when in normal or statistics mode. A second click returns to continuos updates.
   - Holding the STO button alternates between "normal" and "statistics" display mode (when repurposing of STO and RCL is enabled)
   - Holding the RCL button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
+  - clicking the STO button once hold the currently displayed measurement, statistics and graph. A second click returns to showing the current measurement/statistics/graph.
  
- Note 1: When in graph mode, double click of the RCL button shows the cursors. When cursors are shown, the key function changes as follows:
+ Note 1: When in graph mode, double click of the RCL button shows the cursors. When cursors are shown, some of the key functions change as follows:
  - REL and Db move the active cursor to the left and right respectively. 
  - Clicking "RCL" switch the active cursor.
  - Double click of "RCL" goes back to the graph mode without cursors 
   
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
-- REL = up (hold to exit the menu, double click up all the way to the top)
+- REL = up (hold to exit the menu, double click to go directly to the top)
 - dB  = down (hold goes down faster)
-- STO = -/select/ok (acts on the selected menu item)
-- RCL = +/select/ok (acts on the selected menu item)
+- STO = -/select/ok (acts on the selected menu item, hold to increase a value faster)
+- RCL = +/select/ok (acts on the selected menu item, hold to decrease a value faster)
 
 In general changes to a menu item are active immediately when the key is clicked (for example, for a checkbox) or in some cases when the key is released.
 
