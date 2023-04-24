@@ -290,7 +290,7 @@ void UImanager::updateNormalScreen() {
   const unsigned int xunit = 229;
   const unsigned int yunit = 20;
   u8g2.setCursor(xunit, yunit);
-  u8g2.print(k197dev.getUnit(hold));
+  u8g2.print(k197dev.getUnit(false, hold));
 
   // set the AC/DC indicator
   u8g2.setFont(u8g2_font_9x15_m_symbols);
@@ -370,7 +370,7 @@ void UImanager::updateNormalScreen() {
     char buf[K197_RAW_MSG_SIZE + 1];
     dtostrf(k197dev.getTColdJunction(hold), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
-    u8g2.print(k197dev.getUnit(hold));
+    u8g2.print(k197dev.getUnit(false, hold));
   }
 
   updateBtStatus();
@@ -463,7 +463,7 @@ void UImanager::updateMinMaxScreen() {
     char buf[K197_RAW_MSG_SIZE + 1];
     dtostrf(k197dev.getTColdJunction(hold), K197_RAW_MSG_SIZE, 2, buf);
     u8g2.print(buf);
-    u8g2.print(k197dev.getUnit(hold));
+    u8g2.print(k197dev.getUnit(false, hold));
   }
   u8g2.setFont(u8g2_font_8x13_mr);
   x = 0;
