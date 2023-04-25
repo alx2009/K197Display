@@ -1,6 +1,7 @@
+# K197Display
+
 ![K197Display - Main screen screenhot](K197Display_MainScreen.jpg?raw=true "K197Display")
 
-# K197Display
 This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on DxCore (see references below) 
 
 DISCLAIMER: Please note that the purpose of this repository is educational. Any use of the information for any other purpose is under own responsibility.
@@ -79,6 +80,9 @@ The temperature of the cold joint is also shown (this is measured with the AVR i
 
 Options menu:
 -------------
+
+![K197Display - Options menu screenhot](K197Display_menu.jpg?raw=true "K197Display - Options menu")
+
 The options menu list a hyerarchical menu system that allow to set a number of options. The menu is entered holding the REL key (holding a second time exits the menu). For navigating the menu see the section "Keyboard".
 
 At the bottom of the "Options" menu a "Show log" option shows a window with the latest debug output (useful for troubleshooting issues that only happen when Serial is turned off, e.g. BT module detection problems)
