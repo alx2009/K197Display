@@ -91,10 +91,16 @@ Two menu items enable storing and retrieving the configuration to the EEPROM. At
 
 Statistics display mode
 -------------
+
+![K197Display - Statistics display screenhot](K197Display_StatScreen.jpg?raw=true "K197Display - Statistics display")
+
 An additional "statistics" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode in addition to the instantaneous value the average, minimum and maximum value is displayed. Holding the STO button alternates between "normal" and "statistics" mode. Not all annunciators are available in statistics mode. The statistics themselves are not affected from the display mode switch, but they are reset whenever the measurement conditions change  (including for example measurement unit, REL state, AC button, etc.) or with double click of the REL button.
 
 Graph display mode
 ------------------
+
+![K197Display - Statistics display screenhot](K197Display_graph.jpg?raw=true "K197Display - Statistics display")
+
 An additional "graph" display mode is available when the option to repurpose STO and RCL is enabled in the options menu. In this mode a graph of the measurement is shown. Holding the RCL button alternates between "normal" and "graph" mode. Not all annunciators are available in graph mode. The graph itself is not affected from the display mode switch, but it is reset whenever the measurement conditions change (including for example measurement unit, REL state, AC button, etc.) or with double click of the REL button.
 
 Sample rate, preferences for auto-scaling and other options can be set in the options menu (Under the sub menu "Graph options"). 
@@ -103,6 +109,9 @@ The x (time) scale changes automatically depending on how many samples have been
 
 Graph display mode with cursors
 -------------------------------
+
+![K197Display - Statistics display screenhot](K197Display_cursors.jpg?raw=true "K197Display - Statistics display")
+
 Double click of the RCL key in graph mode shows and hides the cursors. Two cursors are shown on the graph, labelled A and B. 
 
 When the cursors are shown, the panel at the right of the graph shows the value at the cursors rather than the latest measurement. the average calculated between cursor A and cursor B is also shown, as well as the difference in time (based on K197 sampling rate).   
