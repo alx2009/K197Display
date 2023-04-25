@@ -1,3 +1,5 @@
+![K197Display - Main screen screenhot](K197Display_MainScreen.jpg?raw=true "K197Display")
+
 # K197Display
 This is a Arduino sketch for a display board intended as a replacement for a 197/197A bench multimeter. The board uses a 2.8" 256x64 OLED (SSD1322) and AVR DB on DxCore (see references below) 
 
