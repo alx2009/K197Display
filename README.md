@@ -124,8 +124,8 @@ compared to the original K197, the use of the the pushbuttons on the front panel
 - Holding the REL button will enter the Options menu (note 1)
 - Double click of the REL button resets the statistics, but otherwise does not affect the reference value (note 1)
 - Normal STO and RCL functions can be disabled from the options menu. When disabled, the buttons are repurposed as follows:
-  - Holding the STO button alternates between "normal" and "statistics" display mode (when repurposing of STO and RCL is enabled)
-  - Holding the RCL button alternates between "normal" and "graph" display mode (when repurposing of STO and RCL is enabled)
+  - Holding the STO button alternates between "normal" and "statistics" display mode
+  - Holding the RCL button alternates between "normal" and "graph" display mode
   - clicking the STO button once hold the currently displayed measurement, statistics and graph. A second click returns to showing the current measurement/statistics/graph.
  
  Note 1: When in graph mode, double click of the RCL button shows the cursors. When cursors are shown, some of the key functions change as follows:
@@ -136,8 +136,8 @@ compared to the original K197, the use of the the pushbuttons on the front panel
 When the Options menu is shown, the buttons are used to navigate the menu as follows:
 - REL = up (hold to exit the menu, double click to go directly to the top)
 - dB  = down (hold goes down faster)
-- STO = -/select/ok (acts on the selected menu item, hold to increase a value faster)
-- RCL = +/select/ok (acts on the selected menu item, hold to decrease a value faster)
+- STO = -/select/ok (acts on the selected menu item, hold to decrease a value faster)
+- RCL = +/select/ok (acts on the selected menu item, hold to increase a value faster)
 
 In general changes to a menu item are active immediately when the key is clicked (for example, for a checkbox) or in some cases when the key is released.
 
@@ -172,4 +172,4 @@ dxCore Optiboot (bootloader) reference: https://github.com/SpenceKonde/DxCore/bl
 
 Programming via UPDI (needed at least the first time, in order to load the bootloader): https://github.com/SpenceKonde/AVR-Guidance/blob/master/UPDI/jtag2updi.md
 
-Link to the OLED display (no affiliation or special endorsement. Only that I bought it there and it works): https://www.aliexpress.com/item/33013330192.html?spm=a2g0o.order_list.0.0.21ef1802HXu3o 
+Link to the OLED display (no affiliation or special endorsement. Only that I bought it there and it works): https://www.aliexpress.com/item/1005005329100345.html 
